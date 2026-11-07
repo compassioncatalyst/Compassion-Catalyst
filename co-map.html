@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<style>
+html,body,#map{margin:0;height:100%}
+#map{background:#ece8de}
+.pin{width:32px;height:32px;display:grid;place-items:center;font-family:var(--font-heading);font-weight:600;font-size:15px;border:1.5px solid var(--color-accent-700);background:var(--color-bg);color:var(--color-accent-800);box-shadow:var(--shadow-md);cursor:pointer;transition:transform .15s}
+.pin:hover{transform:scale(1.1)}
+.pin.sel{background:var(--color-accent-700);color:var(--color-bg);transform:scale(1.15)}
+.leaflet-container{font-family:var(--font-body)}
+.lbl{transform:translate(-50%,-50%);white-space:nowrap;text-align:center;pointer-events:none;transition:opacity .2s}
+.hood{font-size:10.5px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;color:#77715f;text-shadow:0 0 3px #f4f1ea,0 0 3px #f4f1ea,0 0 2px #f4f1ea}
+.hood.city{font-size:15px;letter-spacing:.18em;color:#3d3a33;font-weight:700}
+.place{font-size:10px;font-style:italic;color:#557049;text-shadow:0 0 3px #f4f1ea,0 0 3px #f4f1ea}
+.water{font-size:9.5px;font-style:italic;letter-spacing:.06em;color:#6d8fae;text-shadow:0 0 3px #ece8de,0 0 3px #ece8de}
+.shield{font-size:10px;font-weight:700;color:#fff;background:#4a6fa5;border:1.5px solid #fff;border-radius:4px;padding:1px 4px;box-shadow:0 0 0 1px #4a6fa5}
+.shield.us{background:#fff;color:#333;box-shadow:0 0 0 1px #8a8a8a}
+.z-far .minor,.z-far .place,.z-far .water,.z-mid .place{opacity:0}
+.note{position:absolute;left:8px;bottom:8px;z-index:500;font-size:11px;color:#6b675f;background:rgba(255,255,255,.85);padding:2px 6px}
+</style>
+</head>
+<body>
+<div id="map" aria-label="Map of organizations in Birmingham, AL"></div>
+<div class="note">Birmingham, AL · approximate map</div>
+<script>
+// Birmingham metro district, hand-traced and approximate.
+const DIST = L.latLngBounds([[33.405, -86.975], [33.635, -86.645]]);
+const EDGE = DIST.pad(0.12);
+const map = L.map('map', { scrollWheelZoom: false, zoomControl: true, attributionControl: false, zoomSnap: 0.25, maxZoom: 15, maxBounds: EDGE, maxBoundsViscosity: 1 });
+map.fitBounds(DIST, { padding: [4, 4] });
+map.setMinZoom(map.getZoom());
+const zoomCls = () => { const z = map.getZoom(), c = map.getContainer().classList; c.toggle('z-far', z < 12); c.toggle('z-mid', z >= 12 && z < 13); };
+map.on('zoomend', zoomCls); zoomCls();
+
+// Catmull-Rom smoothing so every line is a continuous curve
+function smooth(pts, seg = 8) {
+  if (pts.length < 3) return pts;
+  const out = [], P = [pts[0]].concat(pts, [pts[pts.length - 1]]);
+  for (let i = 1; i < P.length - 2; i++) {
+    const [p0, p1, p2, p3] = [P[i - 1], P[i], P[i + 1], P[i + 2]];
+    for (let t = 0; t < seg; t++) {
+      const s = t / seg, s2 = s * s, s3 = s2 * s;
+      out.push([0, 1].map(k => .5 * (2 * p1[k] + (-p0[k] + p2[k]) * s + (2 * p0[k] - 5 * p1[k] + 4 * p2[k] - p3[k]) * s2 + (-p0[k] + 3 * p1[k] - 3 * p2[k] + p3[k]) * s3)));
+    }
+  }
+  out.push(pts[pts.length - 1]); return out;
+}
+const R = L.svg({ padding: 1 });
+const line = (pts, o) => L.polyline(smooth(pts), Object.assign({ interactive: false, lineJoin: 'round', lineCap: 'round', renderer: R, smoothFactor: 0.5 }, o)).addTo(map);
+const area = (pts, o) => L.polygon(smooth(pts.concat([pts[0]])), Object.assign({ interactive: false, stroke: false, renderer: R }, o)).addTo(map);
+
+// Land: the whole frame is filled; the city core is a lighter tint
+L.rectangle(EDGE.pad(0.3), { stroke: false, fillColor: '#ece8de', fillOpacity: 1, interactive: false, renderer: R }).addTo(map);
+area([[33.612,-86.905],[33.618,-86.800],[33.600,-86.700],[33.560,-86.660],[33.505,-86.690],[33.470,-86.740],[33.455,-86.810],[33.445,-86.880],[33.470,-86.945],[33.530,-86.950],[33.585,-86.940]], { fillColor: '#f4f1ea', fillOpacity: 1 });
+
+// Ridges (wooded)
+const ridges = [
+  [[33.420,-86.960],[33.440,-86.910],[33.455,-86.880],[33.468,-86.855],[33.479,-86.833],[33.487,-86.812],[33.492,-86.796],[33.499,-86.777],[33.507,-86.757],[33.516,-86.735],[33.528,-86.708],[33.545,-86.680],[33.565,-86.650]],
+  [[33.385,-86.960],[33.402,-86.915],[33.418,-86.865],[33.432,-86.810],[33.443,-86.765],[33.457,-86.725],[33.474,-86.685],[33.492,-86.640]],
+  [[33.585,-86.735],[33.570,-86.712],[33.555,-86.700],[33.538,-86.690]]
+];
+ridges.forEach(r => { line(r, { color: '#cbd8b8', weight: 26, opacity: .55 }); line(r, { color: '#bccda6', weight: 9, opacity: .45 }); });
+
+// Parks
+[[33.5085,-86.8115,220],[33.5205,-86.8090,150],[33.5225,-86.7705,260],[33.5560,-86.7080,1100],[33.4460,-86.8640,1300],[33.5760,-86.7290,450],[33.4917,-86.7956,260],[33.5163,-86.8145,90],[33.5410,-86.8930,500],[33.4300,-86.7780,600],[33.5960,-86.7650,500]]
+  .forEach(([la, lo, r]) => L.circle([la, lo], { radius: r, stroke: false, fillColor: '#b6cf9f', fillOpacity: .9, interactive: false, renderer: R }).addTo(map));
+area([[33.5672,-86.7625],[33.5680,-86.7455],[33.5600,-86.7425],[33.5578,-86.7600]], { fillColor: '#dedad0', fillOpacity: 1 });
+
+// Creeks
+const creeks = [
+  ['Village Creek', [[33.600,-86.700],[33.580,-86.722],[33.563,-86.755],[33.552,-86.790],[33.549,-86.830],[33.545,-86.870],[33.535,-86.910],[33.528,-86.955],[33.520,-87.010]]],
+  ['Valley Creek', [[33.512,-86.825],[33.497,-86.858],[33.478,-86.888],[33.458,-86.925],[33.432,-86.975],[33.410,-87.020]]],
+  ['Shades Creek', [[33.505,-86.660],[33.488,-86.712],[33.472,-86.752],[33.461,-86.785],[33.452,-86.815],[33.438,-86.850],[33.418,-86.890],[33.392,-86.945],[33.370,-86.990]]]
+];
+creeks.forEach(([n, p]) => line(p, { color: '#a9c4dc', weight: 3.5 }));
+
+// Downtown street grid (rotated like Birmingham's numbered streets and avenues)
+(function grid() {
+  const c = [33.5135, -86.8070], mLat = 111320, mLng = 111320 * Math.cos(c[0] * Math.PI / 180);
+  const s = [-0.42, 0.907], u = [0.907, 0.42];
+  const at = (a, b) => [c[0] + (a * u[1] + b * s[1]) / mLat, c[1] + (a * u[0] + b * s[0]) / mLng];
+  const W = 1900, H = 1700, step = 170;
+  for (let a = -W; a <= W; a += step) L.polyline([at(a, -H), at(a, H)], { color: '#e3ded2', weight: 1.4, interactive: false, renderer: R }).addTo(map);
+  for (let b = -H; b <= H; b += step) L.polyline([at(-W, b), at(W, b)], { color: '#e3ded2', weight: 1.4, interactive: false, renderer: R }).addTo(map);
+})();
+
+// Roads: every road runs off the map edge so nothing ends in open space
+const roads = [
+  { ref: 'I-20/59', k: 'i', pts: [[33.360,-87.040],[33.400,-87.000],[33.430,-86.968],[33.452,-86.945],[33.470,-86.925],[33.484,-86.903],[33.495,-86.880],[33.503,-86.860],[33.511,-86.842],[33.519,-86.828],[33.524,-86.818],[33.528,-86.806],[33.532,-86.796]], at: .25 },
+  { ref: 'I-20', k: 'i', pts: [[33.532,-86.796],[33.536,-86.782],[33.541,-86.768],[33.546,-86.752],[33.552,-86.738],[33.558,-86.720],[33.556,-86.695],[33.553,-86.668],[33.560,-86.640],[33.575,-86.600]], at: .5 },
+  { ref: 'I-59', k: 'i', pts: [[33.532,-86.796],[33.542,-86.782],[33.553,-86.768],[33.566,-86.752],[33.580,-86.735],[33.596,-86.714],[33.615,-86.690],[33.640,-86.660],[33.670,-86.625]], at: .45 },
+  { ref: 'I-65', k: 'i', pts: [[33.690,-86.838],[33.640,-86.835],[33.612,-86.832],[33.585,-86.826],[33.560,-86.822],[33.540,-86.820],[33.524,-86.818],[33.508,-86.821],[33.494,-86.828],[33.480,-86.836],[33.464,-86.836],[33.448,-86.826],[33.425,-86.812],[33.404,-86.803],[33.370,-86.795],[33.340,-86.790]], at: .72 },
+  { ref: 'I-459', k: 'i', pts: [[33.350,-87.010],[33.365,-86.965],[33.378,-86.915],[33.390,-86.860],[33.404,-86.803],[33.418,-86.760],[33.437,-86.727],[33.465,-86.700],[33.497,-86.682],[33.528,-86.670],[33.553,-86.668]], at: .62 },
+  { ref: '280', k: 'us', pts: [[33.524,-86.806],[33.512,-86.800],[33.500,-86.795],[33.494,-86.790],[33.490,-86.778],[33.484,-86.762],[33.476,-86.745],[33.466,-86.728],[33.452,-86.712],[33.437,-86.690],[33.418,-86.660],[33.395,-86.620]], at: .55 },
+  { ref: '31', k: 'us', pts: [[33.494,-86.790],[33.484,-86.796],[33.473,-86.799],[33.460,-86.799],[33.445,-86.796],[33.425,-86.790],[33.400,-86.786],[33.360,-86.783]], at: .5 },
+  { ref: '31', k: 'us', pts: [[33.523,-86.808],[33.545,-86.810],[33.570,-86.802],[33.600,-86.796],[33.640,-86.792],[33.690,-86.788]], at: .5 },
+  { ref: '78', k: 'us', pts: [[33.519,-86.828],[33.523,-86.845],[33.528,-86.862],[33.533,-86.882],[33.540,-86.905],[33.548,-86.930],[33.560,-86.965],[33.575,-87.020]], at: .55 },
+  { ref: '11', k: 'us', pts: [[33.512,-86.842],[33.520,-86.812],[33.528,-86.782],[33.537,-86.756],[33.545,-86.730],[33.556,-86.700],[33.568,-86.660],[33.585,-86.600]], at: .62 },
+  { ref: '11', k: 'us', pts: [[33.512,-86.842],[33.497,-86.870],[33.480,-86.900],[33.460,-86.940],[33.430,-87.000],[33.400,-87.050]], at: .4 },
+  { ref: '79', k: 'us', pts: [[33.533,-86.800],[33.558,-86.776],[33.588,-86.760],[33.630,-86.732],[33.690,-86.700]], at: .55 },
+  { k: 'a', pts: [[33.448,-86.660],[33.446,-86.700],[33.452,-86.760],[33.455,-86.800],[33.450,-86.845],[33.441,-86.900],[33.430,-86.960],[33.420,-87.010]] },
+  { k: 'a', pts: [[33.495,-86.830],[33.472,-86.840],[33.445,-86.846],[33.410,-86.852],[33.360,-86.858]] },
+  { k: 'a', pts: [[33.515,-86.822],[33.532,-86.840],[33.552,-86.856],[33.580,-86.870],[33.620,-86.882],[33.680,-86.890]] },
+  { k: 'a', pts: [[33.528,-86.775],[33.528,-86.745],[33.521,-86.712],[33.515,-86.670],[33.510,-86.600]] },
+  { k: 'a', pts: [[33.521,-86.860],[33.525,-86.900],[33.530,-86.950],[33.536,-87.020]] },
+  { k: 'a', pts: [[33.548,-86.830],[33.565,-86.860],[33.585,-86.900],[33.600,-86.960],[33.610,-87.020]] },
+  { k: 'a', pts: [[33.545,-86.730],[33.575,-86.725],[33.610,-86.720],[33.660,-86.712]] },
+  { k: 'a', pts: [[33.494,-86.790],[33.478,-86.776],[33.460,-86.765],[33.430,-86.750],[33.380,-86.735]] },
+  { k: 'a', pts: [[33.476,-86.745],[33.500,-86.735],[33.520,-86.712]] },
+  { k: 'a', pts: [[33.488,-86.858],[33.470,-86.875],[33.445,-86.885],[33.400,-86.900],[33.360,-86.910]] }
+];
+const style = { i: ['#ffffff', 5.5, '#8ea9cc', 8.5], us: ['#fffaf0', 4, '#cdb98e', 6.5], a: ['#ffffff', 2.6, '#d9d3c6', 4.2] };
+['a', 'us', 'i'].forEach(k => { const [c, w, cc, cw] = style[k]; roads.filter(r => r.k === k).forEach(r => line(r.pts, { color: cc, weight: cw })); });
+['a', 'us', 'i'].forEach(k => { const [c, w] = style[k]; roads.filter(r => r.k === k).forEach(r => line(r.pts, { color: c, weight: w })); });
+
+// Labels
+const label = (lat, lng, cls, text) => L.marker([lat, lng], { icon: L.divIcon({ className: '', html: '<div class="lbl ' + cls + '">' + text + '</div>', iconSize: [0, 0] }), interactive: false, keyboard: false, zIndexOffset: -1000 }).addTo(map);
+roads.filter(r => r.ref).forEach(r => { const p = smooth(r.pts), q = p[Math.floor(p.length * r.at)]; label(q[0], q[1], 'shield' + (r.k === 'us' ? ' us' : ''), r.ref); });
+[['Birmingham', 33.5215, -86.8000, 'city'], ['Ensley', 33.522, -86.890], ['Homewood', 33.468, -86.805], ['Mountain Brook', 33.493, -86.745], ['East Lake', 33.572, -86.718],
+ ['Fairfield', 33.481, -86.918], ['Irondale', 33.538, -86.700], ['Vestavia Hills', 33.430, -86.782], ['Tarrant', 33.583, -86.774], ['Hueytown', 33.440, -86.955], ['Fultondale', 33.615, -86.808], ['Center Point', 33.632, -86.690]]
+  .forEach(([n, la, lo, c]) => label(la, lo, 'hood ' + (c || ''), n));
+[['Southside', 33.500, -86.803], ['Avondale', 33.529, -86.775], ['Woodlawn', 33.546, -86.748], ['Crestwood', 33.533, -86.735], ['North Birmingham', 33.560, -86.818],
+ ['Fountain Heights', 33.534, -86.820], ['Smithfield', 33.516, -86.842], ['Titusville', 33.494, -86.826], ['West End', 33.487, -86.860], ['Bush Hills', 33.506, -86.868],
+ ['Pratt City', 33.548, -86.880], ['Airport', 33.563, -86.753], ['Roebuck', 33.592, -86.705], ['Lakeview', 33.509, -86.785], ['Wylam', 33.505, -86.905]]
+  .forEach(([n, la, lo]) => label(la, lo, 'hood minor', n));
+[['Red Mountain', 33.480, -86.826], ['Vulcan', 33.4895, -86.7956], ['Ruffner Mountain', 33.556, -86.708], ['Railroad Park', 33.5068, -86.8115], ['UAB', 33.5025, -86.8075],
+ ['Red Mountain Park', 33.446, -86.864], ['Shades Mountain', 33.430, -86.835], ['Avondale Park', 33.5208, -86.7705]].forEach(([n, la, lo]) => label(la, lo, 'place', n));
+creeks.forEach(([n, p]) => { const q = smooth(p)[Math.floor(smooth(p).length * .7)]; label(q[0] - .002, q[1], 'water', n); });
+
+// Organization pins
+let layer = L.layerGroup().addTo(map), lastSel = null, lastSig = '';
+function render(pins, sel) {
+  const sig = pins.map(p => p.id).join(',') + '|' + sel;
+  if (sig === lastSig) return; lastSig = sig;
+  layer.clearLayers();
+  pins.forEach(p => {
+    const icon = L.divIcon({ className: '', html: '<div class="pin' + (p.id === sel ? ' sel' : '') + '" title="' + p.name.replace(/"/g, '') + '">' + p.n + '</div>', iconSize: [32, 32], iconAnchor: [16, 16] });
+    L.marker([p.lat, p.lng], { icon, keyboard: true, title: p.name, alt: p.name, zIndexOffset: 1000 }).on('click', () => parent.postMessage({ coMapPick: p.id }, '*')).addTo(layer);
+  });
+  if (sel && sel !== lastSel) { const s = pins.find(p => p.id === sel); if (s) map.panTo([s.lat, s.lng]); }
+  lastSel = sel;
+}
+addEventListener('resize', () => { map.invalidateSize(); if (map.getZoom() <= map.getMinZoom()) { map.setMinZoom(0); map.fitBounds(DIST, { padding: [4, 4] }); map.setMinZoom(map.getZoom()); } });
+addEventListener('message', e => { if (e.data && e.data.coMapPins) render(e.data.coMapPins, e.data.sel); });
+parent.postMessage({ coMapReady: true }, '*');
+</script>
+</body>
+</html>
