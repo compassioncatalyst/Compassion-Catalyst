@@ -1,7 +1,6 @@
 /* screens.js — the layout and wording of every screen.
-   Text you can safely change is the plain wording between the tags.
-   Leave anything inside {{ double braces }} as it is: those spots are filled in by app.js.
-   Search for "[YOUR" to find the spots you should replace. */
+   You can change the plain wording between the tags.
+   Leave anything inside {{ double braces }} as it is: those spots are filled in by app.js. */
 window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }}">
 <sc-if value="{{ isPublic }}" hint-placeholder-val="{{ true }}">
 <div role="region" aria-label="Crisis resources" style="background:var(--color-accent-900);color:var(--color-bg);font-size:14px">
@@ -21,7 +20,6 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <sc-if value="{{ wide }}" hint-placeholder-val="{{ true }}">
 <div style="display:flex;align-items:center;gap:18px">
 <sc-for list="{{ pubLinks }}" as="l" hint-placeholder-count="4"><button onClick="{{ l.go }}" style="{{ l.style }}">{{ l.label }}</button></sc-for>
-<button onClick="{{ nav.referNow }}" class="btn" style="min-height:44px;padding:0 18px;font-size:16px;background:var(--color-bg);border-color:var(--color-bg);color:var(--color-accent-900)" style-hover="background:var(--color-accent-100)">Apply for help</button>
 </div>
 </sc-if>
 <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
@@ -31,7 +29,6 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <sc-if value="{{ menuShown }}" hint-placeholder-val="{{ false }}">
 <div style="border-top:1px solid var(--color-accent-800)">
 <sc-for list="{{ pubLinks }}" as="l"><button onClick="{{ l.go }}" style="{{ l.mstyle }}">{{ l.label }}</button></sc-for>
-<div style="padding:16px 20px"><button onClick="{{ nav.referNow }}" class="btn" style="width:100%;min-height:48px;font-size:17px;background:var(--color-bg);border-color:var(--color-bg);color:var(--color-accent-900)">Apply for help</button></div>
 </div>
 </sc-if>
 </header>
@@ -95,7 +92,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <div style="max-width:1200px;margin:0 auto;padding:64px 20px 72px;display:flex;flex-direction:column;gap:32px">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:end;gap:16px">
 <div style="display:flex;flex-direction:column;gap:8px"><span style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);font-weight:600">Three simple steps</span><h2 id="how-h" style="font-size:clamp(34px,4.4vw,46px);margin:0;line-height:1">How it works</h2></div>
-<button onClick="{{ nav.referNow }}" class="btn btn-primary" style="min-height:48px;padding:0 22px;font-size:17px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">Apply for help {{ I.arrow }}</button>
+<button onClick="{{ nav.directory }}" class="btn btn-primary" style="min-height:48px;padding:0 22px;font-size:17px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">See all resources {{ I.arrow }}</button>
 </div>
 <div style="position:relative">
 <div aria-hidden="true" style="position:absolute;left:8%;right:8%;top:56px;border-top:2px dashed var(--color-accent-300)"></div>
@@ -135,7 +132,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 </ul>
 </section>
 
-<section aria-labelledby="feat-h" style="max-width:1200px;margin:0 auto;padding:8px 20px 56px">
+<sc-if value="{{ hasFeatured }}"><section aria-labelledby="feat-h" style="max-width:1200px;margin:0 auto;padding:8px 20px 56px">
 <h2 id="feat-h" style="font-size:34px;margin:0 0 22px">Recently verified</h2>
 <div ref="{{ featRef }}" aria-label="Recently verified organizations" style="display:flex;gap:22px;overflow-x:hidden;padding:4px 2px 8px;margin:0 -20px;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 12%,#000 88%,transparent 100%)">
 <sc-for list="{{ featured }}" as="o" hint-placeholder-count="3">
@@ -149,7 +146,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 </article>
 </sc-for>
 </div>
-</section>
+</section></sc-if>
 
 <section style="background:var(--color-accent-900);color:var(--color-bg)">
 <div style="max-width:1200px;margin:0 auto;padding:48px 20px;display:flex;flex-wrap:wrap;gap:24px;align-items:center;justify-content:space-between">
@@ -257,7 +254,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px">
 <button onClick="{{ o.view }}" class="btn btn-secondary" style="min-height:44px;font-size:16px;padding:0 18px">View details</button>
-<button onClick="{{ o.refer }}" class="btn btn-primary" style="min-height:44px;font-size:16px;padding:0 18px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">Apply for help</button>
+
 </div>
 </article>
 </sc-for>
@@ -268,7 +265,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center"><button onClick="{{ o.view }}" style="background:none;border:0;padding:0;font-family:var(--font-heading);font-weight:600;font-size:19px;color:inherit;cursor:pointer;text-align:left" style-hover="color:var(--color-accent-800);text-decoration:underline">{{ o.name }}</button><sc-if value="{{ o.verified }}"><span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:500;color:var(--color-accent-800)">{{ I.shieldCheck }}Verified</span></sc-if><sc-if value="{{ o.pending }}"><span style="font-size:12px;color:var(--color-neutral-700)">Pending</span></sc-if></div>
 <div style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;color:var(--color-neutral-800)"><span>{{ o.type }}</span><span style="display:inline-flex;align-items:center;gap:5px">{{ I.pin }}{{ o.place }}</span><sc-if value="{{ o.hasHours }}"><span style="display:inline-flex;align-items:center;gap:6px"><span style="{{ o.openDot }}"></span><sc-if value="{{ o.openWord }}"><span>{{ o.openWord }}</span></sc-if><span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700);padding:1px 6px;border:1px solid var(--color-neutral-400)">Today</span><span>{{ o.todayHours }}</span></span></sc-if></div>
 </div>
-<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span style="{{ o.availStyle }}">{{ o.availIcon }}{{ o.availLabel }}</span><button onClick="{{ o.refer }}" class="btn btn-primary" style="min-height:40px;font-size:15px;padding:0 14px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">Apply</button></div>
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span style="{{ o.availStyle }}">{{ o.availIcon }}{{ o.availLabel }}</span></div>
 </div></sc-for>
 </div></sc-if>
 </div>
@@ -286,7 +283,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <h3 style="margin:0;font-size:24px">{{ dir.mapSel.n }} · {{ dir.mapSel.name }}</h3>
 <span style="font-size:15px;color:var(--color-neutral-800)">{{ dir.mapSel.place }} · Today {{ dir.mapSel.today }}</span>
 <span style="{{ dir.mapSel.availStyle }}">{{ dir.mapSel.availIcon }}{{ dir.mapSel.availLabel }}</span>
-<div style="display:flex;gap:10px;flex-wrap:wrap"><button onClick="{{ dir.mapSel.view }}" class="btn btn-secondary" style="min-height:44px;font-size:16px">View details</button><button onClick="{{ dir.mapSel.refer }}" class="btn btn-primary" style="min-height:44px;font-size:16px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Apply for help</button></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><button onClick="{{ dir.mapSel.view }}" class="btn btn-secondary" style="min-height:44px;font-size:16px">View details</button></div>
 </div>
 </sc-if>
 <ol style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:0 20px">
@@ -343,7 +340,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <span style="{{ listing.availStyle }}">{{ listing.availIcon }}{{ listing.availLabel }}</span>
 <p style="margin:0;font-size:16px">{{ listing.cap }}</p>
 <div style="display:flex;flex-wrap:wrap;gap:10px">
-<button onClick="{{ listing.refer }}" class="btn btn-primary" style="min-height:52px;padding:0 24px;font-size:19px;flex:1;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">Apply for help</button>
+
 <a href="{{ listing.phoneHref }}" class="btn btn-secondary" style="min-height:52px;padding:0 18px;font-size:17px;color:var(--color-text)">{{ I.phone }}{{ listing.phone }}</a>
 </div>
 <span style="font-size:14px;color:var(--color-neutral-700)">Last updated {{ listing.updated }}</span>
@@ -559,94 +556,274 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 </main>
 </sc-if>
 <sc-if value="{{ scr.about }}" hint-placeholder-val="{{ false }}">
-<main data-screen-label="K About" style="max-width:1100px;margin:0 auto;padding:36px 20px 64px;display:flex;flex-direction:column;gap:44px">
-<section style="display:flex;flex-direction:column;gap:18px;max-width:52em">
-<span style="font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);font-weight:500">About {{ brand }}</span>
-<h1 style="margin:0;font-size:clamp(38px,6vw,60px);line-height:1.02;text-wrap:balance">One trusted list. Every community. Many hands serving together.</h1>
-<p style="margin:0;font-size:19px;line-height:1.6;color:var(--color-neutral-800);text-wrap:pretty">{{ brand }} is a shared, verified resource directory for the churches, ministries, nonprofits, schools, and public agencies serving communities across the country — starting in Birmingham, Alabama. We exist so that no neighbor is turned away for lack of knowing where to go next.</p>
-<p style="margin: 0; padding-left: 18px; border-left: 3px solid var(--color-accent-700); font-family: var(--font-heading); font-weight: 600; font-size: clamp(24px,3vw,30px); line-height: 1.2; color: var(--color-accent-900); max-width: 1015px; text-align: center">We are a catalyst for collaboration — connecting the people already serving their communities so they can do more, together, than any one of them could alone.</p>
-</section>
+<main data-screen-label="K About" style="display:flex;flex-direction:column;gap:0">
 
-<section style="border:1px solid var(--color-neutral-400);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);padding:32px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:32px;align-items:start">
-<div style="display:flex;flex-direction:column;gap:12px">
-<span style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-neutral-700)">The idea behind our work</span>
-<h2 style="margin:0;font-size:38px;line-height:1.05">Collaborative missiology</h2>
-<p style="margin:0;font-size:17px;line-height:1.6">Rob Hoskins, president of OneHope, describes collaborative missiology as ministries, leaders, and givers uniting around shared goals, shared ways of measuring, and shared humility — each bringing the gifts God has entrusted to them, rather than working alone.</p>
+<section aria-labelledby="about-title" style="background:linear-gradient(180deg, var(--color-accent-100) 0%, var(--color-bg) 100%);color:var(--color-text);position:relative;overflow:hidden;border-bottom:1px solid var(--color-divider)">
+<div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(color-mix(in srgb, var(--color-accent-700) 7%, transparent) 1px, transparent 1px),linear-gradient(90deg, color-mix(in srgb, var(--color-accent-700) 7%, transparent) 1px, transparent 1px);background-size:48px 48px;mask-image:linear-gradient(180deg, #000 0%, transparent 95%);-webkit-mask-image:linear-gradient(180deg, #000 0%, transparent 95%)"></div>
+<div style="position:relative;max-width:1100px;margin:0 auto;padding:clamp(48px,8vw,96px) 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:40px;align-items:center">
+<div style="display:flex;flex-direction:column;gap:20px">
+<span style="display:inline-flex;align-self:flex-start;align-items:center;gap:8px;padding:6px 12px;background:var(--color-bg);border:1px solid var(--color-accent-300);color:var(--color-accent-800);font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:600">About {{ brand }}</span>
+<h1 id="about-title" style="margin:0;font-size:clamp(40px,6vw,64px);line-height:1;text-wrap:balance;color:var(--color-accent-900)">One trusted list. Every community. <span style="color:var(--color-accent-600)">Many hands serving together.</span></h1>
+<p style="margin:0;font-size:19px;line-height:1.6;color:var(--color-neutral-800);text-wrap:pretty;max-width:34em">{{ brand }} is a shared, verified resource directory for the churches, ministries, nonprofits, schools, and public agencies serving communities across the country — starting in Birmingham, Alabama.</p>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:6px">
+<button type="button" onClick="{{ nav.directory }}" class="btn btn-primary" style="min-height:48px;padding:0 22px;font-size:17px;gap:8px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">{{ I.search }}Find help</button>
 </div>
-<blockquote style="margin:0;padding:0 0 0 24px;border-left:3px solid var(--color-accent-700);display:flex;flex-direction:column;gap:12px">
-<p style="margin:0;font-family:var(--font-heading);font-weight:600;font-size:clamp(26px,3.4vw,34px);line-height:1.15;color:var(--color-accent-900)">“No one organization has everything required to fulfill the Great Commission.”</p>
-<cite style="font-style:normal;font-size:15px;color:var(--color-neutral-800)">— Rob Hoskins, OneHope</cite>
-<p style="margin:0;font-size:16px;color:var(--color-neutral-800)">That is true in every community. A food pantry, a legal clinic, and a recovery ministry can each serve one part of a family’s need. Together, they can serve the whole family.</p>
-</blockquote>
-</section>
-
-<section style="display:flex;flex-direction:column;gap:18px">
-<h2 style="margin:0;font-size:34px">Why one unified, verified list matters</h2>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));border-top:1px solid var(--color-divider);border-left:1px solid var(--color-divider)">
-<div style="padding:24px;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);display:flex;flex-direction:column;gap:10px"><span style="font-family:var(--font-heading);font-size:36px;color:var(--color-accent-700);line-height:1">01</span><h3 style="margin:0;font-size:24px">No more dead ends</h3><p style="margin:0;font-size:16px">An outdated phone number or a closed pantry can cost a family a day they don’t have. Verified listings mean the help is really there.</p></div>
-<div style="padding:24px;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);display:flex;flex-direction:column;gap:10px"><span style="font-family:var(--font-heading);font-size:36px;color:var(--color-accent-700);line-height:1">02</span><h3 style="margin:0;font-size:24px">One place, not ten</h3><p style="margin:0;font-size:16px">Pastors and case managers shouldn’t keep their own scattered spreadsheets. One shared list saves hours every week.</p></div>
-<div style="padding:24px;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);display:flex;flex-direction:column;gap:10px"><span style="font-family:var(--font-heading);font-size:36px;color:var(--color-accent-700);line-height:1">03</span><h3 style="margin:0;font-size:24px">Serving together</h3><p style="margin:0;font-size:16px">When everyone can see who is doing what, ministries fill gaps instead of duplicating effort.</p></div>
-<div style="padding:24px;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);display:flex;flex-direction:column;gap:10px"><span style="font-family:var(--font-heading);font-size:36px;color:var(--color-accent-700);line-height:1">04</span><h3 style="margin:0;font-size:24px">Trust for neighbors</h3><p style="margin:0;font-size:16px">People in need are often sent from place to place. A trusted referral honors their time and their dignity.</p></div>
+</div>
+<figure style="margin:0;position:relative;padding:36px 32px;background:var(--color-bg);color:var(--color-text);border:1px solid var(--color-neutral-300);box-shadow:var(--shadow-lg);border-top:6px solid var(--color-accent-700)">
+<span aria-hidden="true" style="position:absolute;top:-6px;right:28px;font-family:var(--font-heading);font-size:120px;line-height:1;color:var(--color-accent-200)">“</span>
+<blockquote style="margin:0;position:relative;font-family:var(--font-heading);font-weight:600;font-size:clamp(26px,3vw,32px);line-height:1.2;color:var(--color-accent-900);text-wrap:pretty">We are a catalyst for collaboration — connecting the people already serving their communities so they can do more, together, than any one of them could alone.</blockquote>
+<figcaption style="margin-top:18px;font-size:15px;letter-spacing:.04em;color:var(--color-neutral-700)">Our mission · We exist so that no neighbor is turned away for lack of knowing where to go next.</figcaption>
+</figure>
 </div>
 </section>
 
-<section style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:32px;align-items:start">
-<div style="display:flex;flex-direction:column;gap:12px">
-<h2 style="margin:0;font-size:34px">How we keep the list current</h2>
-<p style="margin:0;font-size:17px;color:var(--color-neutral-800)">A directory is only as good as its last update. These are our standards for every listing.</p>
-<p style="margin:0;font-size:15px;color:var(--color-neutral-800)">Verified is not an endorsement or a background check.</p>
+<div style="max-width:1100px;width:100%;margin:0 auto;padding:clamp(48px,7vw,80px) 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:clamp(56px,8vw,88px)">
+
+<section aria-labelledby="why-title" style="display:flex;flex-direction:column;gap:28px">
+<div style="display:flex;flex-direction:column;gap:8px;max-width:40em">
+<span style="font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);font-weight:600">Why it matters</span>
+<h2 id="why-title" style="margin:0;font-size:clamp(32px,4vw,42px);line-height:1.05">Why one unified, verified list matters</h2>
 </div>
-<ol style="list-style:none;margin:0;padding:0;border-top:1px solid var(--color-divider)">
-<li style="display:grid;grid-template-columns:96px 1fr;gap:14px;padding:18px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-weight:600;font-size:22px;color:var(--color-accent-700);line-height:1.1">Before listing</span><span style="font-size:16px"><strong>Verified by a person.</strong> We confirm the organization exists and that its address and phone number are correct before it gets the Verified badge.</span></li>
-<li style="display:grid;grid-template-columns:96px 1fr;gap:14px;padding:18px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-weight:600;font-size:22px;color:var(--color-accent-700);line-height:1.1">Every 3 months</span><span style="font-size:16px"><strong>Reconfirmed.</strong> Every resource is checked again every 3 months, so hours, services, and contacts stay up to date. The last confirmed date is always shown.</span></li>
-<li style="display:grid;grid-template-columns:96px 1fr;gap:14px;padding:18px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-weight:600;font-size:22px;color:var(--color-accent-700);line-height:1.1">After 6 months inactive</span><span style="font-size:16px"><strong>Removed.</strong> If an organization has been inactive for 6 months, it is taken off the list, so you never send a neighbor to a closed door.</span></li>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:20px">
+<div style="background:var(--color-bg);border:1px solid var(--color-neutral-400);border-top:4px solid var(--color-accent-700);box-shadow:var(--shadow-md);padding:26px 24px;display:flex;flex-direction:column;gap:12px"><span aria-hidden="true" style="width:48px;height:48px;display:grid;place-items:center;background:var(--color-accent-100);color:var(--color-accent-800)">{{ I.shieldCheck }}</span><h3 style="margin:0;font-size:24px">No more dead ends</h3><p style="margin:0;font-size:16px;line-height:1.55;color:var(--color-neutral-800)">An outdated phone number or a closed pantry can cost a family a day they don’t have. Verified listings mean the help is really there.</p></div>
+<div style="background:var(--color-bg);border:1px solid var(--color-neutral-400);border-top:4px solid var(--color-accent-700);box-shadow:var(--shadow-md);padding:26px 24px;display:flex;flex-direction:column;gap:12px"><span aria-hidden="true" style="width:48px;height:48px;display:grid;place-items:center;background:var(--color-accent-100);color:var(--color-accent-800)">{{ I.layers }}</span><h3 style="margin:0;font-size:24px">One place, not ten</h3><p style="margin:0;font-size:16px;line-height:1.55;color:var(--color-neutral-800)">Pastors and case managers shouldn’t keep their own scattered spreadsheets. One shared list saves hours every week.</p></div>
+<div style="background:var(--color-bg);border:1px solid var(--color-neutral-400);border-top:4px solid var(--color-accent-700);box-shadow:var(--shadow-md);padding:26px 24px;display:flex;flex-direction:column;gap:12px"><span aria-hidden="true" style="width:48px;height:48px;display:grid;place-items:center;background:var(--color-accent-100);color:var(--color-accent-800)">{{ I.search }}</span><h3 style="margin:0;font-size:24px">Find what fits</h3><p style="margin:0;font-size:16px;line-height:1.55;color:var(--color-neutral-800)">Search by the kind of help you need, your neighborhood, language, and cost, and see who’s open right now.</p></div>
+<div style="background:var(--color-bg);border:1px solid var(--color-neutral-400);border-top:4px solid var(--color-accent-700);box-shadow:var(--shadow-md);padding:26px 24px;display:flex;flex-direction:column;gap:12px"><span aria-hidden="true" style="width:48px;height:48px;display:grid;place-items:center;background:var(--color-accent-100);color:var(--color-accent-800)">{{ I.clock }}</span><h3 style="margin:0;font-size:24px">Know before you go</h3><p style="margin:0;font-size:16px;line-height:1.55;color:var(--color-neutral-800)">Hours, who’s eligible, what to bring, and when the listing was last confirmed, so nobody makes a wasted trip.</p></div>
+</div>
+</section>
+
+<section aria-labelledby="current-title" style="background:var(--color-neutral-100);border:1px solid var(--color-neutral-400);padding:clamp(28px,5vw,48px);display:flex;flex-direction:column;gap:32px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:16px">
+<div style="display:flex;flex-direction:column;gap:8px;max-width:36em">
+<span style="font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);font-weight:600">Our standards</span>
+<h2 id="current-title" style="margin:0;font-size:clamp(30px,4vw,40px);line-height:1.05">How we keep the list current</h2>
+<p style="margin:0;font-size:17px;line-height:1.55;color:var(--color-neutral-800)">A directory is only as good as its last update. Every listing follows these three rules.</p>
+</div>
+<span style="display:inline-flex;align-items:center;gap:8px;padding:8px 12px;font-size:14px;color:var(--color-neutral-800);background:var(--color-bg);border:1px solid var(--color-divider)">{{ I.info }}Verified is not an endorsement or a background check.</span>
+</div>
+<ol style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px">
+<li style="position:relative;display:flex;flex-direction:column;gap:12px;padding:24px;background:var(--color-bg);border:1px solid var(--color-divider)"><span style="display:flex;align-items:center;gap:12px"><span aria-hidden="true" style="width:40px;height:40px;flex:none;display:grid;place-items:center;background:var(--color-accent-700);color:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:20px">1</span><span style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);font-weight:600">Before listing</span></span><strong style="font-family:var(--font-heading);font-weight:600;font-size:24px;line-height:1.1">Verified by a person</strong><span style="font-size:16px;line-height:1.55;color:var(--color-neutral-800)">We confirm the organization exists and that its address and phone number are correct before it gets the Verified badge.</span></li>
+<li style="position:relative;display:flex;flex-direction:column;gap:12px;padding:24px;background:var(--color-bg);border:1px solid var(--color-divider)"><span style="display:flex;align-items:center;gap:12px"><span aria-hidden="true" style="width:40px;height:40px;flex:none;display:grid;place-items:center;background:var(--color-accent-700);color:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:20px">2</span><span style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);font-weight:600">Every 3 months</span></span><strong style="font-family:var(--font-heading);font-weight:600;font-size:24px;line-height:1.1">Reconfirmed</strong><span style="font-size:16px;line-height:1.55;color:var(--color-neutral-800)">Every resource is checked again, so hours, services, and contacts stay up to date. The last confirmed date is always shown.</span></li>
+<li style="position:relative;display:flex;flex-direction:column;gap:12px;padding:24px;background:var(--color-bg);border:1px solid var(--color-divider)"><span style="display:flex;align-items:center;gap:12px"><span aria-hidden="true" style="width:40px;height:40px;flex:none;display:grid;place-items:center;background:var(--color-accent-700);color:var(--color-bg);font-family:var(--font-heading);font-weight:600;font-size:20px">3</span><span style="font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);font-weight:600">If we can’t confirm it</span></span><strong style="font-family:var(--font-heading);font-weight:600;font-size:24px;line-height:1.1">Paused, then removed</strong><span style="font-size:16px;line-height:1.55;color:var(--color-neutral-800)">If an organization stops answering our check-ins for 30 days, or people report wrong information more than once and we confirm it, the listing is hidden until it’s fixed. If it isn’t fixed within 60 days, it comes off the list, so you never send a neighbor to a closed door.</span></li>
 </ol>
 </section>
 
-<section style="max-width:640px;display:flex;flex-direction:column;gap:16px">
-<h2 style="margin:0;font-size:32px">Get in touch</h2>
-<sc-if value="{{ about.sent }}"><div role="status" style="padding:16px;border:1px solid var(--color-accent-700);background:var(--color-accent-100);color:var(--color-accent-900);font-size:17px">Thank you — your message was sent. I read every one and usually reply within two days.</div></sc-if>
+<section aria-labelledby="about-orgs-title" style="display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:20px 32px;padding:clamp(24px,4vw,36px);border:1px solid var(--color-accent-300);background:var(--color-accent-100)">
+<div style="display:flex;gap:16px;align-items:flex-start;flex:1 1 420px;min-width:0"><span aria-hidden="true" style="width:52px;height:52px;flex:none;display:grid;place-items:center;background:var(--color-accent-700);color:var(--color-bg)">{{ I.church }}</span><div style="display:flex;flex-direction:column;gap:6px"><h2 id="about-orgs-title" style="margin:0;font-size:clamp(26px,3vw,32px);line-height:1.1;color:var(--color-accent-900)">Run a church, ministry, or nonprofit?</h2><p style="margin:0;font-size:17px;line-height:1.55;color:var(--color-neutral-800)">Add your organization to the list for free, or claim your existing listing to keep it up to date.</p></div></div>
+<button type="button" onClick="{{ nav.orgs }}" class="btn btn-primary" style="min-height:50px;padding:0 24px;font-size:17px;gap:8px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">For organizations{{ I.arrow }}</button>
+</section>
+
+<section aria-labelledby="contact-title" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr));gap:0;border:1px solid var(--color-neutral-400);box-shadow:var(--shadow-lg);background:var(--color-bg)">
+<div style="background:var(--color-accent-700);color:var(--color-bg);padding:clamp(28px,5vw,44px);display:flex;flex-direction:column;gap:16px">
+<span style="font-size:14px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:var(--color-accent-200)">Contact</span>
+<h2 id="contact-title" style="margin:0;font-size:clamp(32px,4vw,40px);line-height:1.05;color:var(--color-bg)">Get in touch</h2>
+<p style="margin:0;font-size:17px;line-height:1.6;color:color-mix(in srgb, var(--color-bg) 88%, transparent)">Questions, ideas, or want to bring {{ brand }} to your community? Send a note. I read every message and usually reply within two days.</p>
+<a href="mailto:info@compassioncatalyst.org" style="display:inline-flex;align-items:center;gap:10px;align-self:flex-start;min-height:44px;font-size:17px;font-weight:600;color:var(--color-bg)">{{ I.mail }}info@compassioncatalyst.org</a>
+<p style="margin:auto 0 0;padding-top:16px;border-top:1px solid color-mix(in srgb, var(--color-bg) 30%, transparent);font-size:14px;line-height:1.5;color:color-mix(in srgb, var(--color-bg) 80%, transparent)">Need help right now? Call 911, or call or text 988. This inbox isn’t watched for emergencies.</p>
+</div>
+<div style="padding:clamp(28px,5vw,44px);display:flex;flex-direction:column;gap:16px">
+<sc-if value="{{ about.sent }}"><div role="status" style="display:flex;gap:10px;align-items:flex-start;padding:16px;border:1px solid var(--color-accent-700);background:var(--color-accent-100);color:var(--color-accent-900);font-size:17px">{{ I.check }}<span>Thank you. Your email app should open with your message ready. Press Send there. If nothing opened, write to info@compassioncatalyst.org.</span></div></sc-if>
 <sc-if value="{{ about.notSent }}" hint-placeholder-val="{{ true }}">
 <form onSubmit="{{ about.send }}" style="display:flex;flex-direction:column;gap:16px" novalidate="">
 <div class="field"><label for="a-name" style="font-size:15px;color:var(--color-neutral-900)">Your name</label><input id="a-name" class="input" value="{{ about.name.v }}" onChange="{{ about.name.on }}" style="min-height:48px;font-size:17px"><sc-if value="{{ about.err.name }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ about.err.name }}</span></sc-if></div>
 <div class="field"><label for="a-email" style="font-size:15px;color:var(--color-neutral-900)">Email</label><input id="a-email" type="email" class="input" value="{{ about.email.v }}" onChange="{{ about.email.on }}" style="min-height:48px;font-size:17px"><sc-if value="{{ about.err.email }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ about.err.email }}</span></sc-if></div>
-<div class="field"><label for="a-msg" style="font-size:15px;color:var(--color-neutral-900)">Message</label><textarea id="a-msg" class="input" value="{{ about.msg.v }}" onChange="{{ about.msg.on }}" style="font-size:17px;min-height:120px"></textarea><sc-if value="{{ about.err.msg }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ about.err.msg }}</span></sc-if></div>
-<button type="submit" class="btn btn-primary" style="align-self:flex-start;min-height:48px;padding:0 24px;font-size:17px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Send message</button>
+<div class="field"><label for="a-msg" style="font-size:15px;color:var(--color-neutral-900)">Message</label><textarea id="a-msg" class="input" value="{{ about.msg.v }}" onChange="{{ about.msg.on }}" style="font-size:17px;min-height:140px"></textarea><sc-if value="{{ about.err.msg }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ about.err.msg }}</span></sc-if></div>
+<button type="submit" class="btn btn-primary" style="align-self:flex-start;min-height:48px;padding:0 26px;font-size:17px;gap:8px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">{{ I.send }}Send message</button>
 </form>
 </sc-if>
+</div>
 </section>
+
+</div>
+</main>
+</sc-if>
+
+<sc-if value="{{ scr.orgs }}" hint-placeholder-val="{{ false }}">
+<main data-screen-label="F For organizations" style="display:flex;flex-direction:column">
+<section aria-labelledby="orgs-title" style="background:var(--color-accent-900);color:var(--color-bg);position:relative;overflow:hidden">
+<div aria-hidden="true" style="position:absolute;inset:0;background-image:linear-gradient(color-mix(in srgb, var(--color-bg) 6%, transparent) 1px, transparent 1px),linear-gradient(90deg, color-mix(in srgb, var(--color-bg) 6%, transparent) 1px, transparent 1px);background-size:48px 48px"></div>
+<div style="position:relative;max-width:1100px;margin:0 auto;padding:clamp(48px,8vw,88px) 20px;display:flex;flex-direction:column;gap:18px">
+<span style="display:inline-flex;align-self:flex-start;padding:6px 12px;border:1px solid color-mix(in srgb, var(--color-bg) 35%, transparent);font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:600">For organizations</span>
+<h1 id="orgs-title" style="margin:0;font-size:clamp(40px,6vw,62px);line-height:1;text-wrap:balance;color:var(--color-bg);max-width:15em">Help your neighbors find you. <span style="color:var(--color-accent-300)">Serve alongside the rest of the city.</span></h1>
+<p style="margin:0;font-size:19px;line-height:1.6;max-width:36em;color:color-mix(in srgb, var(--color-bg) 85%, transparent);text-wrap:pretty">Churches, ministries, nonprofits, schools, and public agencies can list their services for free, keep their information current, and receive referrals from pastors, case managers, and neighbors.</p>
+</div>
+</section>
+
+<div style="max-width:1100px;width:100%;margin:0 auto;padding:clamp(40px,6vw,72px) 20px;box-sizing:border-box;display:flex;flex-direction:column;gap:clamp(48px,7vw,80px)">
+
+<section aria-label="Get started" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,280px),1fr));gap:20px;margin-top:clamp(-96px,-8vw,-60px);position:relative">
+<div style="background:var(--color-bg);border:1px solid var(--color-neutral-400);border-top:4px solid var(--color-accent-700);box-shadow:var(--shadow-lg);padding:28px 24px;display:flex;flex-direction:column;gap:12px">
+<span aria-hidden="true" style="width:48px;height:48px;display:grid;place-items:center;background:var(--color-accent-100);color:var(--color-accent-800)">{{ I.plus }}</span>
+<h2 style="margin:0;font-size:26px">Add your organization</h2>
+<p style="margin:0;font-size:16px;line-height:1.55;color:var(--color-neutral-800);flex:1">Not on the list yet? Tell us about your services. A person reviews every new listing before it’s marked Verified.</p>
+<button type="button" onClick="{{ nav.signup }}" class="btn btn-primary" style="align-self:flex-start;min-height:46px;padding:0 20px;font-size:16px;gap:8px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">Add your organization{{ I.arrow }}</button>
+</div>
+<div style="background:var(--color-bg);border:1px solid var(--color-neutral-400);border-top:4px solid var(--color-accent-700);box-shadow:var(--shadow-lg);padding:28px 24px;display:flex;flex-direction:column;gap:12px">
+<span aria-hidden="true" style="width:48px;height:48px;display:grid;place-items:center;background:var(--color-accent-100);color:var(--color-accent-800)">{{ I.shieldCheck }}</span>
+<h2 style="margin:0;font-size:26px">Claim your listing</h2>
+<p style="margin:0;font-size:16px;line-height:1.55;color:var(--color-neutral-800);flex:1">Already on the list? Prove you work there and you can update your hours, services, and contact details yourself.</p>
+<button type="button" onClick="{{ nav.claim }}" class="btn btn-primary" style="align-self:flex-start;min-height:46px;padding:0 20px;font-size:16px;gap:8px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">Find and claim your listing{{ I.arrow }}</button>
+</div>
+<div style="background:var(--color-bg);border:1px solid var(--color-neutral-400);border-top:4px solid var(--color-neutral-600);box-shadow:var(--shadow-lg);padding:28px 24px;display:flex;flex-direction:column;gap:12px">
+<span aria-hidden="true" style="width:48px;height:48px;display:grid;place-items:center;background:var(--color-neutral-200);color:var(--color-neutral-800)">{{ I.users }}</span>
+<h2 style="margin:0;font-size:26px">Already a member?</h2>
+<p style="margin:0;font-size:16px;line-height:1.55;color:var(--color-neutral-800);flex:1">Log in to your workspace to answer referrals, message partners, and manage your team.</p>
+<button type="button" onClick="{{ nav.login }}" class="btn btn-secondary" style="align-self:flex-start;min-height:46px;padding:0 20px;font-size:16px">Log in</button>
+</div>
+</section>
+
+<section aria-labelledby="get-title" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:36px;align-items:center">
+<div style="display:flex;flex-direction:column;gap:10px">
+<span style="font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);font-weight:600">Why join</span>
+<h2 id="get-title" style="margin:0;font-size:clamp(30px,4vw,40px);line-height:1.05">What your organization gets</h2>
+<p style="margin:0;font-size:17px;line-height:1.6;color:var(--color-neutral-800)">Listing is free. Your team gets one shared workspace instead of scattered phone calls and spreadsheets.</p>
+</div>
+<ul style="list-style:none;margin:0;padding:0;display:flex;flex-direction:column;border-top:1px solid var(--color-divider)">
+<li style="display:grid;grid-template-columns:40px 1fr;gap:14px;padding:18px 0;border-bottom:1px solid var(--color-divider)"><span aria-hidden="true" style="color:var(--color-accent-700)">{{ I.shieldCheck }}</span><span style="font-size:16px;line-height:1.5"><strong style="font-weight:600">A Verified listing</strong> that people trust, with your hours, services, and who you serve.</span></li>
+<li style="display:grid;grid-template-columns:40px 1fr;gap:14px;padding:18px 0;border-bottom:1px solid var(--color-divider)"><span aria-hidden="true" style="color:var(--color-accent-700)">{{ I.search }}</span><span style="font-size:16px;line-height:1.5"><strong style="font-weight:600">A directory you can refer from</strong>. When someone needs help you don’t offer, use the same verified list to find who does and point them there with confidence.</span></li>
+<li style="display:grid;grid-template-columns:40px 1fr;gap:14px;padding:18px 0;border-bottom:1px solid var(--color-divider)"><span aria-hidden="true" style="color:var(--color-accent-700)">{{ I.edit }}</span><span style="font-size:16px;line-height:1.5"><strong style="font-weight:600">You stay in control</strong> of your own information and can update it anytime.</span></li>
+</ul>
+</section>
+
+<section aria-labelledby="trust-title" style="background:var(--color-neutral-100);border:1px solid var(--color-neutral-400);padding:clamp(28px,5vw,44px);display:flex;flex-direction:column;gap:24px">
+<div style="display:flex;flex-direction:column;gap:8px;max-width:44em">
+<span style="font-size:14px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);font-weight:600">Keeping listings safe</span>
+<h2 id="trust-title" style="margin:0;font-size:clamp(28px,4vw,38px);line-height:1.05">How we make sure you are who you say you are</h2>
+<p style="margin:0;font-size:17px;line-height:1.55;color:var(--color-neutral-800)">People in hard situations rely on this list, so nobody can take over a listing without proving they work there.</p>
+</div>
+<ol style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px">
+<li style="display:flex;flex-direction:column;gap:8px;padding:20px;background:var(--color-bg);border:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-weight:600;font-size:30px;color:var(--color-accent-700);line-height:1">01</span><strong style="font-family:var(--font-heading);font-weight:600;font-size:21px">Prove you work there</strong><span style="font-size:15px;line-height:1.5;color:var(--color-neutral-800)">With a code sent to your work email, a call to the phone number already on the listing, or documents a person reviews.</span></li>
+<li style="display:flex;flex-direction:column;gap:8px;padding:20px;background:var(--color-bg);border:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-weight:600;font-size:30px;color:var(--color-accent-700);line-height:1">02</span><strong style="font-family:var(--font-heading);font-weight:600;font-size:21px">The listing’s contact is told</strong><span style="font-size:15px;line-height:1.5;color:var(--color-neutral-800)">We let the current contact know someone claimed the listing, so a wrong claim can be caught quickly.</span></li>
+<li style="display:flex;flex-direction:column;gap:8px;padding:20px;background:var(--color-bg);border:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-weight:600;font-size:30px;color:var(--color-accent-700);line-height:1">03</span><strong style="font-family:var(--font-heading);font-weight:600;font-size:21px">Big changes get a second look</strong><span style="font-size:15px;line-height:1.5;color:var(--color-neutral-800)">New phone numbers, addresses, and emails are reviewed before they go live, so referrals can’t be redirected.</span></li>
+</ol>
+</section>
+
+</div>
+</main>
+</sc-if>
+
+<sc-if value="{{ scr.claim }}" hint-placeholder-val="{{ false }}">
+<main data-screen-label="F Claim a listing" style="max-width:760px;margin:0 auto;padding:32px 20px 64px;display:flex;flex-direction:column;gap:22px">
+<button type="button" onClick="{{ claim.topBack }}" class="btn btn-ghost" style="align-self:flex-start;min-height:40px;padding:0 6px;font-size:15px;gap:6px;color:var(--color-accent-700)">{{ I.back }}{{ claim.topBackLabel }}</button>
+<sc-if value="{{ claim.showNav }}"><span style="font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);font-weight:500">{{ claim.stepText }}</span></sc-if>
+<div><h1 style="margin:0;font-size:clamp(34px,5vw,44px)">Claim your listing</h1><p style="margin:6px 0 0;font-size:17px;color:var(--color-neutral-800)">Once you prove you work there, you can update your organization’s information yourself.</p></div>
+<sc-if value="{{ claim.showNav }}"><ol aria-label="Progress" style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><sc-for list="{{ claim.steps }}" as="st"><li style="display:flex;flex-direction:column;gap:8px"><span style="{{ st.bar }}"></span><span style="{{ st.lbl }}">{{ st.n }} · {{ st.label }}</span></li></sc-for></ol></sc-if>
+
+<sc-if value="{{ claim.s1 }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+<div class="field"><label for="c-q" style="font-size:15px;color:var(--color-neutral-900)">Search for your organization</label><div style="position:relative"><span aria-hidden="true" style="position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--color-neutral-700)">{{ I.search }}</span><input id="c-q" class="input" value="{{ claim.q.v }}" onChange="{{ claim.q.on }}" placeholder="Organization name or neighborhood" style="min-height:52px;font-size:17px;padding-left:44px"></div></div>
+<sc-if value="{{ claim.hasQ }}"><div style="display:flex;flex-direction:column;border:1px solid var(--color-neutral-400);background:var(--color-bg)">
+<sc-for list="{{ claim.results }}" as="o"><div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px 16px;padding:14px 16px;border-bottom:1px solid var(--color-divider)">
+<span style="display:flex;flex-direction:column;gap:2px;min-width:0"><span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong style="font-family:var(--font-heading);font-weight:600;font-size:19px">{{ o.name }}</strong><sc-if value="{{ o.verified }}"><span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--color-accent-800)">{{ I.shieldCheck }}Verified</span></sc-if></span><span style="font-size:14px;color:var(--color-neutral-800)">{{ o.sub }}</span></span>
+<sc-if value="{{ o.canClaim }}"><button type="button" onClick="{{ o.pick }}" class="btn btn-primary" style="min-height:42px;padding:0 16px;font-size:15px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">This is us</button></sc-if>
+<sc-if value="{{ o.isManaged }}"><span style="font-size:14px;color:var(--color-neutral-800);max-width:280px">Already managed. Ask your team’s admin to invite you.</span></sc-if>
+</div></sc-for>
+<sc-if value="{{ claim.noResults }}"><div style="padding:18px 16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;font-size:16px;color:var(--color-neutral-800)">No matching listing.<button type="button" onClick="{{ nav.signup }}" class="btn btn-secondary" style="min-height:42px;font-size:15px">Add your organization instead</button></div></sc-if>
+</div></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ claim.s2 }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+<div style="padding:14px 16px;border:1px solid var(--color-accent-300);background:var(--color-accent-100);display:flex;flex-direction:column;gap:2px"><span style="font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--color-accent-800);font-weight:600">Claiming</span><strong style="font-family:var(--font-heading);font-weight:600;font-size:22px">{{ claim.orgName }}</strong><span style="font-size:14px;color:var(--color-neutral-800)">{{ claim.orgSub }}</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:16px">
+<div class="field"><label for="c-name" style="font-size:15px;color:var(--color-neutral-900)">Your full name</label><input id="c-name" class="input" autocomplete="name" value="{{ claim.name.v }}" onChange="{{ claim.name.on }}" style="min-height:48px;font-size:17px"><sc-if value="{{ claim.err.name }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ claim.err.name }}</span></sc-if></div>
+<div class="field"><label for="c-role" style="font-size:15px;color:var(--color-neutral-900)">Your role</label><input id="c-role" class="input" value="{{ claim.role.v }}" onChange="{{ claim.role.on }}" placeholder="e.g. Pastor, Program Director" style="min-height:48px;font-size:17px"><sc-if value="{{ claim.err.role }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ claim.err.role }}</span></sc-if></div>
+<div class="field" style="grid-column:1/-1"><label for="c-email" style="font-size:15px;color:var(--color-neutral-900)">Your email (for your login)</label><input id="c-email" type="email" autocomplete="email" class="input" value="{{ claim.email.v }}" onChange="{{ claim.email.on }}" style="min-height:48px;font-size:17px"><sc-if value="{{ claim.err.email }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ claim.err.email }}</span></sc-if></div>
+<sc-if value="{{ claim.needPw }}"><div style="grid-column:1/-1"><div class="field"><label for="c-pw" style="font-size:15px;color:var(--color-neutral-900)">Create a password (or use your current one)</label><input id="c-pw" type="password" autocomplete="new-password" class="input" value="{{ claim.pw.v }}" onChange="{{ claim.pw.on }}" style="min-height:48px;font-size:17px"><span style="display:block;margin-top:6px;font-size:14px;color:var(--color-neutral-700)">At least 8 characters. This makes your log-in.</span><sc-if value="{{ claim.err.pw }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ claim.err.pw }}</span></sc-if></div></div></sc-if>
+</div>
+<label style="display:flex;gap:12px;align-items:flex-start;font-size:16px;cursor:pointer;padding:14px;border:1px solid var(--color-divider)"><input type="checkbox" checked="{{ claim.auth.v }}" onChange="{{ claim.auth.on }}" style="width:22px;height:22px;margin-top:1px;flex:none;accent-color:var(--color-accent-700)"><span>I work for this organization and I’m allowed to manage its listing. I understand false claims are removed.</span></label>
+<sc-if value="{{ claim.err.auth }}"><span role="alert" style="font-size:15px;font-weight:500">{{ claim.err.auth }}</span></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ claim.s3 }}">
+<div style="display:flex;flex-direction:column;gap:14px">
+<p style="margin:0;font-size:17px">Choose how you’ll prove you work at <strong style="font-weight:600">{{ claim.orgName }}</strong>.</p>
+<sc-if value="{{ claim.isSensitive }}"><div role="note" style="display:flex;gap:10px;padding:12px 14px;border:1px solid var(--color-neutral-500);background:var(--color-neutral-100);font-size:15px">{{ I.shield }}<span>For everyone’s safety, shelters and confidential services can only be verified by a personal review.</span></div></sc-if>
+<sc-for list="{{ claim.methods }}" as="m"><label class="radio" style="{{ m.labelStyle }}"><input type="radio" name="c-method" checked="{{ m.on }}" disabled="{{ m.disabled }}" onChange="{{ m.pick }}"><span class="dot" style="margin-top:3px"></span><span style="display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600">{{ m.label }}</strong><span style="color:var(--color-neutral-800);font-size:15px">{{ m.hint }}</span></span></label></sc-for>
+
+<sc-if value="{{ claim.isEmail }}"><div style="display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid var(--color-divider);background:var(--color-bg)">
+<div class="field"><label for="c-we" style="font-size:15px;color:var(--color-neutral-900)">Your work email (must end in @{{ claim.domain }})</label><div style="display:flex;flex-wrap:wrap;gap:8px"><input id="c-we" type="email" class="input" value="{{ claim.workEmail.v }}" onChange="{{ claim.workEmail.on }}" style="flex:1;min-width:200px;min-height:48px;font-size:17px"></div></div>
+<span style="font-size:15px;color:var(--color-neutral-800)">We’ll email this address to confirm. Reply from it and we’ll finish your claim.</span>
+</div></sc-if>
+
+<sc-if value="{{ claim.isPhone }}"><div style="display:flex;flex-direction:column;gap:12px;padding:16px;border:1px solid var(--color-divider);background:var(--color-bg)">
+<span style="font-size:16px">We’ll call the number on the listing, ending in <strong style="font-weight:600">{{ claim.phoneEnd }}</strong>. We’ll ask for you by name and confirm your role.</span>
+</div></sc-if>
+
+<sc-if value="{{ claim.isDoc }}"><div style="display:flex;flex-direction:column;gap:12px;padding:16px;border:1px dashed var(--color-neutral-600);background:var(--color-bg)">
+<span style="font-size:15px;line-height:1.5">Upload one of these, showing the organization’s name and address:</span>
+<ul style="margin:0;padding-left:20px;font-size:15px;line-height:1.6"><li>IRS determination letter or state nonprofit registration</li><li>A recent utility bill, lease, or insurance statement</li><li>A signed letter on letterhead from your director, pastor, or board chair naming you</li></ul>
+<sc-if value="{{ claim.noFile }}"><label class="btn btn-secondary" style="align-self:flex-start;min-height:44px;font-size:16px;cursor:pointer;position:relative">{{ I.upload }}Choose a file<input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/*" onChange="{{ claim.fileOn }}" style="position:absolute;width:1px;height:1px;opacity:0"></label></sc-if>
+<sc-if value="{{ claim.hasFile }}"><span style="display:inline-flex;align-items:center;gap:8px;font-size:16px">{{ I.check }}{{ claim.fileName }} attached</span></sc-if>
+<span style="font-size:13px;color:var(--color-neutral-700)">Please don’t upload IDs, Social Security numbers, or bank details. We delete documents after review.</span>
+</div></sc-if>
+<sc-if value="{{ claim.err.method }}"><span role="alert" style="font-size:15px;font-weight:500">{{ claim.err.method }}</span></sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ claim.done }}">
+<div style="display:flex;flex-direction:column;gap:18px">
+<sc-if value="{{ claim.isVerified }}">
+<span style="display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:5px 12px;background:var(--color-accent-700);color:var(--color-bg);font-size:15px;font-weight:600">{{ I.shieldCheck }}Verified</span>
+<h2 style="margin:0;font-size:clamp(30px,5vw,40px);line-height:1.05">You now manage {{ claim.orgName }}.</h2>
+<ul style="margin:0;padding-left:20px;font-size:16px;line-height:1.7"><li>You can update hours, services, and descriptions right away.</li><li>Changes to the phone number, address, or email are reviewed before they go live.</li><li>We let the listing’s current contact know about your claim.</li></ul>
+<div style="display:flex;flex-wrap:wrap;gap:12px"><button type="button" onClick="{{ nav.dash }}" class="btn btn-primary" style="min-height:48px;padding:0 22px;font-size:17px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Go to your workspace</button></div>
+</sc-if>
+<sc-if value="{{ claim.isReview }}">
+<span style="display:inline-flex;align-items:center;gap:6px;align-self:flex-start;padding:5px 12px;color:var(--color-neutral-800);border:1px dashed var(--color-neutral-600);font-size:15px;font-weight:500">{{ I.clock }}Under review</span>
+<h2 style="margin:0;font-size:clamp(30px,5vw,40px);line-height:1.05">Thanks, we got your claim for {{ claim.orgName }}.</h2>
+<ol style="list-style:none;margin:0;padding:0;border-top:1px solid var(--color-divider)">
+<li style="display:grid;grid-template-columns:56px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-size:28px;color:var(--color-accent-700)">01</span><span><strong>A person reviews your claim</strong> within 2–5 business days.</span></li>
+<li style="display:grid;grid-template-columns:56px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-size:28px;color:var(--color-accent-700)">02</span><span><strong>We confirm with the organization</strong> by email or at the phone number on the listing.</span></li>
+<li style="display:grid;grid-template-columns:56px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-size:28px;color:var(--color-accent-700)">03</span><span><strong>You get an email</strong> when you can start managing the listing.</span></li>
+</ol>
+<sc-if value="{{ claim.confirm }}"><div role="note" style="display:flex;gap:10px;padding:14px 16px;border:1px solid var(--color-accent-300);background:var(--color-accent-100);color:var(--color-accent-900);font-size:16px">{{ I.mail }}<span><strong style="font-weight:600">First, check your email.</strong> Click the link we sent to confirm your address, then log in on this same device. Your claim is sent when you do.</span></div></sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:12px"><button type="button" onClick="{{ nav.home }}" class="btn btn-secondary" style="min-height:48px;padding:0 22px;font-size:17px">Back to home</button></div>
+</sc-if>
+</div>
+</sc-if>
+
+<sc-if value="{{ claim.showNav }}"><div style="display:flex;justify-content:space-between;gap:12px;border-top:1px solid var(--color-divider);padding-top:18px">
+<button type="button" onClick="{{ claim.back }}" class="btn btn-secondary" style="min-height:48px;padding:0 20px;font-size:17px">{{ claim.backLabel }}</button>
+<button type="button" onClick="{{ claim.next }}" class="btn btn-primary" style="min-height:48px;padding:0 24px;font-size:18px;gap:8px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">{{ claim.nextLabel }}{{ I.arrow }}</button>
+</div></sc-if>
 </main>
 </sc-if>
 
 <sc-if value="{{ scr.login }}" hint-placeholder-val="{{ false }}">
-<main data-screen-label="F Login" style="max-width:480px;margin:0 auto;padding:48px 20px 72px">
+<main data-screen-label="F Login" style="max-width:480px;margin:0 auto;padding:32px 20px 72px;display:flex;flex-direction:column;gap:16px">
+<button type="button" onClick="{{ nav.orgs }}" class="btn btn-ghost" style="align-self:flex-start;min-height:40px;padding:0 6px;font-size:15px;gap:6px;color:var(--color-accent-700)">{{ I.back }}Back to For organizations</button>
 <form onSubmit="{{ login.go }}" style="border:1px solid var(--color-neutral-400);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);padding:28px;display:flex;flex-direction:column;gap:16px" novalidate="">
 
 <h1 style="margin:0;font-size:38px">Organization log in</h1>
-<p style="margin:0;font-size:16px;color:var(--color-neutral-800)">For church and nonprofit teams in the network.</p>
+<p style="margin:0;font-size:16px;color:var(--color-neutral-800)">For churches, ministries, and nonprofits with a listing.</p>
 <div class="field"><label for="l-email" style="font-size:15px;color:var(--color-neutral-900)">Email</label><input id="l-email" type="email" class="input" value="{{ login.email.v }}" onChange="{{ login.email.on }}" style="min-height:48px;font-size:17px"></div>
 <div class="field"><label for="l-pw" style="font-size:15px;color:var(--color-neutral-900)">Password</label><input id="l-pw" type="password" class="input" value="{{ login.pw.v }}" onChange="{{ login.pw.on }}" style="min-height:48px;font-size:17px"></div>
 <sc-if value="{{ login.hasErr }}"><span role="alert" style="font-size:15px;font-weight:500">{{ I.info }} {{ login.err }}</span></sc-if>
 <button type="submit" class="btn btn-primary" style="min-height:52px;font-size:18px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)"><sc-if value="{{ login.loading }}">{{ spinner }}Logging in…</sc-if><sc-if value="{{ login.notLoading }}" hint-placeholder-val="{{ true }}">Log in</sc-if></button>
-<button type="button" class="btn btn-ghost" style="align-self:flex-start;min-height:40px;font-size:15px;color:var(--color-accent-700)">Forgot password?</button>
-<div style="border-top:1px solid var(--color-divider);padding-top:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:16px">New here?<button type="button" onClick="{{ nav.signup }}" class="btn btn-secondary" style="min-height:44px;font-size:16px">Join the network</button></div>
-<span style="font-size:13px;color:var(--color-neutral-700)">Prototype: any password works.</span>
+<button type="button" onClick="{{ login.forgot }}" class="btn btn-ghost" style="align-self:flex-start;min-height:40px;font-size:15px;color:var(--color-accent-700)">Forgot password?</button>
+<div style="border-top:1px solid var(--color-divider);padding-top:16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:16px">New here?<button type="button" onClick="{{ nav.signup }}" class="btn btn-secondary" style="min-height:44px;font-size:16px">Add your organization</button><button type="button" onClick="{{ nav.claim }}" class="btn btn-secondary" style="min-height:44px;font-size:16px">Claim a listing</button></div>
 </form>
 </main>
 </sc-if>
 
 <sc-if value="{{ scr.signup }}" hint-placeholder-val="{{ false }}">
 <main data-screen-label="F Join" style="max-width:760px;margin:0 auto;padding:32px 20px 64px;display:flex;flex-direction:column;gap:22px">
-<div><span style="font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);font-weight:500">{{ signup.stepText }}</span><h1 style="margin:4px 0 0;font-size:44px">Join the network</h1><p style="margin:6px 0 0;font-size:17px;color:var(--color-neutral-800)">Free for churches, ministries, nonprofits, schools, and public agencies serving your community.</p></div>
+<button type="button" onClick="{{ nav.orgs }}" class="btn btn-ghost" style="align-self:flex-start;min-height:40px;padding:0 6px;font-size:15px;gap:6px;color:var(--color-accent-700)">{{ I.back }}Back to For organizations</button>
+<div><span style="font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--color-accent-700);font-weight:500">{{ signup.stepText }}</span><h1 style="margin:4px 0 0;font-size:44px">Add your organization</h1><p style="margin:6px 0 0;font-size:17px;color:var(--color-neutral-800)">Free for churches, ministries, nonprofits, schools, and public agencies serving your community.</p></div>
 <ol aria-label="Progress" style="list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><sc-for list="{{ signup.steps }}" as="st"><li style="display:flex;flex-direction:column;gap:8px"><span style="{{ st.bar }}"></span><span style="{{ st.lbl }}">{{ st.n }} · {{ st.label }}</span></li></sc-for></ol>
 <sc-if value="{{ signup.s1 }}">
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:16px">
-<div class="field" style="grid-column:1/-1"><label for="s-name" style="font-size:15px;color:var(--color-neutral-900)">Organization name</label><input id="s-name" class="input" value="{{ signup.name.v }}" onChange="{{ signup.name.on }}" style="min-height:48px;font-size:17px"><sc-if value="{{ signup.err.name }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ signup.err.name }}</span></sc-if></div>
+<div class="field" style="grid-column:1/-1"><label for="s-name" style="font-size:15px;color:var(--color-neutral-900)">Organization name</label><input id="s-name" class="input" value="{{ signup.name.v }}" onChange="{{ signup.name.on }}" style="min-height:48px;font-size:17px"><sc-if value="{{ signup.err.name }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ signup.err.name }}</span></sc-if><sc-if value="{{ signup.dupe }}"><div role="note" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 14px;border:1px solid var(--color-accent-300);background:var(--color-accent-100);color:var(--color-accent-900);font-size:15px">{{ I.info }}<span style="flex:1;min-width:200px"><strong style="font-weight:600">{{ signup.dupe.name }}</strong> is already on the list. If that’s you, claim it instead of making a second listing.</span><button type="button" onClick="{{ signup.dupe.claim }}" class="btn btn-secondary" style="min-height:40px;font-size:15px;background:var(--color-bg)">Claim this listing</button></div></sc-if></div>
 <div class="field"><label for="s-type" style="font-size:15px;color:var(--color-neutral-900)">Type</label><select id="s-type" class="input" value="{{ signup.type.v }}" onChange="{{ signup.type.on }}" style="min-height:48px;font-size:17px"><sc-for list="{{ signup.types }}" as="t"><option value="{{ t }}">{{ t }}</option></sc-for></select></div>
 <div class="field"><label for="s-hood" style="font-size:15px;color:var(--color-neutral-900)">Neighborhood</label><select id="s-hood" class="input" value="{{ signup.hood.v }}" onChange="{{ signup.hood.on }}" style="min-height:48px;font-size:17px"><option value="">Choose one</option><sc-for list="{{ signup.hoods }}" as="t"><option value="{{ t }}">{{ t }}</option></sc-for></select></div>
 <fieldset style="border:0;padding:0;margin:0;grid-column:1/-1"><legend style="font-size:15px;color:var(--color-neutral-900);margin-bottom:6px">Are you faith-based?</legend><div class="seg" role="radiogroup" style="display:flex"><sc-for list="{{ signup.faith }}" as="v"><label class="seg-opt" style="min-height:48px;flex:1;justify-content:center;font-size:16px"><input type="radio" name="s-faith" checked="{{ v.on }}" onChange="{{ v.pick }}">{{ v.label }}</label></sc-for></div></fieldset>
 <div class="field"><label for="s-phone" style="font-size:15px;color:var(--color-neutral-900)">Main phone</label><input id="s-phone" class="input" value="{{ signup.phone.v }}" onChange="{{ signup.phone.on }}" placeholder="205-555-0100" style="min-height:48px;font-size:17px"></div>
 <div class="field"><label for="s-email" style="font-size:15px;color:var(--color-neutral-900)">Email</label><input id="s-email" type="email" class="input" value="{{ signup.email.v }}" onChange="{{ signup.email.on }}" style="min-height:48px;font-size:17px"><sc-if value="{{ signup.err.email }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ signup.err.email }}</span></sc-if></div>
+<div class="field"><label for="s-person" style="font-size:15px;color:var(--color-neutral-900)">Your full name</label><input id="s-person" type="text" autocomplete="name" class="input" value="{{ signup.person.v }}" onChange="{{ signup.person.on }}" style="min-height:48px;font-size:17px"><sc-if value="{{ signup.err.person }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ signup.err.person }}</span></sc-if></div>
+<sc-if value="{{ signup.needPw }}"><div class="field"><label for="s-pw" style="font-size:15px;color:var(--color-neutral-900)">Create a password</label><input id="s-pw" type="password" autocomplete="new-password" class="input" value="{{ signup.pw.v }}" onChange="{{ signup.pw.on }}" style="min-height:48px;font-size:17px"><span style="display:block;margin-top:6px;font-size:14px;color:var(--color-neutral-700)">At least 8 characters. You’ll use the email above and this password to log in.</span><sc-if value="{{ signup.err.pw }}"><span role="alert" style="display:block;margin-top:6px;font-size:15px;font-weight:500">{{ signup.err.pw }}</span></sc-if></div></sc-if>
 </div>
 </sc-if>
 <sc-if value="{{ signup.s2 }}">
@@ -662,12 +839,12 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <p style="margin:0;font-size:17px">To keep the directory trustworthy, a person confirms every organization before it is marked Verified. Choose one:</p>
 <sc-for list="{{ signup.methods }}" as="m"><label class="radio" style="align-items:flex-start;padding:14px;border:1px solid var(--color-divider);font-size:16px"><input type="radio" name="s-method" checked="{{ m.on }}" onChange="{{ m.pick }}"><span class="dot" style="margin-top:3px"></span><span style="display:flex;flex-direction:column;gap:2px"><strong style="font-weight:600">{{ m.label }}</strong><span style="color:var(--color-neutral-800);font-size:15px">{{ m.hint }}</span></span></label></sc-for>
 <sc-if value="{{ signup.isDoc }}"><div style="border:1px dashed var(--color-neutral-600);padding:22px;display:flex;flex-direction:column;gap:10px;align-items:flex-start">
-<sc-if value="{{ signup.noFile }}"><span style="font-size:16px;color:var(--color-neutral-800)">PDF, JPG, or PNG. Placeholder only in this prototype.</span><button type="button" onClick="{{ signup.pickFile }}" class="btn btn-secondary" style="min-height:44px;font-size:16px">{{ I.upload }}Choose a file</button></sc-if>
+<sc-if value="{{ signup.noFile }}"><span style="font-size:16px;color:var(--color-neutral-800)">PDF, JPG, or PNG, under 10 MB. Please don’t upload IDs or bank details.</span><label class="btn btn-secondary" style="min-height:44px;font-size:16px;cursor:pointer;position:relative">{{ I.upload }}Choose a file<input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/*" onChange="{{ signup.fileOn }}" style="position:absolute;width:1px;height:1px;opacity:0"></label></sc-if>
 <sc-if value="{{ signup.hasFile }}"><span style="display:inline-flex;align-items:center;gap:8px;font-size:16px">{{ I.check }}{{ signup.fileName }} attached</span></sc-if>
 <sc-if value="{{ signup.err.file }}"><span role="alert" style="font-size:15px;font-weight:500">{{ signup.err.file }}</span></sc-if>
 </div></sc-if>
 <sc-if value="{{ signup.isRef }}"><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:14px">
-<div class="field"><label for="s-ro" style="font-size:15px;color:var(--color-neutral-900)">Verified organization</label><select id="s-ro" class="input" value="{{ signup.refOrg.v }}" onChange="{{ signup.refOrg.on }}" style="min-height:48px;font-size:16px"><option value="">Choose one</option><sc-for list="{{ signup.verifiedOrgs }}" as="t"><option value="{{ t }}">{{ t }}</option></sc-for></select></div>
+<div class="field"><label for="s-ro" style="font-size:15px;color:var(--color-neutral-900)">Organization on our list</label><select id="s-ro" class="input" value="{{ signup.refOrg.v }}" onChange="{{ signup.refOrg.on }}" style="min-height:48px;font-size:16px"><option value="">Choose one</option><sc-for list="{{ signup.verifiedOrgs }}" as="t"><option value="{{ t }}">{{ t }}</option></sc-for></select></div>
 <div class="field"><label for="s-rn" style="font-size:15px;color:var(--color-neutral-900)">Person who knows your work</label><input id="s-rn" class="input" value="{{ signup.refName.v }}" onChange="{{ signup.refName.on }}" style="min-height:48px;font-size:17px"></div>
 <sc-if value="{{ signup.err.ref }}"><span role="alert" style="font-size:15px;font-weight:500">{{ signup.err.ref }}</span></sc-if>
 </div></sc-if>
@@ -690,8 +867,8 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <li style="display:grid;grid-template-columns:64px 1fr;gap:12px;padding:16px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-size:30px;color:var(--color-accent-700)">02</span><span><strong>A personal review — usually 3 to 5 business days.</strong> The founder reads your listing and calls your main phone number.</span></li>
 <li style="display:grid;grid-template-columns:64px 1fr;gap:12px;padding:16px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-size:30px;color:var(--color-accent-700)">03</span><span><strong>Your listing goes live as Verified.</strong> Until then, it can appear marked “Pending verification.”</span></li>
 </ol>
-<p style="margin:0;font-size:16px">While you wait, you can log in, set up your team, and browse Unclaimed needs. You can receive and claim referrals once verified.</p>
-<div style="display:flex;flex-wrap:wrap;gap:12px"><button onClick="{{ nav.dash }}" class="btn btn-primary" style="min-height:48px;padding:0 22px;font-size:17px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Go to your workspace</button><button onClick="{{ nav.home }}" class="btn btn-secondary" style="min-height:48px;padding:0 22px;font-size:17px">Back to home</button></div>
+<sc-if value="{{ signup.confirm }}"><div role="note" style="display:flex;gap:10px;padding:14px 16px;border:1px solid var(--color-accent-300);background:var(--color-accent-100);color:var(--color-accent-900);font-size:16px">{{ I.mail }}<span><strong style="font-weight:600">One more step: check your email.</strong> Click the link we sent to confirm your address, then log in on this same device to send your request.</span></div></sc-if><p style="margin:0;font-size:16px">While you wait, you can log in to see where your request stands.</p>
+<div style="display:flex;flex-wrap:wrap;gap:12px"><button onClick="{{ nav.dash }}" class="btn btn-primary" style="min-height:48px;padding:0 22px;font-size:17px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Go to your account</button><button onClick="{{ nav.home }}" class="btn btn-secondary" style="min-height:48px;padding:0 22px;font-size:17px">Back to home</button></div>
 </main>
 </sc-if>
 
@@ -702,20 +879,19 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <nav aria-label="Footer" style="display:flex;flex-direction:column;gap:2px">
 <button onClick="{{ nav.about }}" style="background:none;border:0;padding:0;min-height:36px;text-align:left;font-size:15px;color:var(--color-accent-700);cursor:pointer;text-decoration:underline">About</button>
 <button onClick="{{ nav.about }}" style="background:none;border:0;padding:0;min-height:36px;text-align:left;font-size:15px;color:var(--color-accent-700);cursor:pointer;text-decoration:underline">Contact</button>
-<a href="#" style="min-height:36px;display:flex;align-items:center;font-size:15px">[YOUR PRIVACY POLICY LINK HERE]</a>
-<a href="#" style="min-height:36px;display:flex;align-items:center;font-size:15px">[YOUR TERMS OF USE LINK HERE]</a>
+<a href="mailto:info@compassioncatalyst.org" style="min-height:36px;display:flex;align-items:center;font-size:15px">info@compassioncatalyst.org</a>
 </nav>
 <div style="display:flex;flex-direction:column;gap:6px;font-size:15px"><strong style="font-weight:600">Crisis resources</strong><span>Emergency: <a href="tel:911">911</a></span><span>Suicide &amp; Crisis Lifeline: call or text <a href="tel:988">988</a></span><span>United Way helpline: <a href="tel:211">211</a></span><span>Domestic Violence Hotline: <a href="tel:18007997233">1-800-799-7233</a></span></div>
 </div>
-<div style="max-width:1200px;margin:0 auto;padding:0 20px 28px;font-size:13px;color:var(--color-neutral-700)">[YOUR FOOTER TEXT HERE — for example © 2026 Your Organization Name. Until you connect real data, everything shown on this site is sample data.]</div>
+<div style="max-width:1200px;margin:0 auto;padding:0 20px 28px;font-size:13px;color:var(--color-neutral-700)">© 2026 Compassion Catalyst · Birmingham, Alabama. Details can change, so please call ahead before you go.</div>
 </footer>
 </sc-if>
 
 <sc-if value="{{ scr.exit }}" hint-placeholder-val="{{ false }}">
 <main style="max-width:640px;margin:0 auto;padding:80px 20px;display:flex;flex-direction:column;gap:16px">
 <h1 style="margin:0;font-size:40px">Weather · Today</h1><p style="margin:0;font-size:20px">68°F · Partly cloudy</p>
-<p style="margin:24px 0 0;font-size:14px;color:var(--color-neutral-700);border-top:1px solid var(--color-divider);padding-top:12px">Prototype note: “Quick exit” would load a neutral site like this one and replace the page in browser history.</p>
-<button onClick="{{ exitBack }}" class="btn btn-secondary" style="align-self:flex-start;min-height:44px;font-size:16px">Return to prototype</button>
+
+<button onClick="{{ exitBack }}" class="btn btn-secondary" style="align-self:flex-start;min-height:44px;font-size:16px">Go back</button>
 </main>
 </sc-if>
 <sc-if value="{{ scr.dash }}" hint-placeholder-val="{{ false }}">
@@ -1546,7 +1722,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center"><span aria-label="Favorite" title="Favorite" style="color:var(--color-accent-700);font-size:18px;line-height:1">★</span><button onClick="{{ o.view }}" style="background:none;border:0;padding:0;font-family:var(--font-heading);font-weight:600;font-size:19px;color:inherit;cursor:pointer;text-align:left" style-hover="color:var(--color-accent-800);text-decoration:underline">{{ o.name }}</button><sc-if value="{{ o.verified }}"><span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:500;color:var(--color-accent-800)">{{ I.shieldCheck }}Verified</span></sc-if><sc-if value="{{ o.pending }}"><span style="font-size:12px;color:var(--color-neutral-700)">Pending</span></sc-if></div>
 <div style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;color:var(--color-neutral-800)"><span>{{ o.type }}</span><span style="display:inline-flex;align-items:center;gap:5px">{{ I.pin }}{{ o.place }}</span><sc-if value="{{ o.hasHours }}"><span style="display:inline-flex;align-items:center;gap:6px"><span style="{{ o.openDot }}"></span><sc-if value="{{ o.openWord }}"><span>{{ o.openWord }}</span></sc-if><span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700);padding:1px 6px;border:1px solid var(--color-neutral-400)">Today</span><span>{{ o.todayHours }}</span></span></sc-if></div>
 </div>
-<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span style="{{ o.availStyle }}">{{ o.availIcon }}{{ o.availLabel }}</span><button onClick="{{ o.refer }}" class="btn btn-primary" style="min-height:40px;font-size:15px;padding:0 14px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">Apply</button></div>
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span style="{{ o.availStyle }}">{{ o.availIcon }}{{ o.availLabel }}</span></div>
 </div></sc-for>
 </div></sc-if>
 <sc-if value="{{ dir.favDetailed }}"><div style="display:flex;flex-direction:column;gap:22px;margin-top:6px">
@@ -1570,7 +1746,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px">
 <button onClick="{{ o.view }}" class="btn btn-secondary" style="min-height:44px;font-size:16px;padding:0 18px">View details</button>
-<button onClick="{{ o.refer }}" class="btn btn-primary" style="min-height:44px;font-size:16px;padding:0 18px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">Apply for help</button>
+
 </div>
 </article>
 </sc-for>
@@ -1597,7 +1773,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px">
 <button onClick="{{ o.view }}" class="btn btn-secondary" style="min-height:44px;font-size:16px;padding:0 18px">View details</button>
-<button onClick="{{ o.refer }}" class="btn btn-primary" style="min-height:44px;font-size:16px;padding:0 18px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">Apply for help</button>
+
 </div>
 </article>
 </sc-for>
@@ -1608,7 +1784,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center"><button onClick="{{ o.view }}" style="background:none;border:0;padding:0;font-family:var(--font-heading);font-weight:600;font-size:19px;color:inherit;cursor:pointer;text-align:left" style-hover="color:var(--color-accent-800);text-decoration:underline">{{ o.name }}</button><sc-if value="{{ o.verified }}"><span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:500;color:var(--color-accent-800)">{{ I.shieldCheck }}Verified</span></sc-if><sc-if value="{{ o.pending }}"><span style="font-size:12px;color:var(--color-neutral-700)">Pending</span></sc-if></div>
 <div style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;color:var(--color-neutral-800)"><span>{{ o.type }}</span><span style="display:inline-flex;align-items:center;gap:5px">{{ I.pin }}{{ o.place }}</span><sc-if value="{{ o.hasHours }}"><span style="display:inline-flex;align-items:center;gap:6px"><span style="{{ o.openDot }}"></span><sc-if value="{{ o.openWord }}"><span>{{ o.openWord }}</span></sc-if><span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700);padding:1px 6px;border:1px solid var(--color-neutral-400)">Today</span><span>{{ o.todayHours }}</span></span></sc-if></div>
 </div>
-<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span style="{{ o.availStyle }}">{{ o.availIcon }}{{ o.availLabel }}</span><button onClick="{{ o.refer }}" class="btn btn-primary" style="min-height:40px;font-size:15px;padding:0 14px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">Apply</button></div>
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span style="{{ o.availStyle }}">{{ o.availIcon }}{{ o.availLabel }}</span></div>
 </div></sc-for>
 </div></sc-if>
 </div>
@@ -1626,7 +1802,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <h3 style="margin:0;font-size:24px">{{ dir.mapSel.n }} · {{ dir.mapSel.name }}</h3>
 <span style="font-size:15px;color:var(--color-neutral-800)">{{ dir.mapSel.place }} · Today {{ dir.mapSel.today }}</span>
 <span style="{{ dir.mapSel.availStyle }}">{{ dir.mapSel.availIcon }}{{ dir.mapSel.availLabel }}</span>
-<div style="display:flex;gap:10px;flex-wrap:wrap"><button onClick="{{ dir.mapSel.view }}" class="btn btn-secondary" style="min-height:44px;font-size:16px">View details</button><button onClick="{{ dir.mapSel.refer }}" class="btn btn-primary" style="min-height:44px;font-size:16px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Apply for help</button></div>
+<div style="display:flex;gap:10px;flex-wrap:wrap"><button onClick="{{ dir.mapSel.view }}" class="btn btn-secondary" style="min-height:44px;font-size:16px">View details</button></div>
 </div>
 </sc-if>
 <ol style="margin:0;padding:0;list-style:none;display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,260px),1fr));gap:0 20px">

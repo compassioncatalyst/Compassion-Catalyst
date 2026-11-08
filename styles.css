@@ -303,3 +303,47 @@ fieldset:has([role="alert"]) label.radio,.field:has([role="alert"]) label.radio{
 label:has(+ [role="alert"]){border-color:oklch(0.58 0.19 27)!important;background:oklch(0.97 0.025 27)}
 html{-webkit-text-size-adjust:100%}
 #app{min-height:100vh}
+
+/* ---- Account and admin pages ---- */
+.acct{min-height:100vh;display:flex;flex-direction:column;background:var(--color-bg);color:var(--color-text)}
+.acct-top{background:var(--color-accent-700);color:var(--color-bg);border-bottom:1px solid var(--color-accent-800)}
+.acct-top nav{max-width:1100px;margin:0 auto;padding:10px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.acct-brand{display:flex;align-items:center;gap:10px;margin-right:auto;color:var(--color-bg);text-decoration:none;min-height:48px}
+.acct-brand b{font-family:var(--font-heading);font-weight:600;font-size:23px;line-height:1}
+.acct-top a.l{color:var(--color-bg);font-size:16px;min-height:44px;display:inline-flex;align-items:center;text-decoration:none}
+.acct-top a.l:hover{text-decoration:underline}
+.acct-top .btn{min-height:40px;font-size:15px;background:var(--color-bg);border-color:var(--color-bg);color:var(--color-accent-900)}
+.acct-main{max-width:1100px;width:100%;margin:0 auto;padding:32px 20px 72px;display:flex;flex-direction:column;gap:22px;box-sizing:border-box}
+.acct-main h1{margin:0;font-size:clamp(32px,5vw,44px);line-height:1.05}
+.acct-main h2{margin:0;font-size:26px}
+.acct-main p{margin:0}
+.muted{color:var(--color-neutral-800)}
+.small{font-size:14px}
+.card{border:1px solid var(--color-neutral-400);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);padding:22px;display:flex;flex-direction:column;gap:14px}
+.card.white{background:var(--color-bg)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:14px}
+.acct .field label{font-size:15px;color:var(--color-neutral-900)}
+.acct .input{min-height:46px;font-size:16px;width:100%;box-sizing:border-box}
+.acct textarea.input{min-height:90px}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:3px 10px;font-size:14px;font-weight:600;border:1px solid var(--color-neutral-600);color:var(--color-neutral-800)}
+.tag.blue{border-color:var(--color-accent-700);color:var(--color-accent-700)}
+.tag.solid{background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)}
+.tag.dash{border-style:dashed}
+.note{padding:12px 14px;border:1px solid var(--color-accent-300);background:var(--color-accent-100);color:var(--color-accent-900);font-size:15px}
+.alert{padding:12px 14px;border:1px solid var(--color-neutral-700);background:var(--color-neutral-100);font-size:15px;font-weight:500}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid var(--color-divider)}
+.tabs button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 12px;min-height:44px;font-size:16px;cursor:pointer;color:var(--color-neutral-800);font-family:inherit}
+.tabs button.on{border-bottom-color:var(--color-accent-700);color:var(--color-text);font-weight:600}
+.item{border:1px solid var(--color-divider);background:var(--color-bg);padding:16px;display:flex;flex-direction:column;gap:8px}
+.item h3{margin:0;font-size:21px}
+.kv{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;font-size:15px}
+.kv dt{color:var(--color-neutral-700)}
+.kv dd{margin:0;word-break:break-word}
+.hours{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,150px),1fr));gap:10px}
+.cats{display:flex;flex-wrap:wrap;gap:8px}
+.cats label{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--color-divider);font-size:15px;cursor:pointer;min-height:36px}
+.acct .btn-primary{background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)}
+.acct .btn{min-height:44px;font-size:16px}
+.acct-foot{margin-top:auto;border-top:1px solid var(--color-divider);padding:20px;font-size:14px;color:var(--color-neutral-700);text-align:center}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--color-text);color:var(--color-bg);padding:12px 18px;font-size:15px;max-width:calc(100vw - 32px);z-index:50;box-shadow:var(--shadow-lg)}
