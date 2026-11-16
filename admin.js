@@ -2,7 +2,7 @@
    The database checks this too, so other people can't approve anything even if they open this page. */
 (function () {
   var CC = window.CC, E = CC.esc, root = document.getElementById('page');
-  var S = { session: null, admin: false, tab: 'requests', loading: true, err: '', q: '', requests: [], changes: [], reports: [], orgs: [], names: {} };
+  var S = { session: null, admin: false, tab: 'requests', loading: true, err: '', q: '', requests: [], changes: [], reports: [], orgs: [], names: {}, admins: [], newAdmin: '' };
   var MARK = '<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><circle cx="8.5" cy="12" r="6.5"/><circle cx="15.5" cy="12" r="6.5"/><path d="M12 8.6v6.8M9.9 10.9h4.2"/></svg>';
   function toast(msg) { var t = document.createElement('div'); t.className = 'toast'; t.setAttribute('role', 'status'); t.textContent = msg; document.body.appendChild(t); setTimeout(function () { t.remove(); }, 5000); }
   function shell(inner) {
@@ -18,24 +18,25 @@
       sb.from('claim_requests').select('*').eq('status', 'pending').order('created_at'),
       sb.from('pending_changes').select('*').eq('status', 'pending').order('created_at'),
       sb.from('listing_reports').select('*').eq('status', 'open').order('created_at'),
-      sb.from('organizations').select('id, name, status, verified, verified_at, phone, email, website, address, city, zip, is_sensitive, updated_at, last_confirmed_at').order('name')
+      sb.from('organizations').select('id, name, status, verified, verified_at, phone, email, website, address, city, zip, is_sensitive, updated_at, last_confirmed_at').order('name'),
+      sb.from('profiles').select('id, email, full_name').eq('is_admin', true).order('email')
     ]);
     all.forEach(function (r) { if (r.error) throw r.error; });
-    S.requests = all[0].data; S.changes = all[1].data; S.reports = all[2].data; S.orgs = all[3].data;
+    S.requests = all[0].data; S.changes = all[1].data; S.reports = all[2].data; S.orgs = all[3].data; S.admins = all[4].data;
     S.names = {}; S.orgs.forEach(function (o) { S.names[o.id] = o; });
     S.loading = false; render();
   }
 
   function render() {
     if (!CC.ok) { root.innerHTML = shell('<h1>Admin review</h1><p class="alert">The site can’t reach the database right now.</p>'); return; }
-    if (!S.session) { root.innerHTML = shell('<h1>Admin review</h1><div class="card"><p>Please log in first.</p><a class="btn btn-primary" href="login.html" style="align-self:flex-start">Log in</a></div>'); return; }
-    if (!S.admin) { root.innerHTML = shell('<h1>Admin review</h1><p class="alert">This page is only for the site’s administrators.</p>'); return; }
-    var T = [['requests', 'New listings & claims', S.requests.length], ['changes', 'Contact changes', S.changes.length], ['reports', 'Reports', S.reports.length], ['listings', 'All listings', S.orgs.length]];
+    if (!S.session) { window.location.replace('login.html'); return; }
+    if (!S.admin) { if (S.loading) { root.innerHTML = shell('<p class="muted">Checking your access…</p>'); return; } root.innerHTML = shell('<h1>Admin review</h1><p class="alert">This page is only for the site’s administrators. If you think you should have access, ask the site owner to add your email.</p>'); return; }
+    var T = [['requests', 'New listings & claims', S.requests.length], ['changes', 'Contact changes', S.changes.length], ['reports', 'Reports', S.reports.length], ['listings', 'All listings', S.orgs.length], ['admins', 'Admin team', S.admins.length]];
     var h = '<div><h1>Admin review</h1><p class="muted" style="margin-top:6px">Nothing goes live or gets the Verified badge until you approve it here.</p></div>';
     if (S.err) h += '<p class="alert" role="alert">' + E(S.err) + '</p>';
     h += '<div class="tabs" role="tablist">' + T.map(function (t) { return '<button role="tab" aria-selected="' + (S.tab === t[0]) + '" class="' + (S.tab === t[0] ? 'on' : '') + '" data-act="tab" data-tab="' + t[0] + '">' + t[1] + ' (' + t[2] + ')</button>'; }).join('') + '</div>';
     if (S.loading) h += '<p class="muted">Loading…</p>';
-    else h += ({ requests: requestsTab, changes: changesTab, reports: reportsTab, listings: listingsTab })[S.tab]();
+    else h += ({ requests: requestsTab, changes: changesTab, reports: reportsTab, listings: listingsTab, admins: adminsTab })[S.tab]();
     root.innerHTML = shell(h);
   }
   function orgLine(id) { var o = S.names[id] || {}; return '<strong style="font-size:19px">' + E(o.name || 'Unknown organization') + '</strong>' + (o.phone ? ' <span class="small muted">· listed phone ' + E(o.phone) + '</span>' : ''); }
@@ -84,6 +85,17 @@
     }).join('');
   }
 
+  function adminsTab() {
+    var me = S.session.user.id;
+    return '<div class="card white"><p>Admins can open this page and approve listings, claims, contact changes and reports. Only add people you trust.</p>' +
+      '<form data-form="addAdmin" class="row" style="align-items:flex-end"><div class="field" style="flex:1;min-width:240px"><label for="na">Their email</label><input id="na" name="email" type="email" class="input" autocomplete="off" required></div><button class="btn btn-primary" type="submit">Make admin</button></form>' +
+      '<span class="small muted">They need an account first: ask them to sign up on the site (Add your organization or Claim a listing), then add them here.</span></div>' +
+      S.admins.map(function (a) {
+        return '<div class="item"><div class="row" style="justify-content:space-between"><div><strong style="font-size:18px">' + E(a.full_name || a.email) + '</strong><br><span class="small muted">' + E(a.email) + '</span></div>' +
+          (a.id === me ? '<span class="tag solid">You</span>' : '<button class="btn btn-secondary" data-act="unadmin" data-email="' + E(a.email) + '">Remove admin</button>') + '</div></div>';
+      }).join('');
+  }
+
   async function run(p, done) {
     try { var r = await p; if (r && r.error) throw r.error; toast(done); await load(); } catch (err) { S.err = CC.msg(err); render(); window.scrollTo(0, 0); }
   }
@@ -107,10 +119,18 @@
     if (act === 'approveChange') run(sb.rpc('approve_change', { change_id: id }), 'Change approved and live.');
     if (act === 'rejectChange') { var n2 = prompt('Reason (optional):'); if (n2 !== null) run(sb.rpc('reject_change', { change_id: id, note: n2 || null }), 'Change rejected.'); }
     if (act === 'report') run(sb.from('listing_reports').update({ status: b.getAttribute('data-v'), reviewed_at: new Date().toISOString(), reviewed_by: S.session.user.id }).eq('id', id), 'Report updated.');
+    if (act === 'unadmin') { var em0 = b.getAttribute('data-email'); if (confirm('Remove admin access for ' + em0 + '?')) run(sb.rpc('set_site_admin', { person_email: em0, make_admin: false }), 'Admin access removed.'); }
     if (act === 'verify') {
       var v = b.getAttribute('data-v') === 'true';
       if (!v || confirm('Only mark this Verified if you have personally confirmed its details. Continue?')) run(sb.rpc('set_verified', { org: id, is_verified: v }), v ? 'Marked Verified.' : 'Verified badge removed.');
     }
+  });
+  root.addEventListener('submit', function (e) {
+    var f = e.target; if (f.getAttribute('data-form') !== 'addAdmin') return;
+    e.preventDefault(); S.err = '';
+    var em = (f.email.value || '').trim();
+    if (!/.+@.+\..+/.test(em)) { S.err = 'Enter a valid email address.'; return render(); }
+    if (confirm('Give ' + em + ' admin access to this page?')) run(CC.sb.rpc('set_site_admin', { person_email: em, make_admin: true }), em + ' is now an admin.');
   });
   root.addEventListener('change', function (e) {
     var el = e.target; if (el.getAttribute('data-act') !== 'status') return;
@@ -128,7 +148,7 @@
     if (!session) { S.loading = false; return render(); }
     var p = await CC.sb.from('profiles').select('is_admin').eq('id', session.user.id).maybeSingle();
     S.admin = !!(p.data && p.data.is_admin);
-    if (!S.admin) return render();
+    if (!S.admin) { S.loading = false; return render(); }
     load().catch(function (err) { S.loading = false; S.err = CC.msg(err); render(); });
   });
 })();

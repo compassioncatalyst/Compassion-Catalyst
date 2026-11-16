@@ -1,16 +1,37 @@
 # Compassion Catalyst website
 
-Plain HTML, CSS and JavaScript. No build step. Cloudflare publishes whatever is in this repository.
+Plain HTML, CSS and JavaScript. No build step. Cloudflare Pages serves these files straight from GitHub.
 
-| File | What it is |
+## Pages
+
+| Address | What it is |
 |---|---|
-| index.html, directory.html, about.html, for-organizations.html, claim.html, login.html, signup.html | Public pages |
-| account.html + account.js | "Your account": organizations see their requests and edit their listing |
-| admin.html + admin.js | Admin review: approve listings, claims, contact changes, reports, and the Verified badge |
-| config.js | Supabase project URL and **publishable** key (never put a secret key here) |
-| connect.js | Talks to Supabase |
-| supabase.js | Supabase's own library (v2.117.3), kept here so the site doesn't depend on another website |
-| app.js, screens.js, styles.css | The public pages' code, layout and styles |
-| data.js | Saved copy of the directory, used only if Supabase can't be reached |
-| co-map.html | The map (uses Leaflet and OpenStreetMap) |
-| track.html, dashboard.html | Old addresses that now forward to the right page |
+| `/` (index.html) | Home |
+| `/directory` | Find help |
+| `/get-help` | Get help: pick a need and a ZIP code |
+| `/about`, `/for-organizations` | Info pages |
+| `/organizations` | Short link that goes to the organization log-in page (see `_redirects`) |
+| `/login`, `/signup`, `/claim` | Log in, add your organization, claim a listing |
+| `/dashboard` | Organization dashboard. Organizations land here after logging in |
+| `/account` | Shows where a request stands before it's approved |
+| `/join` | Page for teammates invited from the dashboard |
+| `/admin` | Admin review. Only accounts marked admin in Supabase can use it |
+
+## Files
+
+- `config.js`: the Supabase address, the **publishable** key, and the Hope Harbor sample email. Never put a secret key in any file here.
+- `connect.js`: talks to Supabase.
+- `screens.js` + `app.js`: the public pages.
+- `dash-screens.js` + `dash-app.js`: the organization dashboard.
+- `account.js`, `admin.js`, `join.js`: the account, admin and join pages.
+- `data.js`: a saved copy of the directory, used only if Supabase can't be reached. It also holds the made-up Hope Harbor sample.
+- `_redirects`: short addresses such as `/organizations`.
+
+## Who can see what
+
+The database enforces every rule below with Row Level Security, so nobody gets around them by changing website files.
+
+- Admin page: only accounts with `is_admin = true`. Add or remove admins on the Admin page under "Admin team".
+- Dashboard: only members of an approved organization, and only for their own organization.
+- Phone, email, website and address changes wait for an admin's approval before they go live.
+- Hope Harbor: log in with the sample email in `config.js` to see the sample dashboard. Nothing in it is saved, and it never shows on Find help.

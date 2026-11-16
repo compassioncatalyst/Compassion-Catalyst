@@ -1,0 +1,4 @@
+# Short addresses for the site. Cloudflare Pages reads this file.
+/organizations   /login       301
+/organizations/  /login       301
+/organization    /login       301

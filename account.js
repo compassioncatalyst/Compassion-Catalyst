@@ -14,7 +14,9 @@
     document.body.appendChild(t); setTimeout(function () { t.remove(); }, 5000);
   }
   function shell(inner) {
+    var hasOrg = S.orgs.some(function (o) { return S.roles[o.id] && (o.status === 'approved' || o.status === 'paused'); });
     var links = '<a class="l" href="directory.html">Find help</a><a class="l" href="about.html">About</a>' +
+      (hasOrg ? '<a class="l" href="dashboard.html">Your dashboard</a>' : '') +
       (S.profile && S.profile.is_admin ? '<a class="l" href="admin.html">Admin review</a>' : '') +
       (S.session ? '<button class="btn" data-act="signout">Log out</button>' : '<a class="l" href="login.html">Log in</a>');
     return '<header class="acct-top"><nav aria-label="Main"><a class="acct-brand" href="index.html">' + MARK + '<b>Compassion Catalyst</b></a>' + links + '</nav></header>' +
@@ -67,6 +69,8 @@
     var h = '<div><h1>' + (name ? 'Welcome, ' + E(name.split(' ')[0]) : 'Your account') + '</h1><p class="muted" style="margin-top:6px">Logged in as ' + E(S.session.user.email) + '</p></div>';
     if (S.err) h += '<p class="alert" role="alert">' + E(S.err) + '</p>';
     if (S.stash) h += stashCard();
+    if (S.orgs.some(function (o) { return S.roles[o.id] && (o.status === 'approved' || o.status === 'paused'); }))
+      h += '<div class="card"><p>Manage your listing, availability, team and settings in your organization dashboard.</p><a class="btn btn-primary" href="dashboard.html" style="align-self:flex-start">Open your dashboard</a></div>';
     h += '<section style="display:flex;flex-direction:column;gap:14px"><h2>Your organizations</h2>';
     if (!S.orgs.length) h += '<div class="card white"><p>You don’t manage an organization yet. When a request below is approved, it shows up here.</p><div class="row"><a class="btn btn-secondary" href="signup.html">Add your organization</a><a class="btn btn-secondary" href="claim.html">Claim a listing</a></div></div>';
     S.orgs.forEach(function (o) { h += orgCard(o); });

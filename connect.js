@@ -111,6 +111,41 @@
     return r.data;
   };
 
+  // --- Turn one row from the "directory_listings" view into the shape the screens use ---
+  var BUNDLED = {};
+  function bundledByName() {
+    if (Object.keys(BUNDLED).length) return BUNDLED;
+    ((window.BBData && window.BBData.ORGS) || []).forEach(function (o) { if (o.id !== 'hope') BUNDLED[o.name.trim().toLowerCase()] = o; });
+    return BUNDLED;
+  }
+  function pos(lat, lng) { // rough spot on the small map drawing, for listings that are new
+    if (lat == null || lng == null) return { x: 50, y: 50 };
+    return { x: Math.max(4, Math.min(96, (lng + 87.05) / 0.45 * 100)), y: Math.max(4, Math.min(96, (33.68 - lat) / 0.35 * 100)) };
+  }
+  function shortDate(d) { return d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; }
+  CC.toOrg = function (r) {
+    var b = bundledByName()[(r.name || '').trim().toLowerCase()];
+    var o = Object.assign({ partners: [], cap: '', open: null, mi: null, x: 50, y: 50 }, b ? JSON.parse(JSON.stringify(b)) : {});
+    var hours = Array.isArray(r.hours) && r.hours.length === 7 ? r.hours : (o.hours || ['Call for hours', 'Call for hours', 'Call for hours', 'Call for hours', 'Call for hours', 'Call for hours', 'Call for hours']);
+    var addr = r.is_sensitive || !r.address ? null : r.address + ', ' + (r.city || 'Birmingham') + ', ' + (r.state || 'AL') + (r.zip ? ' ' + r.zip : '');
+    var upd = r.last_confirmed_at || r.updated_at;
+    Object.assign(o, {
+      id: b ? b.id : 'db-' + r.id, dbId: r.id, name: r.name, type: r.org_type || o.type || 'Nonprofit', faith: r.faith || '',
+      cats: r.categories || [], hood: r.neighborhood || o.hood || '', addr: addr, phone: r.phone || '',
+      verified: !!r.verified, vDate: shortDate(r.verified_at), updated: shortDate(upd), updN: upd ? Math.max(0, Math.round((Date.now() - new Date(upd)) / 864e5)) : 0,
+      avail: ['Accepting', 'Limited', 'Waitlist', 'Full'].indexOf(r.availability) >= 0 ? r.availability : 'Accepting',
+      hours: hours, open: b ? o.open : null, langs: r.languages && r.languages.length ? r.languages : ['English'], cost: r.cost || 'Free',
+      elig: r.eligibility && r.eligibility.length ? r.eligibility : ['No restrictions'], docs: r.what_to_bring || '',
+      contact: [r.contact_name || 'Main line', r.contact_title || '', r.email || ''], about: r.about || '',
+      services: r.services && typeof r.services === 'object' ? r.services : {}, sensitive: !!r.is_sensitive,
+      lat: r.is_sensitive ? null : r.latitude, lng: r.is_sensitive ? null : r.longitude, website: r.website || '',
+      claimed: !!r.is_claimed, hideAvail: r.show_availability === false, applyUrl: r.apply_url || ''
+    });
+    if (!b) Object.assign(o, pos(o.lat, o.lng));
+    (o.cats || []).forEach(function (k) { if (!o.services[k]) o.services[k] = []; });
+    return o;
+  };
+
   // ---- tiny helpers for the account and admin pages ----
   CC.esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
   CC.date = function (d) { return d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; };

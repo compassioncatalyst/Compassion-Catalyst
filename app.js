@@ -778,7 +778,7 @@ class Component extends DCLogic {
   dec(o) {
     const av = this.AV[o.avail];
     return Object.assign({}, o, {
-      isFaith: !!o.faith, pending: !o.verified,
+      isFaith: !!o.faith, pending: !o.verified, confText: o.updated ? 'Last confirmed ' + o.updated : 'Not confirmed yet',
       chips: o.cats.map(k => ({ label: this.cat(k).label, icon: this.ic(this.cat(k).icon, 16) })),
       availLabel: av.label, availStyle: Object.assign({}, this.chipBase, av.style), availIcon: this.ic(av.icon, 14),
       today: o.hours[2], openWord: o.open == null ? '' : o.open ? 'Open now' : 'Closed now', todayHours: o.hours[2], hasHours: o.open != null || (o.hours[2] && o.hours[2] !== 'Call for hours'), statusLine: o.open == null ? 'Today ' + o.hours[2] : (o.open ? 'Open now' : 'Closed now') + ' · Today ' + o.hours[2], openLabel: o.open == null ? 'Today ' + o.hours[2] : o.open ? 'Open now' : 'Closed now',
@@ -813,6 +813,29 @@ class Component extends DCLogic {
     else if (this.state.sort === 'recent') list.sort((a, b) => b.updN - a.updN);
     else list.sort((a, b) => (b.verified - a.verified) || (rank[a.avail] - rank[b.avail]));
     return list;
+  }
+  ghVals() {
+    const s = this.state, G = s.gh || { cat: '', zip: '', shown: false, err: '' }, D = this.D;
+    const set = o => this.setState(st => ({ gh: Object.assign({}, st.gh || G, o) }));
+    const zip = (G.zip || '').trim(), zipOk = /^\d{5}$/.test(zip);
+    const zipOf = o => ((o.addr || '').match(/\b(\d{5})\b\s*$/) || [])[1] || '';
+    const cats = D.CATS.map(c => { const on = G.cat === c.k; return { label: c.label, icon: this.ic(c.icon, 22), pressed: on ? 'true' : 'false', pick: () => set({ cat: c.k, err: '', shown: G.shown }),
+      style: { display: 'flex', alignItems: 'center', gap: 10, minHeight: 56, padding: '10px 14px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: 16, fontWeight: on ? 600 : 500, color: on ? 'var(--color-accent-900)' : 'var(--color-text)', background: on ? 'var(--color-accent-100)' : 'var(--color-bg)', border: '1px solid ' + (on ? 'var(--color-accent-700)' : 'var(--color-neutral-400)'), boxShadow: on ? 'inset 0 0 0 1px var(--color-accent-700)' : 'var(--shadow-sm)' } }; });
+    const find = e => { e && e.preventDefault && e.preventDefault(); if (!G.cat) return set({ err: 'Choose what you need help with.', shown: false }); if (!zipOk) return set({ err: 'Enter a 5-digit ZIP code.', shown: false }); set({ err: '', shown: true }); };
+    let list = [];
+    if (G.shown && G.cat) {
+      const near = o => { const z = zipOf(o); return z === zip ? 0 : z && z.slice(0, 3) === zip.slice(0, 3) ? 1 : 2; };
+      const gap = o => { const z = zipOf(o); return z ? Math.abs(+z - +zip) : 99999; };
+      list = s.orgs.filter(o => o.cats.includes(G.cat)).sort((a, b) => (near(a) - near(b)) || (gap(a) - gap(b)) || ((a.mi ?? 99) - (b.mi ?? 99)) || (b.verified - a.verified))
+        .map(o => { const d = this.dec(o), n = near(o); return Object.assign(d, { nearLabel: n === 0 ? 'In your ZIP code' : n === 1 ? 'Nearby' : 'Farther away', isNear: n === 0, phoneHref: 'tel:' + (o.phone || '').replace(/\D/g, ''), services: (o.services[G.cat] || []).join(' · '), hasServices: (o.services[G.cat] || []).length > 0,
+          nearStyle: { padding: '2px 8px', fontSize: 12, fontWeight: 600, border: '1px solid ' + (n === 0 ? 'var(--color-accent-700)' : 'var(--color-neutral-500)'), color: n === 0 ? 'var(--color-accent-800)' : 'var(--color-neutral-800)', background: n === 0 ? 'var(--color-accent-100)' : 'transparent' } }); });
+    }
+    const catLabel = G.cat ? this.cat(G.cat).label : '';
+    return { cats, zip: { v: G.zip || '', on: e => set({ zip: e.target.value.replace(/[^\d]/g, '').slice(0, 5), err: '' }) }, find, err: G.err || '', hasErr: !!G.err,
+      shown: !!G.shown, list, none: !!G.shown && !list.length, has: list.length > 0, noneInZip: !!G.shown && list.length > 0 && !list.some(o => o.isNear),
+      noneInZipText: 'No organizations in ' + zip + ' offer ' + catLabel.toLowerCase() + ' yet. Here are the closest ones that do.',
+      summary: (list.some(o => o.isNear) ? list.filter(o => o.isNear).length + (list.filter(o => o.isNear).length === 1 ? ' organization helps' : ' organizations help') + ' with ' + catLabel.toLowerCase() + ' in ' + zip : 'Closest organizations for ' + catLabel.toLowerCase()),
+      reset: () => set({ cat: '', zip: '', shown: false, err: '' }), browseAll: () => this.go('directory', { filters: Object.assign(this.blankFilters(), { cats: G.cat ? [G.cat] : [] }), view: 'list' }) };
   }
   runSearch = e => {
     e && e.preventDefault && e.preventDefault();
@@ -913,13 +936,13 @@ class Component extends DCLogic {
     const base = { brand, I, spinner, narrow, wide, frameRef: this.frameRef, ready: !!s.ready,
       frameStyle: s.mobilePreview ? { maxWidth: 390, margin: '0 auto', minHeight: '100vh', background: 'var(--color-bg)', boxShadow: 'var(--shadow-lg)', position: 'relative' } : { minHeight: '100vh', background: 'var(--color-bg)', position: 'relative' } };
     if (!s.ready) return base;
-    const D = this.D, PUBLIC = ['home', 'directory', 'listing', 'refer', 'refDone', 'track', 'about', 'orgs', 'claim', 'login', 'signup', 'pending'];
+    const D = this.D, PUBLIC = ['home', 'directory', 'gethelp', 'listing', 'refer', 'refDone', 'track', 'about', 'orgs', 'claim', 'login', 'signup', 'pending'];
     const scr = {}; PUBLIC.concat(['dash', 'mod', 'system', 'exit']).forEach(k => scr[k] = s.screen === k);
     const nav = {}; ['home', 'directory', 'track', 'about', 'orgs', 'login', 'signup', 'mod', 'system'].forEach(k => nav[k] = () => this.go(k));
     nav.claim = () => this.go('claim', { claim: this.blankClaim() });
     nav.dash = () => this.go('dash', { dashTab: 'overview', selRef: null });
     nav.directory = () => this.go('directory', { view: 'list', density: 'compact', mapSel: null });
-    nav.referNow = () => this.startRef(null);
+    nav.referNow = () => this.go('gethelp', { gh: { cat: '', zip: '', shown: false, err: '' } });
     nav.allOrgs = () => this.go('directory', { filters: this.blankFilters() });
     const linkStyle = a => ({ background: 'none', border: 0, borderBottom: '2px solid ' + (a ? 'var(--color-bg)' : 'transparent'), cursor: 'pointer', fontSize: 16, minHeight: 44, padding: '0 4px', color: 'var(--color-bg)', fontWeight: a ? 600 : 400 });
     const pubLinks = [['directory', 'Find help'], ['about', 'About'], ['orgs', 'For organizations']].map(([k, label]) => {
@@ -989,7 +1012,7 @@ class Component extends DCLogic {
     const lo = this.dec(this.org(s.orgId));
     const mkL = lo => Object.assign(lo, {
       showFav: !!s.fromDash, favBtn: favBits(s.orgId),
-      addrLine: lo.sensitive ? 'Address shared after contact' : lo.addr || (lo.hood + ' · No walk-in address listed — call or visit online'), hasAddr: !lo.sensitive && !!lo.addr, hasAddr2: !lo.sensitive && !!lo.addr2, phoneHref: /^[0-9+(]/.test(lo.phone) ? 'tel:' + lo.phone : 'https://' + lo.phone,
+      addrLine: lo.sensitive ? 'Address shared after contact' : lo.addr || (lo.hood + ' · No walk-in address listed — call or visit online'), hasAddr: !lo.sensitive && !!lo.addr, mapHref: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(lo.addr || ''), hasAddr2: !lo.sensitive && !!lo.addr2, phoneHref: /^[0-9+(]/.test(lo.phone) ? 'tel:' + lo.phone : 'https://' + lo.phone,
       noHours: !(lo.hours || []).some(h => h && !/call for hours|no hours/i.test(h)), hasHours: (lo.hours || []).some(h => h && !/call for hours|no hours/i.test(h)),
       hoursRows: D.ORGS && ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((d, i) => ({ d, h: lo.hours[i], today: i === 2, style: { display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12, padding: '8px 10px', borderBottom: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)', background: i === 2 ? 'var(--color-accent-100)' : 'transparent', fontWeight: i === 2 ? 600 : 400 } })),
       groups: Object.keys(lo.services).map(k => ({ label: this.cat(k).label, icon: this.ic(this.cat(k).icon, 20), items: lo.services[k] })),
@@ -1342,6 +1365,7 @@ class Component extends DCLogic {
       services: Object.keys(HO.services || {}).filter(k => (HO.services[k] || []).length).map(k => ({ label: this.cat(k).label, icon: this.ic(this.cat(k).icon, 16), items: HO.services[k] })),
       facts: [['Languages', (HO.langs || []).join(', ')], ['Cost', HO.cost], ['Eligibility', (HO.elig || []).join(', ')], ['What to bring', HO.docs]].filter(r => r[1]).map(([k, v]) => ({ k, v })),
       editApp: () => this.modal({ kind: 'appQs', qs: JSON.parse(JSON.stringify(HO.appQs || [])) }), appQLabel: (HO.appQs || []).length ? (HO.appQs.length + ' Hope Harbor question' + (HO.appQs.length === 1 ? '' : 's') + ' on your application') : 'Standard application only',
+      confirmNow: () => { this.setState(st => ({ orgs: st.orgs.map(o2 => o2.id === 'hope' ? Object.assign({}, o2, { updated: 'today' }) : o2) })); this.toast('Thanks! Your listing now says “Last confirmed today.”'); },
       L: hopeL, hasPartners: (hopeL.partnerOrgs || []).length > 0,
       goSettings: () => this.setState({ dashTab: 'settings' }),
       e: ['ident', 'about', 'cats', 'hours', 'services', 'who', 'contact'].reduce((o, key) => { o[key] = { on: s.orgEdit === key, off: s.orgEdit !== key,
@@ -1630,7 +1654,7 @@ class Component extends DCLogic {
 
     return Object.assign(base, {
       cmcStyle: s.w >= 1100 ? { fontFamily: 'var(--font-heading)', fontWeight: 500, fontSize: 46, lineHeight: '40px', height: 40, letterSpacing: '.04em', display: 'inline-block', transform: 'scaleX(.82)', transformOrigin: 'left center', marginRight: -10, paddingLeft: 12, borderLeft: '1px solid color-mix(in srgb,var(--color-bg) 45%,transparent)' } : { display: 'none' },
-      scr, nav, isPublic: PUBLIC.includes(s.screen), pubLinks, menuShown: narrow && s.menuOpen, toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }), menuLabel: s.menuOpen ? 'Close menu' : 'Open menu', menuExpanded: s.menuOpen ? 'true' : 'false',
+      gh: this.ghVals(), scr, nav, isPublic: PUBLIC.includes(s.screen), pubLinks, menuShown: narrow && s.menuOpen, toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }), menuLabel: s.menuOpen ? 'Close menu' : 'Open menu', menuExpanded: s.menuOpen ? 'true' : 'false',
       homeQ: this.bind('homeQ'), homeCat: this.bind('homeCat'), homeZip: this.bind('homeZip'), catOptions, runSearch: this.runSearch, catCar, popular, heroSearchFull: { position: 'relative', minWidth: 0, gridColumn: s.w >= 900 ? 'auto' : '1 / -1' }, heroSearchBtn: { width: '100%', margin: 0, minHeight: 56, padding: '0 28px', fontSize: 18, background: 'var(--color-accent-700)', borderColor: 'var(--color-accent-700)', color: 'var(--color-bg)', gridColumn: s.w >= 900 ? 'auto' : '1 / -1' }, heroSearchGrid: { display: 'grid', gap: 14, alignItems: 'stretch', gridTemplateColumns: s.w >= 900 ? 'minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) auto' : s.w >= 600 ? 'minmax(0,1fr) minmax(0,1fr)' : 'minmax(0,1fr)' }, featured, hasFeatured: featured.length > 0, featCardStyle, featRef: this.featRef, mapFrame: this.mapFrame,
       dir, listing, verPop: s.verPop, toggleVerPop: () => this.setState({ verPop: !s.verPop }), closeVerPop: () => this.setState({ verPop: false }),
       openReport: () => this.modal({ kind: 'report', targetName: 'Listing · ' + lo.name }), quickExit: () => { try { window.location.replace('https://www.google.com/search?q=weather'); } catch (e) { this.go('exit'); } }, backToResults: () => this.state.fromDash ? this.go('dash', { dashTab: this.state.fromTab || 'directory', selRef: null }) : this.go('directory'), backLabel: s.fromDash ? ({ org: 'Back to My organization', overview: 'Back to Dashboard', directory: 'Back to results' }[s.fromTab] || 'Back') : 'Back to results',
@@ -1651,38 +1675,18 @@ class Component extends DCLogic {
   var CC = window.CC || { ok: false };
   var files = { signup: null, claim: null }; // files people choose to upload
 
-  // --- Turn one row from the "directory_listings" view into the shape the screens use ---
-  var BUNDLED = {};
-  function bundledByName() {
-    if (Object.keys(BUNDLED).length) return BUNDLED;
-    ((window.BBData && window.BBData.ORGS) || []).forEach(function (o) { BUNDLED[o.name.trim().toLowerCase()] = o; });
-    return BUNDLED;
-  }
-  function pos(lat, lng) { // rough spot on the small map drawing, for listings that are new
-    if (lat == null || lng == null) return { x: 50, y: 50 };
-    return { x: Math.max(4, Math.min(96, (lng + 87.05) / 0.45 * 100)), y: Math.max(4, Math.min(96, (33.68 - lat) / 0.35 * 100)) };
-  }
-  function shortDate(d) { return d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; }
-  CC.toOrg = function (r) {
-    var b = bundledByName()[(r.name || '').trim().toLowerCase()];
-    var o = Object.assign({ partners: [], cap: '', open: null, mi: null, x: 50, y: 50 }, b ? JSON.parse(JSON.stringify(b)) : {});
-    var hours = Array.isArray(r.hours) && r.hours.length === 7 ? r.hours : (o.hours || ['Call for hours', 'Call for hours', 'Call for hours', 'Call for hours', 'Call for hours', 'Call for hours', 'Call for hours']);
-    var addr = r.is_sensitive || !r.address ? null : r.address + ', ' + (r.city || 'Birmingham') + ', ' + (r.state || 'AL') + (r.zip ? ' ' + r.zip : '');
-    var upd = r.last_confirmed_at || r.updated_at;
-    Object.assign(o, {
-      id: b ? b.id : 'db-' + r.id, dbId: r.id, name: r.name, type: r.org_type || o.type || 'Nonprofit', faith: r.faith || '',
-      cats: r.categories || [], hood: r.neighborhood || o.hood || '', addr: addr, phone: r.phone || '',
-      verified: !!r.verified, vDate: shortDate(r.verified_at), updated: shortDate(upd), updN: upd ? Math.max(0, Math.round((Date.now() - new Date(upd)) / 864e5)) : 0,
-      avail: ['Accepting', 'Limited', 'Waitlist', 'Full'].indexOf(r.availability) >= 0 ? r.availability : 'Accepting',
-      hours: hours, open: b ? o.open : null, langs: r.languages && r.languages.length ? r.languages : ['English'], cost: r.cost || 'Free',
-      elig: r.eligibility && r.eligibility.length ? r.eligibility : ['No restrictions'], docs: r.what_to_bring || '',
-      contact: [r.contact_name || 'Main line', r.contact_title || '', r.email || ''], about: r.about || '',
-      services: r.services && typeof r.services === 'object' ? r.services : {}, sensitive: !!r.is_sensitive,
-      lat: r.is_sensitive ? null : r.latitude, lng: r.is_sensitive ? null : r.longitude, website: r.website || ''
-    });
-    if (!b) Object.assign(o, pos(o.lat, o.lng));
-    (o.cats || []).forEach(function (k) { if (!o.services[k]) o.services[k] = []; });
-    return o;
+  // --- Availability shows only for listings an organization manages (Claimed), and only if they choose to show it.
+  //     "Apply on their website" shows when the organization added an application link in its dashboard.
+  var baseDec = Component.prototype.dec;
+  Component.prototype.dec = function (o) {
+    var d = baseDec.apply(this, arguments);
+    if (!d || !o) return d;
+    var show = !!o.claimed && !o.hideAvail;
+    d.showAvail = show;
+    if (!show) { d.availStyle = { display: 'none' }; d.availLabel = ''; d.availIcon = null; }
+    d.hasApplyUrl = /^https?:\/\//i.test(o.applyUrl || '');
+    d.applyHref = d.hasApplyUrl ? o.applyUrl : '';
+    return d;
   };
 
   // --- Hook the forms. Each render, swap the sample-only actions for real ones. ---
@@ -1702,7 +1706,7 @@ class Component extends DCLogic {
       app.setState({ login: Object.assign({}, lg, { err: '', loading: true }) });
       CC.signIn(lg.email.trim(), lg.pw).then(function (r) {
         if (r.error) return app.setState({ login: Object.assign({}, app.state.login, { loading: false, err: CC.msg(r.error) }) });
-        window.location.href = 'account.html';
+        window.location.href = 'dashboard.html';
       }).catch(function (err) { app.setState({ login: Object.assign({}, app.state.login, { loading: false, err: CC.msg(err) }) }); });
     };
     v.login.forgot = function () {
@@ -1870,16 +1874,17 @@ var BRAND_NAME = 'Compassion Catalyst';
 var CONTACT_EMAIL = 'info@compassioncatalyst.org';
 
 // Which file each main screen lives in. Moving to one of these screens opens that file.
-var PAGE_FILES = { home: 'index.html', directory: 'directory.html', about: 'about.html', orgs: 'for-organizations.html', claim: 'claim.html', login: 'login.html', signup: 'signup.html', dash: 'account.html', track: 'index.html' };
+var PAGE_FILES = { home: 'index.html', directory: 'directory.html', about: 'about.html', orgs: 'for-organizations.html', claim: 'claim.html', login: 'login.html', signup: 'signup.html', gethelp: 'get-help.html', dash: 'dashboard.html', track: 'index.html' };
 
 (function () {
   var pageScreen = 'home';
   var inAppGo = Component.prototype.go;
   Component.prototype.go = function (screen, extra) {
-    if (screen === 'dash' || (screen === 'login' && window.CC && CC.session)) { window.location.href = 'account.html'; return; }
+    if (screen === 'dash' || (screen === 'login' && window.CC && CC.session)) { window.location.href = 'dashboard.html'; return; }
     var file = PAGE_FILES[screen];
     var plain = !extra || Object.keys(extra).length === 0 || screen === 'signup' ||
-      (screen === 'claim' && !(extra.claim && (extra.claim.orgId || extra.claim.q)));
+      (screen === 'claim' && !(extra.claim && (extra.claim.orgId || extra.claim.q))) ||
+      (screen === 'gethelp' && !(extra.gh && (extra.gh.cat || extra.gh.zip)));
     if (file && screen !== pageScreen && plain) { window.location.href = file; return; }
     return inAppGo.call(this, screen, extra || {});
   };
@@ -1889,7 +1894,7 @@ var PAGE_FILES = { home: 'index.html', directory: 'directory.html', about: 'abou
     el.textContent = '';
     window.app = window.startApp(Component, el, { brandName: BRAND_NAME, startScreen: pageScreen, showGuide: false }, window.APP_SCREENS);
     if (window.CC_AFTER_START) window.CC_AFTER_START(window.app);
-    if (pageScreen === 'login' && window.CC && CC.whenReady) CC.whenReady.then(function (s) { if (s) window.location.href = 'account.html'; });
+    if (pageScreen === 'login' && window.CC && CC.whenReady) CC.whenReady.then(function (s) { if (s) window.location.href = 'dashboard.html'; });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot); else boot();
 })();
