@@ -5,7 +5,25 @@
   var CC = window.CC = {};
   var cfg = window.CC_CONFIG || {};
   CC.ok = !!(window.supabase && cfg.SUPABASE_URL && cfg.SUPABASE_PUBLISHABLE_KEY);
-  CC.sb = CC.ok ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_PUBLISHABLE_KEY) : null;
+  // "Keep me logged in": when it's ticked, the log-in is saved on this device (localStorage).
+  // Otherwise it lives only until the browser is closed (sessionStorage).
+  var REMEMBER = 'cc-remember';
+  function remembered() { try { return localStorage.getItem(REMEMBER) === '1'; } catch (e) { return false; } }
+  function store() { try { return remembered() ? window.localStorage : window.sessionStorage; } catch (e) { return null; } }
+  var authStorage = {
+    getItem: function (k) { try { var s = store(); return s ? s.getItem(k) : null; } catch (e) { return null; } },
+    setItem: function (k, v) { try { var s = store(); if (s) s.setItem(k, v); } catch (e) {} },
+    removeItem: function (k) { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {} }
+  };
+  CC.setRemember = function (on) {
+    try {
+      var keys = [];
+      for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (/^sb-.*-auth-token/.test(k)) keys.push(k); }
+      keys.forEach(function (k) { localStorage.removeItem(k); });
+      if (on) localStorage.setItem(REMEMBER, '1'); else localStorage.removeItem(REMEMBER);
+    } catch (e) {}
+  };
+  CC.sb = CC.ok ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_PUBLISHABLE_KEY, { auth: { storage: authStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }) : null;
   CC.session = null;
   CC.SITE = location.origin + location.pathname.replace(/[^/]*$/, ''); // the folder this page lives in
 
@@ -18,6 +36,7 @@
     if (/Invalid login credentials/i.test(m)) return 'That email and password don’t match. Check them, or use “Forgot password?”.';
     if (/Email not confirmed/i.test(m)) return 'Please confirm your email first. We sent you a link when you signed up.';
     if (/rate limit|too many/i.test(m)) return 'Too many tries in a short time. Please wait a few minutes and try again.';
+    if (/row-level security.*claim_requests/i.test(m)) return 'This request has to be sent from an account that uses the email on the form. Log out, then try again with that email.';
     if (/claim_requests_one_pending|duplicate key/i.test(m)) return 'You already have a request waiting for review for this organization.';
     if (/Password should be/i.test(m)) return 'Please use a password with at least 8 characters.';
     if (/Failed to fetch|NetworkError|Load failed/i.test(m)) return 'We couldn’t reach the server. Check your internet connection and try again.';
@@ -30,11 +49,14 @@
   CC.ensureSession = async function (email, password) {
     if (!CC.ok) throw new Error('The site isn’t connected to the database yet.');
     var cur = (await CC.sb.auth.getSession()).data.session;
-    if (cur) return { session: cur };
+    // Already logged in as this same person: keep going. Logged in as someone else (for example your admin
+    // account): log that account out first, so the request is made with the email typed on the form.
+    if (cur && String(cur.user.email || '').toLowerCase() === String(email || '').toLowerCase()) return { session: cur };
+    if (cur) { await CC.sb.auth.signOut(); CC.session = null; }
     var r = await CC.sb.auth.signInWithPassword({ email: email, password: password });
     if (!r.error) return { session: r.data.session };
     if (/Email not confirmed/i.test(r.error.message)) return { needsConfirm: true };
-    var up = await CC.sb.auth.signUp({ email: email, password: password, options: { emailRedirectTo: CC.SITE + 'account.html' } });
+    var up = await CC.sb.auth.signUp({ email: email, password: password, options: { emailRedirectTo: CC.SITE + 'dashboard.html' } });
     if (up.error) throw up.error;
     if (up.data.session) return { session: up.data.session };
     if (up.data.user && up.data.user.identities && up.data.user.identities.length === 0)
@@ -139,11 +161,64 @@
       contact: [r.contact_name || 'Main line', r.contact_title || '', r.email || ''], about: r.about || '',
       services: r.services && typeof r.services === 'object' ? r.services : {}, sensitive: !!r.is_sensitive,
       lat: r.is_sensitive ? null : r.latitude, lng: r.is_sensitive ? null : r.longitude, website: r.website || '',
-      claimed: !!r.is_claimed, hideAvail: r.show_availability === false, applyUrl: r.apply_url || ''
+      claimed: !!r.is_claimed, hideAvail: r.show_availability === false, applyUrl: r.apply_url || '',
+      area: r.service_area || '', zip: r.is_sensitive ? '' : (r.zip || ''),
+      st: CC.stateName(r.state || (r.service_area === 'Georgia' ? 'GA' : '')), county: r.county || ''
     });
+    if (!b && !o.hood) o.hood = r.city || '';
     if (!b) Object.assign(o, pos(o.lat, o.lng));
     (o.cats || []).forEach(function (k) { if (!o.services[k]) o.services[k] = []; });
     return o;
+  };
+
+  // ---- service areas: who each listing serves ----
+  // A listing's service_area is 'Nationwide', 'Georgia' / 'Alabama' (statewide), or a local area below.
+  // To add a new local area, add it here with the first 3 digits of its ZIP codes.
+  CC.AREAS = { 'Birmingham, AL': ['350', '351', '352'], 'Coweta County, GA': ['302'] };
+  CC.stateOfZip = function (z) {
+    var n = +String(z).slice(0, 3);
+    if ((n >= 300 && n <= 319) || n === 398 || n === 399) return 'Georgia';
+    if (n >= 350 && n <= 369) return 'Alabama';
+    return '';
+  };
+  CC.servesZip = function (o, zip) {
+    var a = o.area || '';
+    if (!a || a === 'Nationwide') return true;
+    if (a === 'Georgia' || a === 'Alabama') return CC.stateOfZip(zip) === a;
+    var pre = CC.AREAS[a];
+    if (pre) return pre.indexOf(String(zip).slice(0, 3)) >= 0;
+    return !!o.zip && o.zip.slice(0, 3) === String(zip).slice(0, 3);
+  };
+  // ---- State and County filters ----
+  var STATES = { AL: 'Alabama', GA: 'Georgia' };
+  CC.stateName = function (s) { s = String(s || '').trim(); return STATES[s.toUpperCase()] || s; };
+  // A listing matches the State / County filters if it's in that place, or serves all of it (statewide or nationwide).
+  CC.placeMatch = function (o, f) {
+    if (o.area === 'Nationwide') return true;
+    if (f.st && o.st !== f.st) return false;
+    if (f.county && o.county !== f.county && !(o.area === o.st || o.area === 'Georgia' || o.area === 'Alabama')) return false;
+    return true;
+  };
+  // Adds the State / County choices to a page's values (v.dir).
+  CC.placeVals = function (app, v) {
+    if (!v || !v.dir) return;
+    var f = app.state.filters || {}, orgs = app.state.orgs || [], st = {}, co = {};
+    orgs.forEach(function (o) { if (o.st) st[o.st] = 1; if (o.county && (!f.st || o.st === f.st)) co[o.county] = 1; });
+    v.dir.states = Object.keys(st).sort();
+    v.dir.counties = Object.keys(co).sort();
+    v.dir.countyAll = f.st ? 'All of ' + f.st : 'All counties';
+    v.dir.st = { v: f.st || '', on: function (e) { var val = e.target.value; app.setState(function (s2) { return { filters: Object.assign({}, s2.filters, { st: val, county: '' }) }; }); } };
+    v.dir.county = { v: f.county || '', on: function (e) { var val = e.target.value; app.setState(function (s2) { return { filters: Object.assign({}, s2.filters, { county: val }) }; }); } };
+  };
+
+  // The neighborhood filter lists the places the live listings are in.
+  CC.setPlaces = function (orgs) {
+    if (!window.BBData) return;
+    var seen = {};
+    (orgs || []).forEach(function (o) { if (o.hood && !o.sensitive) seen[o.hood] = 1; });
+    var wide = ['Statewide (Georgia)', 'Nationwide'];
+    window.BBData.HOODS = Object.keys(seen).filter(function (h) { return wide.indexOf(h) < 0; }).sort()
+      .concat(wide.filter(function (h) { return seen[h]; }));
   };
 
   // ---- tiny helpers for the account and admin pages ----

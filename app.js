@@ -389,6 +389,7 @@
    ========================================================================== */
 class Component extends DCLogic {
   ICONS = {
+    userCheck: ['M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2', ['circle', { cx: 9, cy: 7, r: 4 }], 'm16 11 2 2 4-4'],
     search: [['circle', { cx: 11, cy: 11, r: 8 }], 'm21 21-4.3-4.3'],
     shieldCheck: ['M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z', 'm9 12 2 2 4-4'],
     shield: ['M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'],
@@ -460,7 +461,7 @@ class Component extends DCLogic {
     filters: this.blankFilters(), sort: 'relevance', view: 'list', density: 'compact', favs: ['clinic', 'legal', 'newground'], filtersOpen: false, loading: false, homeQ: '', homeCat: '', homeZip: '', mapSel: null,
     orgId: 'hope', verPop: false, ref: this.blankRef(), refStep: 1, refErr: {}, refSending: false, lastRef: null,
     trackIn: '', trackCode: null, trackErr: '', prefs: { email: true, text: false, app: true },
-    login: { email: '', pw: '', err: '', loading: false },
+    login: { email: '', pw: '', err: '', loading: false, remember: false },
     claim: this.blankClaim(), signup: { step: 1, person: '', pw: '', sending: false, confirm: false, name: '', type: 'Church', faith: 'yes', hood: '', phone: '', email: '', cats: [], services: '', serves: '', method: 'doc', fileName: '', refOrg: '', refName: '', err: {} },
     dashTab: 'overview', selRef: null, note: '', qFilter: 'all', needF: { cat: '', urg: '', status: '' }, selThread: null, msg: '',
     invite: { email: '', role: 'Staff', err: '' },
@@ -510,7 +511,7 @@ class Component extends DCLogic {
   };
 
   blankClaim() { return { q: '', orgId: null, step: 1, name: '', role: '', email: '', pw: '', sending: false, confirm: false, auth: false, method: '', workEmail: '', codeSent: false, code: '', fileName: '', result: '', err: {} }; }
-  blankFilters() { return { q: '', cats: [], faith: 'any', types: [], hood: '', openNow: false, accepting: false, lang: '', cost: '', elig: '' }; }
+  blankFilters() { return { q: '', cats: [], faith: 'any', types: [], hood: '', st: '', county: '', openNow: false, accepting: false, lang: '', cost: '', elig: '' }; }
   passInfo(r) {
     const p = r.log.slice().reverse().find(l => /^Passed to /.test(l.text));
     if (!p) return { passed: false };
@@ -775,17 +776,50 @@ class Component extends DCLogic {
   modal(m) { this.setState({ modal: Object.assign({ reason: '', note: '', q: '', pick: '', text: '', title: '', type: 'Supply request', urg: 'No rush', err: '' }, m) }); }
   org(id) { return this.state.orgs.find(o => o.id === id); }
 
+  static CLAIMED = ['hope', 'steelcity', 'jimmiehale', 'greenleaf', 'firstlight', 'pathways', 'interfaith', 'fellowship', 'clinic', 'legal', 'career', 'zion', 'dreamcenter', 'unitedway'];
+  static APPLY_URLS = { clinic: 'https://christhealthcenter.example/apply', career: 'https://careerconnect.example/apply', legal: 'https://legalaid.example/get-help' };
+  // Same status look everywhere: a colored dot and the words (green Accepting, amber Limited, blue Waitlist, red Full).
+  // Availability only shows for listings an organization manages (Claimed), and only if they choose to show it.
+  static DOT = { Accepting: ['#2f8f4e', '#22703c', '47,143,78'], Limited: ['#c98a10', '#8a5a00', '201,138,16'], Waitlist: ['#3b6fb6', '#2c5490', '59,111,182'], Full: ['#b4443a', '#8c2f27', '180,68,58'] };
   dec(o) {
-    const av = this.AV[o.avail];
+    const av = this.AV[o.avail] || this.AV.Accepting;
+    const cl = o.claimed != null ? !!o.claimed : Component.CLAIMED.includes(o.id), showAvail = cl && !o.hideAvail;
+    const aUrl = cl ? (o.applyUrl || Component.APPLY_URLS[o.id] || '') : '';
+    const DC = Component.DOT[o.avail] || ['#777', '#444', '119,119,119'];
+    const dot = React.createElement('span', { 'aria-hidden': 'true', style: { display: 'inline-block', width: 9, height: 9, background: DC[0], borderRadius: '50%', boxShadow: '0 0 0 3px rgba(' + DC[2] + ',.18)', flex: '0 0 auto' } });
+    const dotStyle = showAvail ? { display: 'inline-flex', alignItems: 'center', gap: 8, padding: 0, fontSize: 14, fontWeight: 600, lineHeight: 1.3, whiteSpace: 'nowrap', alignSelf: 'flex-start', background: 'transparent', border: 0, color: DC[1] } : { display: 'none' };
     return Object.assign({}, o, {
       isFaith: !!o.faith, pending: !o.verified, confText: o.updated ? 'Last confirmed ' + o.updated : 'Not confirmed yet',
+      claimed: cl, showAvail, dirAvailStyle: dotStyle, dirAvailIcon: showAvail ? dot : null, hasApplyUrl: !!aUrl, applyHref: aUrl, applyLabel: aUrl ? 'Apply on their website' : 'See next steps',
+      apply: e => { if (e && e.stopPropagation) e.stopPropagation(); this.setState({ modal: { kind: 'next', oid: o.id } }); },
       chips: o.cats.map(k => ({ label: this.cat(k).label, icon: this.ic(this.cat(k).icon, 16) })),
-      availLabel: av.label, availStyle: Object.assign({}, this.chipBase, av.style), availIcon: this.ic(av.icon, 14),
+      availLabel: showAvail ? av.label : '', availStyle: dotStyle, availIcon: showAvail ? dot : null,
       today: o.hours[2], openWord: o.open == null ? '' : o.open ? 'Open now' : 'Closed now', todayHours: o.hours[2], hasHours: o.open != null || (o.hours[2] && o.hours[2] !== 'Call for hours'), statusLine: o.open == null ? 'Today ' + o.hours[2] : (o.open ? 'Open now' : 'Closed now') + ' · Today ' + o.hours[2], openLabel: o.open == null ? 'Today ' + o.hours[2] : o.open ? 'Open now' : 'Closed now',
       openDot: { width: 9, height: 9, flex: 'none', borderRadius: '50%', background: o.open ? 'var(--color-accent-700)' : 'transparent', border: '1.5px solid ' + (o.open ? 'var(--color-accent-700)' : 'var(--color-neutral-600)') },
       place: o.sensitive ? 'Location kept private' : o.mi == null ? o.hood : o.hood + ' · ' + o.mi + ' mi',
       view: () => this.openOrg(o.id), refer: () => this.startRef(o.id)
     });
+  }
+  nsVals(M) {
+    const no = this.org(M.oid) || {}, nd = this.dec(no.cats ? no : Object.assign({ cats: [], hours: [], services: {} }, no)), ph = no.phone || '', C = no.contact || [];
+    const wide = no.area === 'Nationwide' || no.area === 'Georgia' || no.area === 'Alabama';
+    return { name: no.name || '', isWeb: !!nd.hasApplyUrl, isSteps: !nd.hasApplyUrl, url: nd.applyHref || '',
+      phone: ph || 'No phone listed', phoneHref: ph ? 'tel:' + ph.replace(/[^0-9+]/g, '') : '#',
+      today: no.hours && no.hours[2] && no.hours[2] !== 'Call for hours' ? 'Today: ' + no.hours[2] : 'Call for hours',
+      hasEmail: !!C[2], email: C[2] || '', mailHref: 'mailto:' + (C[2] || ''), contactLine: [C[0] !== 'Main line' ? C[0] : '', C[1]].filter(Boolean).join(', '),
+      addr: no.sensitive ? 'Address shared when you call (for everyone’s safety)' : no.addr ? no.addr : wide ? 'Help by phone or online (' + (no.area === 'Nationwide' ? 'nationwide' : 'all of ' + no.area) + ')' : (no.hood || 'Location') + ' · call for the address',
+      docs: no.docs || 'Call ahead to confirm hours and what to bring.' };
+  }
+  // State and County filters. A listing matches if it's in that place, or serves all of it (statewide or nationwide).
+  static ST = { AL: 'Alabama', GA: 'Georgia' };
+  stOf(o) { return o.st || Component.ST[((o.addr || '').match(/,\s*([A-Z]{2})\b[^,]*$/) || [])[1]] || (o.area === 'Georgia' || o.area === 'Alabama' ? o.area : ''); }
+  countyOf(o) { return o.county || (this.stOf(o) === 'Alabama' && !o.area ? 'Jefferson County' : ''); }
+  placeOk(o, f) {
+    if (window.CC && CC.placeMatch) return CC.placeMatch(o, f);
+    if (o.area === 'Nationwide') return true;
+    if (f.st && this.stOf(o) !== f.st) return false;
+    if (f.county && this.countyOf(o) !== f.county && !(o.area === 'Georgia' || o.area === 'Alabama')) return false;
+    return true;
   }
   openOrg(id) { const d = this.state.screen === 'dash'; this.go('listing', { orgId: id, fromDash: d, fromTab: d ? this.state.dashTab : null }); }
   startRef(id) {
@@ -800,6 +834,7 @@ class Component extends DCLogic {
       if (f.cats.length && !f.cats.some(c => o.cats.includes(c))) return false;
       if (f.faith === 'yes' && !o.faith) return false; if (f.faith === 'no' && o.faith) return false;
       if (f.types.length && !f.types.includes(o.type)) return false;
+      if (!this.placeOk(o, f)) return false;
       if (f.hood && o.hood !== f.hood) return false;
       if (f.openNow && !o.open) return false;
       if (f.accepting && !(o.avail === 'Accepting' || o.avail === 'Limited')) return false;
@@ -818,7 +853,7 @@ class Component extends DCLogic {
     const s = this.state, G = s.gh || { cat: '', zip: '', shown: false, err: '' }, D = this.D;
     const set = o => this.setState(st => ({ gh: Object.assign({}, st.gh || G, o) }));
     const zip = (G.zip || '').trim(), zipOk = /^\d{5}$/.test(zip);
-    const zipOf = o => ((o.addr || '').match(/\b(\d{5})\b\s*$/) || [])[1] || '';
+    const zipOf = o => o.zip || ((o.addr || '').match(/\b(\d{5})\b\s*$/) || [])[1] || '';
     const cats = D.CATS.map(c => { const on = G.cat === c.k; return { label: c.label, icon: this.ic(c.icon, 22), pressed: on ? 'true' : 'false', pick: () => set({ cat: c.k, err: '', shown: G.shown }),
       style: { display: 'flex', alignItems: 'center', gap: 10, minHeight: 56, padding: '10px 14px', textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', fontSize: 16, fontWeight: on ? 600 : 500, color: on ? 'var(--color-accent-900)' : 'var(--color-text)', background: on ? 'var(--color-accent-100)' : 'var(--color-bg)', border: '1px solid ' + (on ? 'var(--color-accent-700)' : 'var(--color-neutral-400)'), boxShadow: on ? 'inset 0 0 0 1px var(--color-accent-700)' : 'var(--shadow-sm)' } }; });
     const find = e => { e && e.preventDefault && e.preventDefault(); if (!G.cat) return set({ err: 'Choose what you need help with.', shown: false }); if (!zipOk) return set({ err: 'Enter a 5-digit ZIP code.', shown: false }); set({ err: '', shown: true }); };
@@ -980,7 +1015,7 @@ class Component extends DCLogic {
     f.cats.forEach(k => active.push([this.cat(k).label, () => this.toggleIn('filters.cats', k)]));
     if (f.faith !== 'any') active.push([f.faith === 'yes' ? 'Faith-based only' : 'Not faith-based', () => this.upd('filters.faith', 'any')]);
     f.types.forEach(t => active.push([t, () => this.toggleIn('filters.types', t)]));
-    [['hood', f.hood], ['lang', f.lang], ['cost', f.cost], ['elig', f.elig]].forEach(([k, v]) => v && active.push([v, () => this.upd('filters.' + k, '')]));
+    [['county', f.county], ['st', f.st], ['hood', f.hood], ['lang', f.lang], ['cost', f.cost], ['elig', f.elig]].forEach(([k, v]) => v && active.push([v, () => this.upd('filters.' + k, '')]));
     if (f.openNow) active.push(['Open now', () => this.upd('filters.openNow', false)]);
     if (f.accepting) active.push(['Accepting applications now', () => this.upd('filters.accepting', false)]);
     const activeChips = active.map(([label, remove]) => ({ label, remove, aria: 'Remove filter ' + label }));
@@ -997,6 +1032,10 @@ class Component extends DCLogic {
       viewSeg: this.segOf('view', [['list', 'List'], ['map', 'Map']]), densitySeg: [['detailed', 'Detailed', 'Full cards'], ['compact', 'Compact', 'Short rows with key info']].map(([k, label, tip]) => ({ label, tip, on: (s.density || 'detailed') === k, pick: () => this.setState({ density: k }) })), detailed: (s.density || 'detailed') === 'detailed', compact: s.density === 'compact', showDensity: s.view !== 'map', sort: this.bind('sort'),
       fCats, typeChips, faithSeg: this.segOf('filters.faith', [['any', 'Any'], ['yes', 'Faith-based'], ['no', 'Not faith-based']]),
       costSeg: this.segOf('filters.cost', [['', 'Any'], ['Free', 'Free'], ['Sliding scale', 'Sliding scale']]),
+      st: { v: f.st || '', on: e => { const v = e.target.value; this.setState(st2 => ({ filters: Object.assign({}, st2.filters, { st: v, county: '' }) })); } },
+      county: { v: f.county || '', on: e => { const v = e.target.value; this.setState(st2 => ({ filters: Object.assign({}, st2.filters, { county: v }) })); } },
+      states: [...new Set(s.orgs.map(o => this.stOf(o)).filter(Boolean))].sort(), counties: [...new Set(s.orgs.filter(o => !f.st || this.stOf(o) === f.st).map(o => this.countyOf(o)).filter(Boolean))].sort(),
+      countyAll: f.st ? 'All of ' + f.st : 'All counties',
       hood: this.bind('filters.hood'), lang: this.bind('filters.lang'), elig: this.bind('filters.elig'), openNow: this.bind('filters.openNow'), accepting: this.bind('filters.accepting'),
       hoods: D.HOODS, langs: D.LANGS, eligs: D.ELIG, activeChips, hasActive: activeChips.length > 0,
       clear: () => this.setState({ filters: this.blankFilters(), homeZip: '' }),
@@ -1079,7 +1118,7 @@ class Component extends DCLogic {
 
     // login / signup
     const lg = s.login;
-    const login = { email: this.bind('login.email'), pw: this.bind('login.pw'), err: lg.err, hasErr: !!lg.err, loading: lg.loading, notLoading: !lg.loading,
+    const login = { email: this.bind('login.email'), pw: this.bind('login.pw'), remember: !!lg.remember, rememberOn: e => this.upd('login.remember', !!e.target.checked), err: lg.err, hasErr: !!lg.err, loading: lg.loading, notLoading: !lg.loading,
       go: e => { e.preventDefault(); if (!/.+@.+/.test(lg.email)) return this.upd('login.err', 'Enter the email your organization signed up with.'); if (!lg.pw) return this.upd('login.err', 'Enter your password.'); this.setState({ login: Object.assign({}, lg, { err: '', loading: true }) }); setTimeout(() => { this.setState({ login: Object.assign({}, this.state.login, { loading: false }) }); nav.dash(); }, 800); } };
     const su = s.signup;
     const signup = { s1: su.step === 1, s2: su.step === 2, s3: su.step === 3, err: su.err, stepText: 'Step ' + su.step + ' of 3',
@@ -1113,6 +1152,7 @@ class Component extends DCLogic {
       ['doc', 'Send documents for a personal review', 'Upload proof that ties you to the organization, like an IRS letter or a letter on letterhead naming you.', true]
     ];
     const claim = {
+      noConfirm: true,
       q: this.bind('claim.q'), hasQ: cq.length >= 2, noResults: cq.length >= 2 && !cResults.length,
       results: cResults.map(o => ({ name: o.name, sub: [o.hood, o.cats.map(k => this.cat(k).label).join(', ')].filter(Boolean).join(' · '), isManaged: managed(o), canClaim: !managed(o), verified: !!o.verified,
         pick: () => setC({ orgId: o.id, step: 2, method: '', codeSent: false, code: '', err: {} }) })),
@@ -1435,6 +1475,7 @@ class Component extends DCLogic {
     const reasonOpts = list => list.map(l => ({ label: l, on: M.reason === l, pick: () => this.setState({ modal: Object.assign({}, M, { reason: l, err: '' }) }) }));
     const close = () => this.setState({ modal: null });
     const modal = {
+      nextSteps: mk === 'next', ns: mk === 'next' ? this.nsVals(M) : {},
       open: !!mk, report: mk === 'report', decline: mk === 'decline', pass: mk === 'pass', notfit: mk === 'notfit', ask: mk === 'ask', invite: mk === 'invite', post: mk === 'post', dlgStyle: { background: 'var(--color-bg)', width: mk === 'claim' && M.browse ? 'min(1120px, calc(100vw - 32px))' : mk === 'claim' && M.mode === 'share' ? 'min(940px, calc(100vw - 32px))' : (mk === 'volPost' || mk === 'event' || mk === 'appQs' || mk === 'volView' || mk === 'evView' || mk === 'projForm') ? 'min(820px, calc(100vw - 32px))' : (mk === 'volSign' || mk === 'signups') ? 'min(680px, calc(100vw - 32px))' : mk === 'offerMsg' ? 'min(460px, calc(100vw - 32px))' : 'min(560px, calc(100vw - 32px))', maxWidth: 'none', maxHeight: '90vh', overflowY: mk === 'claim' && (M.browse || M.mode === 'share') && s.w >= 760 ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column', padding: 24, gap: 14, animation: 'bbin .18s ease-out', transition: 'width .3s cubic-bezier(.2,.7,.2,1)' },
       volSign: mk === 'volSign', signups: mk === 'signups', claim: mk === 'claim',
       offerMsg: mk === 'offerMsg', om: (() => { if (mk !== 'offerMsg') return {}; const p = (s.posts || []).find(x => x.id === M.pid) || {};
@@ -1677,22 +1718,53 @@ class Component extends DCLogic {
 
   // --- Availability shows only for listings an organization manages (Claimed), and only if they choose to show it.
   //     "Apply on their website" shows when the organization added an application link in its dashboard.
+  var STATUS_COLORS = { Accepting: ['#2f8f4e', '#22703c', '47,143,78'], Limited: ['#c98a10', '#8a5a00', '201,138,16'], Waitlist: ['#3b6fb6', '#2c5490', '59,111,182'], Full: ['#b4443a', '#8c2f27', '180,68,58'] };
   var baseDec = Component.prototype.dec;
   Component.prototype.dec = function (o) {
     var d = baseDec.apply(this, arguments);
     if (!d || !o) return d;
     var show = !!o.claimed && !o.hideAvail;
     d.showAvail = show;
-    if (!show) { d.availStyle = { display: 'none' }; d.availLabel = ''; d.availIcon = null; }
+    // Same status look everywhere: a colored dot and the words (green Accepting, amber Limited, blue Waitlist, red Full)
+    var DC = STATUS_COLORS[o.avail] || ['#777', '#444', '119,119,119'];
+    var dot = React.createElement('span', { 'aria-hidden': 'true', style: { display: 'inline-block', width: 9, height: 9, background: DC[0], borderRadius: '50%', boxShadow: '0 0 0 3px rgba(' + DC[2] + ',.18)', flex: '0 0 auto' } });
+    var st = { display: 'inline-flex', alignItems: 'center', gap: 8, padding: 0, fontSize: 14, fontWeight: 600, lineHeight: 1.3, whiteSpace: 'nowrap', alignSelf: 'flex-start', background: 'transparent', border: 0, color: DC[1] };
+    d.availStyle = show ? st : { display: 'none' }; d.availIcon = show ? dot : null; d.dirAvailStyle = d.availStyle; d.dirAvailIcon = d.availIcon;
+    if (!show) d.availLabel = '';
     d.hasApplyUrl = /^https?:\/\//i.test(o.applyUrl || '');
     d.applyHref = d.hasApplyUrl ? o.applyUrl : '';
+    d.applyLabel = d.hasApplyUrl ? 'Apply on their website' : 'See next steps';
+    var app = this;
+    d.apply = function (e) { if (e && e.stopPropagation) e.stopPropagation(); app.setState({ modal: { kind: 'next', oid: o.id } }); };
     return d;
+  };
+
+  // --- Get help: only show listings that serve the ZIP code that was entered.
+  //     Local listings in that area come first, then statewide, then nationwide ones.
+  var baseGh = Component.prototype.ghVals;
+  Component.prototype.ghVals = function () {
+    var s = this.state, G = s.gh || {}, zip = String(G.zip || '').trim();
+    if (!G.shown || !/^\d{5}$/.test(zip) || !CC.servesZip) return baseGh.apply(this, arguments);
+    var local = function (o) { return o.area && CC.AREAS[o.area]; };
+    var keep = (s.orgs || []).filter(function (o) { return CC.servesZip(o, zip); }).map(function (o) {
+      // A local listing with no ZIP still counts as nearby for people in its area.
+      return local(o) && !o.zip ? Object.assign({}, o, { zip: zip.slice(0, 3) + '99' }) : o;
+    });
+    this.state = Object.assign({}, s, { orgs: keep });
+    var v;
+    try { v = baseGh.apply(this, arguments); } finally { this.state = s; }
+    (v.list || []).forEach(function (d) {
+      if (d.area === 'Nationwide') d.nearLabel = 'Nationwide';
+      else if (d.area === 'Georgia' || d.area === 'Alabama') d.nearLabel = 'Serves all of ' + d.area;
+    });
+    return v;
   };
 
   // --- Hook the forms. Each render, swap the sample-only actions for real ones. ---
   var baseRender = Component.prototype.renderVals;
   Component.prototype.renderVals = function () {
     var v = baseRender.apply(this, arguments);
+    if (v && CC.placeVals) CC.placeVals(this, v);
     if (!v || !v.login || !this.state.ready) return v;
     var app = this, s = this.state, loggedIn = !!CC.session;
 
@@ -1704,11 +1776,14 @@ class Component extends DCLogic {
       if (!lg.pw) return app.upd('login.err', 'Enter your password.');
       if (!CC.ok) return app.upd('login.err', 'Log in isn’t available right now. Please try again later.');
       app.setState({ login: Object.assign({}, lg, { err: '', loading: true }) });
+      CC.setRemember(!!lg.remember);
       CC.signIn(lg.email.trim(), lg.pw).then(function (r) {
         if (r.error) return app.setState({ login: Object.assign({}, app.state.login, { loading: false, err: CC.msg(r.error) }) });
         window.location.href = 'dashboard.html';
       }).catch(function (err) { app.setState({ login: Object.assign({}, app.state.login, { loading: false, err: CC.msg(err) }) }); });
     };
+    v.login.remember = !!lg.remember;
+    v.login.rememberOn = function (e) { app.upd('login.remember', !!e.target.checked); };
     v.login.forgot = function () {
       var em = (app.state.login.email || '').trim();
       if (!/.+@.+\..+/.test(em)) return app.upd('login.err', 'Type your email above first, then press “Forgot password?” again.');
@@ -1722,7 +1797,7 @@ class Component extends DCLogic {
 
     // Add your organization (3 steps)
     var su = s.signup;
-    v.signup.needPw = !loggedIn;
+    v.signup.needPw = true;
     v.signup.person = app.bind('signup.person');
     v.signup.pw = app.bind('signup.pw');
     v.signup.verifiedOrgs = s.orgs.map(function (o) { return o.name; });
@@ -1735,7 +1810,7 @@ class Component extends DCLogic {
       if (su.step === 1) {
         var err = {};
         if (!(su.person || '').trim()) err.person = 'Add your full name.';
-        if (!loggedIn && (su.pw || '').length < 8) err.pw = 'Create a password with at least 8 characters.';
+        if ((su.pw || '').length < 8) err.pw = 'Create a password with at least 8 characters (or enter your current password).';
         if (!su.name.trim()) err.name = 'Add your organization’s name.';
         if (!/.+@.+\..+/.test(su.email)) err.email = 'Add an email for your organization.';
         if (Object.keys(err).length) return app.upd('signup.err', err);
@@ -1769,7 +1844,7 @@ class Component extends DCLogic {
     var cl = s.claim || {};
     var setC = function (o) { app.setState(function (st) { return { claim: Object.assign({}, st.claim, o) }; }); };
     var cOrg = cl.orgId ? app.org(cl.orgId) : null;
-    v.claim.needPw = !loggedIn;
+    v.claim.needPw = true;
     v.claim.pw = app.bind('claim.pw');
     v.claim.fileOn = function (e) { var f = e.target.files && e.target.files[0]; files.claim = f || null; setC({ fileName: f ? f.name : '', err: {} }); };
     v.claim.results = v.claim.results.filter(function (r) { return r.canClaim; });
@@ -1783,10 +1858,11 @@ class Component extends DCLogic {
     v.claim.isVerified = false;
     v.claim.isReview = cl.step === 4;
     v.claim.confirm = !!cl.confirm;
+    v.claim.noConfirm = !cl.confirm;
     var baseCNext = v.claim.next;
     v.claim.next = function () {
       if (cl.sending) return;
-      if (cl.step === 2 && !loggedIn && (cl.pw || '').length < 8) {
+      if (cl.step === 2 && (cl.pw || '').length < 8) {
         var e2 = {};
         if (!(cl.name || '').trim()) e2.name = 'Add your full name.';
         if (!(cl.role || '').trim()) e2.role = 'Add your role, like Pastor or Program Director.';
@@ -1830,6 +1906,24 @@ class Component extends DCLogic {
       };
     }
 
+    // "See next steps" / "Apply on their website" pop-up
+    if (v.modal && M.kind === 'next') {
+      var no = app.org(M.oid) || {}, nd = app.dec(no) || {};
+      var ph = no.phone || '';
+      v.modal.nextSteps = true;
+      v.modal.ns = {
+        name: no.name || '', isWeb: !!nd.hasApplyUrl, isSteps: !nd.hasApplyUrl, url: nd.applyHref || '',
+        phone: ph || 'No phone listed', phoneHref: ph ? 'tel:' + ph.replace(/[^0-9+]/g, '') : '#',
+        today: no.hours && no.hours[2] && no.hours[2] !== 'Call for hours' ? 'Today: ' + (nd.todayHours || no.hours[2]) : 'Call for hours',
+        hasEmail: !!(no.contact && no.contact[2]), email: (no.contact && no.contact[2]) || '', mailHref: 'mailto:' + ((no.contact && no.contact[2]) || ''),
+        contactLine: [no.contact && no.contact[0] !== 'Main line' ? no.contact[0] : '', no.contact && no.contact[1]].filter(Boolean).join(', '),
+        addr: no.sensitive ? 'Address shared when you call (for everyone’s safety)' : no.addr ? no.addr :
+          (no.area === 'Nationwide' || no.area === 'Georgia' || no.area === 'Alabama') ? 'Help by phone or online (' + (no.area === 'Nationwide' ? 'nationwide' : 'all of ' + no.area) + ')' :
+          ((no.hood || 'Location') + ' · call for the address'),
+        docs: no.docs || 'Call ahead to confirm hours and what to bring.'
+      };
+    }
+
     // About page contact form: opens the visitor's email app, addressed to you.
     var ab = s.about;
     v.about.send = function (e) {
@@ -1860,37 +1954,64 @@ class Component extends DCLogic {
     CC.loadListings().then(function (rows) {
       if (!rows) return;
       var live = rows.map(CC.toOrg);
+      CC.setPlaces(live);
       app.setState({ orgs: live });
       if (app.state.screen === 'listing' && !app.org(app.state.orgId)) app.go('directory');
     }).catch(function (e) { if (window.console) console.warn('Could not load listings from Supabase, showing the saved list instead.', e); });
   };
 })();
 
-
 /* ==========================================================================
    PART 3 — Starting each page, and the links between pages.
+   Moving between the public pages happens inside the page (no reload), while
+   the address bar still changes, so links, bookmarks and the Back button work.
    ========================================================================== */
 var BRAND_NAME = 'Compassion Catalyst';
 var CONTACT_EMAIL = 'info@compassioncatalyst.org';
 
-// Which file each main screen lives in. Moving to one of these screens opens that file.
+// Which file each main screen lives in.
 var PAGE_FILES = { home: 'index.html', directory: 'directory.html', about: 'about.html', orgs: 'for-organizations.html', claim: 'claim.html', login: 'login.html', signup: 'signup.html', gethelp: 'get-help.html', dash: 'dashboard.html', track: 'index.html' };
+var PAGE_TITLES = { home: 'Find help near you', directory: 'Find help', about: 'About', orgs: 'For organizations', claim: 'Claim your listing', login: 'Log in', signup: 'Add your organization', gethelp: 'Get help' };
 
 (function () {
   var pageScreen = 'home';
   var inAppGo = Component.prototype.go;
+  // On the live site, addresses look like /about instead of /about.html
+  var pretty = !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && !/\.html$/.test(location.pathname);
+  function urlFor(screen) {
+    var f = PAGE_FILES[screen];
+    if (!pretty) return f;
+    if (screen === 'login') return 'organizations'; // the organization log-in page lives at /organizations
+    return f === 'index.html' ? './' : f.replace(/\.html$/, '');
+  }
+  function screenForPath() {
+    var name = (location.pathname.split('/').pop() || 'index').replace(/\.html$/, '') || 'index';
+    if (name === 'organizations' || name === 'organization') return 'login';
+    for (var k in PAGE_FILES) if (PAGE_FILES[k].replace(/\.html$/, '') === name && k !== 'track') return k;
+    return 'home';
+  }
+  function setTitle(screen) { if (PAGE_TITLES[screen]) document.title = PAGE_TITLES[screen] + ' · ' + BRAND_NAME; }
+
   Component.prototype.go = function (screen, extra) {
     if (screen === 'dash' || (screen === 'login' && window.CC && CC.session)) { window.location.href = 'dashboard.html'; return; }
-    var file = PAGE_FILES[screen];
-    var plain = !extra || Object.keys(extra).length === 0 || screen === 'signup' ||
-      (screen === 'claim' && !(extra.claim && (extra.claim.orgId || extra.claim.q))) ||
-      (screen === 'gethelp' && !(extra.gh && (extra.gh.cat || extra.gh.zip)));
-    if (file && screen !== pageScreen && plain) { window.location.href = file; return; }
+    if (PAGE_FILES[screen] && screen !== 'dash' && screen !== pageScreen) {
+      try { history.pushState({ screen: screen }, '', urlFor(screen)); } catch (e) {}
+      pageScreen = screen;
+      setTitle(screen);
+    }
     return inAppGo.call(this, screen, extra || {});
   };
+  window.addEventListener('popstate', function () {
+    var screen = (history.state && history.state.screen) || screenForPath();
+    pageScreen = screen;
+    setTitle(screen);
+    if (window.app) inAppGo.call(window.app, screen, {});
+  });
+
   function boot() {
     var el = document.getElementById('app');
     pageScreen = el.getAttribute('data-screen') || 'home';
+    try { history.replaceState({ screen: pageScreen }, '', location.href); } catch (e) {}
     el.textContent = '';
     window.app = window.startApp(Component, el, { brandName: BRAND_NAME, startScreen: pageScreen, showGuide: false }, window.APP_SCREENS);
     if (window.CC_AFTER_START) window.CC_AFTER_START(window.app);

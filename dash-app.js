@@ -508,7 +508,7 @@ class Component extends DCLogic {
     this.ro.observe(el);
   };
 
-  blankFilters() { return { q: '', cats: [], faith: 'any', types: [], hood: '', openNow: false, accepting: false, lang: '', cost: '', elig: '' }; }
+  blankFilters() { return { q: '', cats: [], faith: 'any', types: [], hood: '', st: '', county: '', openNow: false, accepting: false, lang: '', cost: '', elig: '' }; }
   passInfo(r) {
     const p = r.log.slice().reverse().find(l => /^Passed to /.test(l.text));
     if (!p) return { passed: false };
@@ -851,6 +851,34 @@ class Component extends DCLogic {
       view: () => this.openOrg(o.id), refer: () => this.startRef(o.id)
     });
   }
+  // The welcome tour on the dashboard
+  tourSteps() {
+    const name = (this.org('hope') || {}).name || 'your organization';
+    return [
+      ['Welcome to your dashboard', 'This is where ' + name + ' keeps its listing up to date. Here’s a quick look around. It takes less than a minute.' + (this.state.tourPending ? ' Your listing isn’t public yet, but you can set everything up now.' : '')],
+      ['Your public listing', 'My organization shows your listing exactly as people see it. Use the Edit links beside each part (description, services, hours, location, contact) to change it. “View as the public” shows the finished page.'],
+      ['Availability and how people apply', 'On the right, tell people if you’re Accepting, Limited, on a Waitlist, or Full. Then choose what your button does: show your next steps (phone, email, address) or send people to your own online application.'],
+      ['Find help and Favorites', 'Use Find help (the magnifying glass in the left menu) to look up other organizations for the people you serve. Open one and add it to Favorites (the star) to keep it close.'],
+      ['Your team and settings', 'Invite teammates and set their roles in “Your team” at the bottom of My organization. Settings (the gear) has your account, privacy choices, and password.']
+    ];
+  }
+  tourVals(M) {
+    const S = this.tourSteps(), i = Math.min(M.step || 0, S.length - 1), last = i === S.length - 1;
+    return { stepText: 'Step ' + (i + 1) + ' of ' + S.length, title: S[i][0], body: S[i][1], hasBack: i > 0, noBack: i === 0, nextLabel: last ? 'Get started' : 'Next',
+      back: () => this.setState({ modal: { kind: 'tour', step: i - 1 } }), next: () => this.setState({ modal: last ? null : { kind: 'tour', step: i + 1 } }),
+      dots: S.map((_, k) => ({ style: { width: k === i ? 22 : 8, height: 8, borderRadius: 4, background: k === i ? 'var(--color-accent-700)' : 'var(--color-neutral-400)' } })) };
+  }
+  // State and County filters. A listing matches if it's in that place, or serves all of it (statewide or nationwide).
+  static ST = { AL: 'Alabama', GA: 'Georgia' };
+  stOf(o) { return o.st || Component.ST[((o.addr || '').match(/,\s*([A-Z]{2})\b[^,]*$/) || [])[1]] || (o.area === 'Georgia' || o.area === 'Alabama' ? o.area : ''); }
+  countyOf(o) { return o.county || (this.stOf(o) === 'Alabama' && !o.area ? 'Jefferson County' : ''); }
+  placeOk(o, f) {
+    if (window.CC && CC.placeMatch) return CC.placeMatch(o, f);
+    if (o.area === 'Nationwide') return true;
+    if (f.st && this.stOf(o) !== f.st) return false;
+    if (f.county && this.countyOf(o) !== f.county && !(o.area === 'Georgia' || o.area === 'Alabama')) return false;
+    return true;
+  }
   openOrg(id) { if (this.state.screen === 'dash') return this.setState({ pubView: true, orgId: id, verPop: false }); const d = this.state.screen === 'dash'; this.go('listing', { orgId: id, fromDash: d, fromTab: d ? this.state.dashTab : null }); }
   startRef(id) {
     const o = id && this.org(id); const fc = this.state.filters.cats[0];
@@ -864,6 +892,7 @@ class Component extends DCLogic {
       if (f.cats.length && !f.cats.some(c => o.cats.includes(c))) return false;
       if (f.faith === 'yes' && !o.faith) return false; if (f.faith === 'no' && o.faith) return false;
       if (f.types.length && !f.types.includes(o.type)) return false;
+      if (!this.placeOk(o, f)) return false;
       if (f.hood && o.hood !== f.hood) return false;
       if (f.openNow && !o.open) return false;
       if (f.accepting && !(o.avail === 'Accepting' || o.avail === 'Limited')) return false;
@@ -1020,7 +1049,7 @@ class Component extends DCLogic {
     f.cats.forEach(k => active.push([this.cat(k).label, () => this.toggleIn('filters.cats', k)]));
     if (f.faith !== 'any') active.push([f.faith === 'yes' ? 'Faith-based only' : 'Not faith-based', () => this.upd('filters.faith', 'any')]);
     f.types.forEach(t => active.push([t, () => this.toggleIn('filters.types', t)]));
-    [['hood', f.hood], ['lang', f.lang], ['cost', f.cost], ['elig', f.elig]].forEach(([k, v]) => v && active.push([v, () => this.upd('filters.' + k, '')]));
+    [['county', f.county], ['st', f.st], ['hood', f.hood], ['lang', f.lang], ['cost', f.cost], ['elig', f.elig]].forEach(([k, v]) => v && active.push([v, () => this.upd('filters.' + k, '')]));
     if (f.openNow) active.push(['Open now', () => this.upd('filters.openNow', false)]);
     if (f.accepting) active.push(['Accepting applications now', () => this.upd('filters.accepting', false)]);
     const activeChips = active.map(([label, remove]) => ({ label, remove, aria: 'Remove filter ' + label }));
@@ -1037,6 +1066,10 @@ class Component extends DCLogic {
       viewSeg: this.segOf('view', [['list', 'List'], ['map', 'Map']]), densitySeg: [['detailed', 'Detailed', 'Full cards'], ['compact', 'Compact', 'Short rows with key info']].map(([k, label, tip]) => ({ label, tip, on: (s.density || 'detailed') === k, pick: () => this.setState({ density: k }) })), detailed: (s.density || 'detailed') === 'detailed', compact: s.density === 'compact', showDensity: s.view !== 'map', sort: this.bind('sort'),
       fCats, typeChips, faithSeg: this.segOf('filters.faith', [['any', 'Any'], ['yes', 'Faith-based'], ['no', 'Not faith-based']]),
       costSeg: this.segOf('filters.cost', [['', 'Any'], ['Free', 'Free'], ['Sliding scale', 'Sliding scale']]),
+      st: { v: f.st || '', on: e => { const v = e.target.value; this.setState(st2 => ({ filters: Object.assign({}, st2.filters, { st: v, county: '' }) })); } },
+      county: { v: f.county || '', on: e => { const v = e.target.value; this.setState(st2 => ({ filters: Object.assign({}, st2.filters, { county: v }) })); } },
+      states: [...new Set(s.orgs.map(o => this.stOf(o)).filter(Boolean))].sort(), counties: [...new Set(s.orgs.filter(o => !f.st || this.stOf(o) === f.st).map(o => this.countyOf(o)).filter(Boolean))].sort(),
+      countyAll: f.st ? 'All of ' + f.st : 'All counties',
       hood: this.bind('filters.hood'), lang: this.bind('filters.lang'), elig: this.bind('filters.elig'), openNow: this.bind('filters.openNow'), accepting: this.bind('filters.accepting'),
       hoods: D.HOODS, langs: D.LANGS, eligs: D.ELIG, activeChips, hasActive: activeChips.length > 0,
       clear: () => this.setState({ filters: this.blankFilters(), homeZip: '' }),
@@ -1398,6 +1431,11 @@ class Component extends DCLogic {
     };
     const dash = {
       org: orgD,
+      pubTip: { show: !s.pubTipHidden, hidden: !!s.pubTipHidden, close: () => this.setState({ pubTipHidden: true }) },
+      notice: s.notice ? { show: true, title: s.notice.title, text: s.notice.text, canDismiss: !!s.notice.canDismiss, dismiss: () => this.setState({ notice: null }),
+        boxStyle: s.notice.tone === 'live' ? { display: 'flex', gap: 14, alignItems: 'flex-start', padding: '16px 18px', marginBottom: 22, border: '1px solid #2f8f4e', borderLeft: '6px solid #2f8f4e', background: '#eef7f0', color: '#173f24' }
+          : { display: 'flex', gap: 14, alignItems: 'flex-start', padding: '16px 18px', marginBottom: 22, border: '1px solid #c98a10', borderLeft: '6px solid #c98a10', background: '#fdf6e7', color: '#4a3203' } } : { show: false },
+      startTour: () => this.setState({ modal: { kind: 'tour', step: 0 } }),
       info: { open: infoOpen, hidden: infoOpen ? 'false' : 'true', wrap: { display: 'grid', gridTemplateRows: infoOpen ? '1fr' : '0fr', opacity: infoOpen ? 1 : 0, transform: infoOpen ? 'translateY(0)' : 'translateY(-6px)', transition: 'grid-template-rows .35s ease, opacity .3s ease, transform .35s ease' }, aria: infoOpen ? 'true' : 'false', label: infoOpen ? 'Hide page info' : 'About this page', toggle: () => this.setState(st => ({ pageInfo: st.pageInfo === st.dashTab ? null : st.dashTab })) },
       postsView: Object.assign(postsView, { has: posts.length > 0, count: posts.length + (posts.length === 1 ? ' post' : ' posts'), empty: !s.showHiddenPosts && posts.length === 0 && !pfN, filteredEmpty: posts.length === 0 && !!pfN }), feed, fp, pop, cpop: Object.assign({}, pop, { open: !!s.casePop && !!sr && s.dashTab === 'overview' }), settings: this.settingsVals(), ov, history, backToRefs: () => this.setState({ dashTab: 'referrals', selRef: null }), historyCount: history.length + ' completed referrals', backOverview: () => this.setState({ dashTab: 'overview' }), tabs: dashTabs, tab, hope, availSeg, availShow: { v: !hope.hideAvail, hidden: !!hope.hideAvail, on: () => { const nv = !hope.hideAvail; this.setState(st => ({ orgs: st.orgs.map(o => o.id === 'hope' ? Object.assign({}, o, { hideAvail: nv }) : o) })); this.toast(nv ? 'Availability is now hidden from your public listing.' : 'Availability is showing on your public listing again.'); } }, availHelp: this.AV[hope.avail].help, stats, queue, queuePreview: hopeR.filter(x => !['Completed', 'Declined', 'Redirected'].includes(x.stage)).map(x => this.decRef(x)),
       queueEmpty: queue.length === 0, caseCards, caseTitle: (KD.find(k => k[0] === ck) || KD[0])[1], caseCount: queue.length + (queue.length === 1 ? ' case' : ' cases'), qSeg: this.segOf('qFilter', [['all', 'All'], ['new', 'New'], ['active', 'In progress'], ['closed', 'Closed']]), sharedToggle: () => this.setState({ sharedF: s.sharedF === 'only' ? 'show' : 'only', qFilter: s.sharedF === 'only' ? s.qFilter : 'all' }), sharedPressed: s.sharedF === 'only' ? 'true' : 'false',
@@ -1433,6 +1471,7 @@ class Component extends DCLogic {
     const reasonOpts = list => list.map(l => ({ label: l, on: M.reason === l, pick: () => this.setState({ modal: Object.assign({}, M, { reason: l, err: '' }) }) }));
     const close = () => this.setState({ modal: null });
     const modal = {
+      tour: mk === 'tour', tr: mk === 'tour' ? this.tourVals(M) : {},
       open: !!mk, teamMsg: mk === 'teamMsg', tmTo: M.to || '', tmText: { v: M.text || '', on: e => this.setState(st => ({ modal: Object.assign({}, st.modal, { text: e.target.value, err: '' }) })) }, tmSend: () => { if (!(M.text || '').trim()) return this.upd('modal.err', 'Write a message first.'); this.setState({ modal: null }); this.toast('Message sent to ' + M.to + '.'); }, applyPrev: mk === 'applyPrev', af: mk === 'applyPrev' ? this.afVals(M) : {}, report: mk === 'report', decline: mk === 'decline', pass: mk === 'pass', notfit: mk === 'notfit', ask: mk === 'ask', invite: mk === 'invite', post: mk === 'post', dlgStyle: { background: 'var(--color-bg)', width: mk === 'claim' && M.browse ? 'min(1120px, calc(100vw - 32px))' : mk === 'claim' && M.mode === 'share' ? 'min(940px, calc(100vw - 32px))' : (mk === 'volPost' || mk === 'applyPrev' || mk === 'event' || mk === 'appQs' || mk === 'volView' || mk === 'evView' || mk === 'projForm') ? 'min(820px, calc(100vw - 32px))' : (mk === 'volSign' || mk === 'signups') ? 'min(680px, calc(100vw - 32px))' : mk === 'offerMsg' ? 'min(460px, calc(100vw - 32px))' : 'min(560px, calc(100vw - 32px))', maxWidth: 'none', maxHeight: '90vh', overflowY: mk === 'claim' && (M.browse || M.mode === 'share') && s.w >= 760 ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column', padding: 24, gap: 14, animation: 'bbin .18s ease-out', transition: 'width .3s cubic-bezier(.2,.7,.2,1)' },
       volSign: mk === 'volSign', signups: mk === 'signups', claim: mk === 'claim',
       offerMsg: mk === 'offerMsg', om: (() => { if (mk !== 'offerMsg') return {}; const p = (s.posts || []).find(x => x.id === M.pid) || {};
@@ -1690,6 +1729,8 @@ class Component extends DCLogic {
   var REVIEWED = { phone: 1, email: 1, address: 1, city: 1, state: 1, zip: 1, website: 1 };
 
   var LIVE = false;          // true for a real organization, false for the Hope Harbor sample
+  var PEND = null;           // the person's request, while it waits for approval ({ id, kind, draft })
+  var NOTICE = null;         // the message at the top of the dashboard
   var ORG = null;            // the organization's row in Supabase
   var ME = null;             // { uid, email, role }
   var app = null;
@@ -1748,6 +1789,7 @@ class Component extends DCLogic {
   }
   function listingOrgs(rows, skipId) {
     var out = rows.filter(function (r) { return r.id !== skipId; }).map(CC.toOrg);
+    CC.setPlaces(out);
     return out;
   }
 
@@ -1764,7 +1806,14 @@ class Component extends DCLogic {
       window.CC_DASH_INIT = rows0.length ? { orgs: [hope].concat(listingOrgs(rows0)) } : {};
       boot(false);
       toast('This is the Hope Harbor sample. Nothing you change here is saved.');
+      startTourOnce('demo');
       return;
+    }
+
+    // Site admins use the Admin page as their dashboard (add ?org=1 to open an organization's dashboard instead)
+    if (!/[?&]org=1\b/.test(location.search)) {
+      var adm = await sb.from('profiles').select('is_admin').eq('id', uid).maybeSingle();
+      if (adm.data && adm.data.is_admin) { window.location.replace('admin.html'); return; }
     }
 
     // A real organization
@@ -1778,21 +1827,49 @@ class Component extends DCLogic {
       orgs = o.data || [];
     }
     if (!orgs.length) {
-      var p = await sb.from('profiles').select('is_admin').eq('id', uid).maybeSingle();
-      window.location.replace(p.data && p.data.is_admin ? 'admin.html' : 'account.html');
-      return;
+      // Waiting for approval? Open the dashboard anyway so they can start setting up.
+      var rq = await sb.from('claim_requests').select('id, organization_id, kind, status, draft, created_at').eq('user_id', uid).eq('status', 'pending').order('created_at', { ascending: false }).limit(1);
+      var req = rq.data && rq.data[0];
+      var base = null;
+      if (req) {
+        if (req.kind === 'new_listing') base = (await sb.from('organizations').select('*').eq('id', req.organization_id).maybeSingle()).data;
+        else base = (await sb.from('directory_listings').select('*').eq('id', req.organization_id).maybeSingle()).data;
+      }
+      if (!req || !base) {
+        if (CC.stashed && CC.stashed()) { window.location.replace('account.html'); return; } // a request still to send
+        var p = await sb.from('profiles').select('is_admin').eq('id', uid).maybeSingle();
+        window.location.replace(p.data && p.data.is_admin ? 'admin.html' : 'account.html');
+        return;
+      }
+      PEND = { id: req.id, kind: req.kind, draft: req.draft || {} };
+      ORG = Object.assign({ apply_mode: 'steps', show_availability: true, show_contact: true, hide_address: false }, base, req.kind === 'claim' ? PEND.draft : {});
+      ORG.status = 'pending';
+      orgs = [ORG];
+      roles[ORG.id] = 'owner';
+      NOTICE = { tone: 'wait', canDismiss: false,
+        title: req.kind === 'claim' ? 'Your claim is waiting for approval' : 'Your new listing is waiting for approval',
+        text: 'Go ahead and set up your listing now. Your changes are saved, but they won’t show on Find help until our team approves ' +
+          (req.kind === 'claim' ? 'your claim' : 'your listing') + ' (usually within 2–5 business days). We’ll email you when it’s live.' };
     }
     var pick = null; try { pick = localStorage.getItem('cc-dash-org'); } catch (e) {}
-    ORG = orgs.find(function (x) { return x.id === pick; }) || orgs[0];
+    if (!PEND) ORG = orgs.find(function (x) { return x.id === pick; }) || orgs[0];
     ME = { uid: uid, email: email, role: roles[ORG.id] };
 
     var prof = await sb.from('profiles').select('full_name, email, phone, is_admin').eq('id', uid).maybeSingle();
     var P = prof.data || {};
     var res = await Promise.all([
-      loadTeam(),
-      sb.from('org_favorites').select('favorite_id').eq('organization_id', ORG.id),
-      loadListings()
+      PEND ? Promise.resolve([]) : loadTeam(),
+      PEND ? Promise.resolve({ data: [] }) : sb.from('org_favorites').select('favorite_id').eq('organization_id', ORG.id),
+      loadListings(),
+      PEND ? Promise.resolve({ data: [] }) : sb.from('claim_requests').select('id, reviewed_at').eq('user_id', uid).eq('organization_id', ORG.id).eq('status', 'approved').order('reviewed_at', { ascending: false }).limit(1)
     ]);
+    // Just approved? Say so once.
+    var ok = res[3] && res[3].data && res[3].data[0];
+    if (ok && ok.reviewed_at && Date.now() - new Date(ok.reviewed_at) < 60 * 864e5) {
+      var seen = null; try { seen = localStorage.getItem('cc-live-seen-' + ok.id); } catch (e) {}
+      if (!seen) NOTICE = { tone: 'live', canDismiss: true, key: 'cc-live-seen-' + ok.id, title: 'Your listing is live!',
+        text: 'Our team approved it, so people can now find ' + ORG.name + ' on Find help. Keep it up to date from here any time.' };
+    }
     var team = res[0], favIds = (res[1].data || []).map(function (f) { return f.favorite_id; }), rows = res[2];
     var others = listingOrgs(rows, ORG.id);
     var meName = (P.full_name || '').trim() || email;
@@ -1801,8 +1878,8 @@ class Component extends DCLogic {
 
     var S0 = new Component({}).state; // the design's starting state, for shapes we keep as they are
     window.CC_DASH_INIT = {
-      LIVE: true, meName: meName, meRole: ROLE_LABEL[ME.role] || 'Staff', isSiteAdmin: !!P.is_admin, myOrgCount: orgs.length,
-      orgs: [myOrgShape(ORG)].concat(others),
+      LIVE: true, tourPending: !!PEND, meName: meName, meRole: ROLE_LABEL[ME.role] || 'Staff', isSiteAdmin: !!P.is_admin, myOrgCount: orgs.length,
+      orgs: [Object.assign(myOrgShape(ORG), PEND ? { claimed: false, verified: PEND.kind === 'claim' ? !!ORG.verified : false } : {})].concat(others),
       favs: others.filter(function (x) { return favIds.indexOf(x.dbId) >= 0; }).map(function (x) { return x.id; }),
       team: team,
       apply: { mode: ORG.apply_mode === 'web' ? 'web' : 'steps', url: ORG.apply_url || '' },
@@ -1814,6 +1891,7 @@ class Component extends DCLogic {
     };
     LIVE = true;
     boot(true);
+    startTourOnce(uid);
     if (ORG.status === 'paused') toast('Your listing is paused, so it isn’t showing on Find help right now. Email ' + CONTACT_EMAIL + ' with questions.');
   }
 
@@ -1843,6 +1921,7 @@ class Component extends DCLogic {
   var baseRV = Component.prototype.renderVals;
   Component.prototype.renderVals = function () {
     var v = baseRV.apply(this, arguments);
+    if (v && CC.placeVals) CC.placeVals(this, v);
     if (!v || !v.dash) return v;
     var self = this, s = this.state, hope = this.org('hope') || {};
     var meName = s.meName || 'Denise Carter', role = s.meRole || 'Admin';
@@ -1852,6 +1931,14 @@ class Component extends DCLogic {
     v.dash.demoOnly = !LIVE;
     v.dash.devicesNote = LIVE ? 'Signs you out on every other phone and computer.' : 'This laptop (Chrome) · iPhone · Office desktop';
     v.dash.deactivateNote = LIVE ? 'Email us and we’ll close your account or take your listing down.' : 'Removes your listing from the directory. Open referrals are returned to Unclaimed needs.';
+    v.dash.notice = NOTICE ? { show: true, title: NOTICE.title, text: NOTICE.text, canDismiss: !!NOTICE.canDismiss,
+      boxStyle: NOTICE.tone === 'live'
+        ? { display: 'flex', gap: 14, alignItems: 'flex-start', padding: '16px 18px', marginBottom: 22, border: '1px solid #2f8f4e', borderLeft: '6px solid #2f8f4e', background: '#eef7f0', color: '#173f24' }
+        : { display: 'flex', gap: 14, alignItems: 'flex-start', padding: '16px 18px', marginBottom: 22, border: '1px solid #c98a10', borderLeft: '6px solid #c98a10', background: '#fdf6e7', color: '#4a3203' },
+      dismiss: function () { try { if (NOTICE.key) localStorage.setItem(NOTICE.key, '1'); } catch (e) {} NOTICE = null; self.setState({}); } } : { show: false };
+    var tipKey = 'cc-hide-pubtip-' + (ME ? ME.uid : 'demo'), tipHidden = false;
+    try { tipHidden = localStorage.getItem(tipKey) === '1'; } catch (e) {}
+    v.dash.pubTip = { show: !tipHidden, hidden: tipHidden, close: function () { try { localStorage.setItem(tipKey, '1'); } catch (e) {} self.setState({}); } };
     v.dash.logout = function () { CC.signOut().then(function () { window.location.href = 'index.html'; }, function () { window.location.href = 'index.html'; }); };
     if (!LIVE) return v;
 
@@ -1884,6 +1971,7 @@ class Component extends DCLogic {
     };
 
     // Team → Invite teammate. Invites are saved in Supabase; your own email app sends the message.
+    if (PEND) { v.dash.invite = function () { toast('You can invite your team once your listing is approved.'); }; }
     if (v.modal && s.modal && s.modal.kind === 'invite') {
       v.modal.inviteNote = 'When you send this, your email app opens with a message and a link for them. They join your team when they log in with this email.';
       v.modal.submitInvite = function () {
@@ -1914,10 +2002,18 @@ class Component extends DCLogic {
   async function flushOrg() {
     var patch = pendingOrg; pendingOrg = {};
     if (!Object.keys(patch).length) return;
+    if (PEND && PEND.kind === 'claim') {
+      // Not approved yet: keep the changes with the claim. They're published when it's approved.
+      var draft = Object.assign({}, PEND.draft, patch);
+      var d = await CC.sb.from('claim_requests').update({ draft: draft }).eq('id', PEND.id).select('id');
+      if (d.error || !d.data || !d.data.length) { toast(d.error ? CC.msg(d.error) : 'We couldn’t save that change. Please refresh and try again.'); return; }
+      PEND.draft = draft; Object.assign(ORG, patch);
+      return;
+    }
     var r = await CC.sb.from('organizations').update(patch).eq('id', ORG.id).select('*');
     if (r.error) { toast(CC.msg(r.error)); return resync(); }
     if (!r.data || !r.data.length) { toast('Only Admins on your team can change the listing.'); return resync(); }
-    var row = r.data[0], held = Object.keys(patch).filter(function (k) { return REVIEWED[k] && String(patch[k] == null ? '' : patch[k]) !== String(row[k] == null ? '' : row[k]); });
+    var row = r.data[0], held = PEND ? [] : Object.keys(patch).filter(function (k) { return REVIEWED[k] && String(patch[k] == null ? '' : patch[k]) !== String(row[k] == null ? '' : row[k]); });
     ORG = row;
     if (held.length) {
       toast('Saved. Phone, email and address changes are checked by our team before they show on your listing.');
@@ -1994,8 +2090,9 @@ class Component extends DCLogic {
       if (pa.hideAddr !== pb.hideAddr) pp2.hide_address = !!pb.hideAddr;
       if (Object.keys(pp2).length) queueOrg(pp2);
     }
-    // Favorites
-    if (ps.favs !== s.favs) {
+    // Favorites (saved once the listing is approved)
+    if (ps.favs !== s.favs && PEND) { if (!this._favNote) { this._favNote = 1; toast('Favorites are kept on this screen for now. They’ll save once your listing is approved.'); } }
+    else if (ps.favs !== s.favs) {
       var add = (s.favs || []).filter(function (id) { return (ps.favs || []).indexOf(id) < 0; });
       var del = (ps.favs || []).filter(function (id) { return (s.favs || []).indexOf(id) < 0; });
       add.forEach(function (id) {
@@ -2008,7 +2105,7 @@ class Component extends DCLogic {
       });
     }
     // Team: role changes and removals (new invites are saved when they're sent)
-    if (ps.team !== s.team) {
+    if (ps.team !== s.team && !PEND) {
       var now = {}; (s.team || []).forEach(function (m) { now[(m.email || m.name).toLowerCase()] = m; });
       (ps.team || []).forEach(function (m) {
         var k = (m.email || m.name).toLowerCase(), n = now[k], q = null;
@@ -2029,6 +2126,13 @@ class Component extends DCLogic {
       });
     }
   };
+
+  // ---------- the welcome tour (part of the dashboard design; shows once per person, Settings → Take the tour shows it again) ----------
+  function startTourOnce(who) {
+    var k = 'cc-tour-' + who, done = null;
+    try { done = localStorage.getItem(k); localStorage.setItem(k, '1'); } catch (e) { return; }
+    if (!done) setTimeout(function () { if (app) app.setState({ modal: { kind: 'tour', step: 0 } }); }, 400);
+  }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { start().catch(fail); }); else start().catch(fail);
   function fail(e) { if (window.console) console.error(e); say('<h1 style="font-size:28px">Something went wrong</h1><p>' + CC.esc(CC.msg(e)) + '</p><p><a href="login.html">Back to log in</a></p>'); }

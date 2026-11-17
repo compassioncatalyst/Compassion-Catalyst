@@ -14,7 +14,7 @@
     document.body.appendChild(t); setTimeout(function () { t.remove(); }, 5000);
   }
   function shell(inner) {
-    var hasOrg = S.orgs.some(function (o) { return S.roles[o.id] && (o.status === 'approved' || o.status === 'paused'); });
+    var hasOrg = S.orgs.some(function (o) { return S.roles[o.id] && (o.status === 'approved' || o.status === 'paused'); }) || S.requests.some(function (r) { return r.status === 'pending'; });
     var links = '<a class="l" href="directory.html">Find help</a><a class="l" href="about.html">About</a>' +
       (hasOrg ? '<a class="l" href="dashboard.html">Your dashboard</a>' : '') +
       (S.profile && S.profile.is_admin ? '<a class="l" href="admin.html">Admin review</a>' : '') +
@@ -69,8 +69,8 @@
     var h = '<div><h1>' + (name ? 'Welcome, ' + E(name.split(' ')[0]) : 'Your account') + '</h1><p class="muted" style="margin-top:6px">Logged in as ' + E(S.session.user.email) + '</p></div>';
     if (S.err) h += '<p class="alert" role="alert">' + E(S.err) + '</p>';
     if (S.stash) h += stashCard();
-    if (S.orgs.some(function (o) { return S.roles[o.id] && (o.status === 'approved' || o.status === 'paused'); }))
-      h += '<div class="card"><p>Manage your listing, availability, team and settings in your organization dashboard.</p><a class="btn btn-primary" href="dashboard.html" style="align-self:flex-start">Open your dashboard</a></div>';
+    if (S.orgs.some(function (o) { return S.roles[o.id] && (o.status === 'approved' || o.status === 'paused'); }) || S.requests.some(function (r) { return r.status === 'pending'; }))
+      h += '<div class="card"><p>Manage your listing, availability, team and settings in your organization dashboard. If your request is still waiting for approval, you can start setting things up there now.</p><a class="btn btn-primary" href="dashboard.html" style="align-self:flex-start">Open your dashboard</a></div>';
     h += '<section style="display:flex;flex-direction:column;gap:14px"><h2>Your organizations</h2>';
     if (!S.orgs.length) h += '<div class="card white"><p>You don’t manage an organization yet. When a request below is approved, it shows up here.</p><div class="row"><a class="btn btn-secondary" href="signup.html">Add your organization</a><a class="btn btn-secondary" href="claim.html">Claim a listing</a></div></div>';
     S.orgs.forEach(function (o) { h += orgCard(o); });
@@ -88,8 +88,15 @@
     root.innerHTML = shell(h);
   }
 
+  function stashEmail() { var d = (S.stash && S.stash.data) || {}; return String(d.email || '').trim().toLowerCase(); }
+  function stashMatches() { return !stashEmail() || stashEmail() === String(S.session.user.email || '').toLowerCase(); }
   function stashCard() {
     var st = S.stash, d = st.data || {}, isNew = st.kind === 'new_listing', needFile = d.method === 'doc';
+    // A request saved on this device can only be sent by the account it was started for.
+    if (!stashMatches()) return '<div class="card" style="border-color:var(--color-accent-700)"><h2 style="font-size:22px">A request on this device belongs to another account</h2>' +
+      '<p>' + (isNew ? 'The new listing for <strong>' + E(d.name) + '</strong>' : 'The claim for <strong>' + E(d.orgName) + '</strong>') + ' was started with <strong>' + E(stashEmail()) + '</strong>, so it can’t be sent from this account (' + E(S.session.user.email) + ').</p>' +
+      '<p class="muted">To send it, log out and log in as ' + E(stashEmail()) + '.</p>' +
+      '<div class="row"><button class="btn btn-secondary" type="button" data-act="signout">Log out</button><button class="btn btn-ghost" type="button" data-act="dropstash">Discard it</button></div></div>';
     return '<form data-form="stash" class="card" style="border-color:var(--color-accent-700)"><h2 style="font-size:22px">Finish sending your request</h2>' +
       '<p>' + (isNew ? 'Your new listing for <strong>' + E(d.name) + '</strong>' : 'Your claim for <strong>' + E(d.orgName) + '</strong>') + ' is saved on this device and hasn’t been sent yet.</p>' +
       (needFile ? '<div class="field"><label for="sf">Choose your document again' + (st.fileName ? ' (' + E(st.fileName) + ')' : '') + '</label><input id="sf" name="file" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/*" class="input"></div>' : '') +
@@ -160,6 +167,7 @@
       }
       if (kind === 'stash') {
         var st = S.stash, file = f.file && f.file.files[0];
+        if (!stashMatches()) return toast('This request belongs to ' + stashEmail() + '. Log in with that email to send it.');
         if (st.data.method === 'doc' && !file) return toast('Please choose your document first.');
         S.busy = true; render();
         if (st.kind === 'new_listing') await CC.submitNewListing(st.data, file); else await CC.submitClaim(st.data, file);

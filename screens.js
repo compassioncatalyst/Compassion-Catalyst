@@ -21,6 +21,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <div style="display:flex;align-items:center;gap:18px">
 <sc-for list="{{ pubLinks }}" as="l" hint-placeholder-count="4"><button onClick="{{ l.go }}" style="{{ l.style }}">{{ l.label }}</button></sc-for>
 <button onClick="{{ nav.referNow }}" class="btn" style="min-height:44px;padding:0 18px;font-size:16px;background:var(--color-bg);border-color:var(--color-bg);color:var(--color-accent-900)" style-hover="background:var(--color-accent-100)">Get help</button>
+<button onClick="{{ nav.login }}" class="btn" style="min-height:44px;padding:0 18px;font-size:16px;background:transparent;border:1.5px solid var(--color-bg);color:var(--color-bg)" style-hover="background:color-mix(in srgb,var(--color-bg) 14%,transparent)">Log in</button>
 </div>
 </sc-if>
 <sc-if value="{{ narrow }}" hint-placeholder-val="{{ false }}">
@@ -30,7 +31,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <sc-if value="{{ menuShown }}" hint-placeholder-val="{{ false }}">
 <div style="border-top:1px solid var(--color-accent-800)">
 <sc-for list="{{ pubLinks }}" as="l"><button onClick="{{ l.go }}" style="{{ l.mstyle }}">{{ l.label }}</button></sc-for>
-<div style="padding:16px 20px"><button onClick="{{ nav.referNow }}" class="btn" style="width:100%;min-height:48px;font-size:17px;background:var(--color-bg);border-color:var(--color-bg);color:var(--color-accent-900)">Get help</button></div>
+<div style="padding:16px 20px"><button onClick="{{ nav.referNow }}" class="btn" style="width:100%;min-height:48px;font-size:17px;background:var(--color-bg);border-color:var(--color-bg);color:var(--color-accent-900)">Get help</button><button onClick="{{ nav.login }}" class="btn" style="width:100%;min-height:48px;font-size:17px;margin-top:10px;background:transparent;border:1.5px solid var(--color-bg);color:var(--color-bg)">Log in</button></div>
 </div>
 </sc-if>
 </header>
@@ -41,7 +42,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <div style="position:relative;overflow:hidden;background:var(--color-bg)">
 <section style="position:relative;max-width:1200px;margin:0 auto;padding:56px 20px 64px;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,max(340px,calc((100% - 100px) / 2))),1fr));gap:48px clamp(48px,5vw,96px);align-items:center">
 <div style="display:flex;flex-direction:column;gap:20px;min-width:0;padding-left:clamp(0px,4vw,56px)">
-<div style="display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:6px 12px;background:var(--color-accent-900);color:var(--color-bg);font-size:13px;letter-spacing:.1em;text-transform:uppercase;font-weight:500"><span style="width:8px;height:8px;border-radius:50%;background:var(--color-accent-300)"></span>Now launching in Birmingham, AL</div>
+<div style="display:inline-flex;align-items:center;gap:8px;align-self:flex-start;padding:6px 12px;background:var(--color-accent-900);color:var(--color-bg);font-size:13px;letter-spacing:.1em;text-transform:uppercase;font-weight:500"><span style="width:8px;height:8px;border-radius:50%;background:var(--color-accent-300)"></span>Now serving Birmingham, AL and Coweta County, GA</div>
 <h1 style="font-size: clamp(42px,6.4vw,70px); line-height: .98; margin: 0; text-wrap: balance; width: 608px; max-width: 607px; height: 142px">One place to find help, and <span style="color:var(--color-accent-700)">one place to send it.</span></h1><p style="font-size:19px;line-height:1.5;margin:0;max-width:46em;color:var(--color-neutral-800);text-wrap:pretty">A verified directory of churches, ministries, nonprofits, schools, and public agencies serving together — so you can connect a neighbor to the right help today.</p>
 
 
@@ -204,7 +205,8 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px;cursor:pointer"><input type="checkbox" checked="{{ dir.openNow.v }}" onChange="{{ dir.openNow.on }}" style="width:20px;height:20px;accent-color:var(--color-accent-700)">Open now</label>
 <label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px;cursor:pointer"><input type="checkbox" checked="{{ dir.accepting.v }}" onChange="{{ dir.accepting.on }}" style="width:20px;height:20px;accent-color:var(--color-accent-700)">Accepting applications now</label>
 </div>
-<div class="field"><label for="f-hood" style="font-size:14px;color:var(--color-neutral-800)">Neighborhood</label><select id="f-hood" class="input" value="{{ dir.hood.v }}" onChange="{{ dir.hood.on }}" style="min-height:44px;font-size:16px"><option value="">Anywhere nearby</option><sc-for list="{{ dir.hoods }}" as="h"><option value="{{ h }}">{{ h }}</option></sc-for></select></div>
+<div class="field"><label for="f-st" style="font-size:14px;color:var(--color-neutral-800)">State</label><select id="f-st" class="input" value="{{ dir.st.v }}" onChange="{{ dir.st.on }}" style="min-height:44px;font-size:16px"><option value="">All states</option><sc-for list="{{ dir.states }}" as="h"><option value="{{ h }}">{{ h }}</option></sc-for></select></div>
+<div class="field"><label for="f-county" style="font-size:14px;color:var(--color-neutral-800)">County</label><select id="f-county" class="input" value="{{ dir.county.v }}" onChange="{{ dir.county.on }}" style="min-height:44px;font-size:16px"><option value="">{{ dir.countyAll }}</option><sc-for list="{{ dir.counties }}" as="h"><option value="{{ h }}">{{ h }}</option></sc-for></select></div>
 <div class="field"><label for="f-lang" style="font-size:14px;color:var(--color-neutral-800)">Language spoken</label><select id="f-lang" class="input" value="{{ dir.lang.v }}" onChange="{{ dir.lang.on }}" style="min-height:44px;font-size:16px"><option value="">Any language</option><sc-for list="{{ dir.langs }}" as="h"><option value="{{ h }}">{{ h }}</option></sc-for></select></div>
 <fieldset style="border:0;padding:0;margin:0"><legend style="font-size:14px;color:var(--color-neutral-800);margin-bottom:6px">Cost</legend>
 <div class="seg" role="radiogroup" style="display:flex"><sc-for list="{{ dir.costSeg }}" as="v"><label class="seg-opt" style="min-height:44px;flex:1;justify-content:center;font-size:14px"><input type="radio" name="f-cost" checked="{{ v.on }}" onChange="{{ v.pick }}">{{ v.label }}</label></sc-for></div>
@@ -228,47 +230,46 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 
 <h2 style="margin:0;font-size:30px">No organizations match all of those filters</h2>
 <p style="margin:0;color:var(--color-neutral-800);font-size:17px">That doesn’t mean there’s no help. Try one of these:</p>
-<ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:16px"><li>Remove a filter or two — “Open now” and “Faith-based” narrow things a lot.</li><li>Search the whole city instead of one neighborhood.</li><li>Call <a href="tel:211">211</a> — the United Way helpline knows resources across Alabama.</li></ul>
+<ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:16px"><li>Remove a filter or two — “Open now” and “Faith-based” narrow things a lot.</li><li>Search the whole city instead of one neighborhood.</li><li>Call <a href="tel:211">211</a> — the United Way helpline knows resources in your area.</li></ul>
 <div style="display:flex;flex-wrap:wrap;gap:10px"><button onClick="{{ dir.clear }}" class="btn btn-primary" style="min-height:44px;font-size:16px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Clear all filters</button><button onClick="{{ dir.tryFood }}" class="btn btn-secondary" style="min-height:44px;font-size:16px">Show food resources</button></div>
 </div>
 </sc-if>
 
 <sc-if value="{{ dir.showList }}">
 <div style="display:flex;flex-direction:column;gap:22px">
+<div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 24px"><h2 style="font-size:24px;margin:0">All organizations</h2><div style="display:flex;flex-wrap:wrap;align-items:center;gap:6px 20px;font-size:13px;color:var(--color-neutral-700)"><span style="display:inline-flex;align-items:center;gap:6px"><span style="display:inline-flex;align-items:center;gap:4px;font-weight:600;color:var(--color-accent-800)">{{ I.shieldCheck }}Verified</span>Confirmed by our team</span><span aria-hidden="true" style="width:1px;height:14px;background:var(--color-neutral-400)"></span><span style="display:inline-flex;align-items:center;gap:6px"><span style="display:inline-flex;align-items:center;gap:4px;font-weight:600;color:oklch(0.40 0.13 250)">{{ I.userCheck }}Claimed</span>Managed by the organization</span></div></div>
 <sc-if value="{{ dir.detailed }}" hint-placeholder-val="{{ true }}">
 <sc-for list="{{ dir.results }}" as="o" hint-placeholder-count="4">
-<article class="card" style="border:1px solid var(--color-neutral-400);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);padding:20px;gap:12px">
+<article class="card" onClick="{{ o.view }}" title="Open {{ o.name }}" style="border:1px solid var(--color-neutral-400);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);padding:20px;gap:12px;cursor:pointer" style-hover="border-color:var(--color-accent-700)">
 
 <div style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
-<sc-if value="{{ o.verified }}"><span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--color-accent-100);color:var(--color-accent-800);border:1px solid var(--color-accent-300);font-size:13px;font-weight:500">{{ I.shieldCheck }}Verified</span></sc-if>
+<sc-if value="{{ o.verified }}"><span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:var(--color-accent-100);color:var(--color-accent-800);border:1px solid var(--color-accent-300);font-size:13px;font-weight:500">{{ I.shieldCheck }}Verified</span></sc-if><sc-if value="{{ o.claimed }}"><span title="Claimed: this organization manages its own listing and keeps it up to date" style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;background:oklch(0.96 0.03 250);color:oklch(0.40 0.13 250);border:1px solid oklch(0.80 0.07 250);font-size:13px;font-weight:500">{{ I.userCheck }}Claimed</span></sc-if>
 <sc-if value="{{ o.pending }}"><span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;color:var(--color-neutral-800);border:1px dashed var(--color-neutral-600);font-size:13px;font-weight:500">{{ I.clock }}Pending verification</span></sc-if>
 <span class="tag tag-neutral" style="font-size:13px">{{ o.type }}</span>
 <sc-if value="{{ o.isFaith }}"><span style="display:inline-flex;align-items:center;gap:4px;font-size:13px;color:var(--color-neutral-800)">{{ I.church }}Faith-based · {{ o.faith }}</span></sc-if>
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:space-between;align-items:flex-start">
 <h2 style="margin:0;font-size:26px"><button onClick="{{ o.view }}" style="background:none;border:0;padding:0;font:inherit;color:inherit;cursor:pointer;text-align:left" style-hover="color:var(--color-accent-800);text-decoration:underline">{{ o.name }}</button></h2>
-<span style="{{ o.availStyle }}">{{ o.availIcon }}{{ o.availLabel }}</span>
 </div>
 <div style="display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--color-neutral-800)"><sc-for list="{{ o.chips }}" as="c"><span style="display:inline-flex;align-items:center;gap:5px">{{ c.icon }}{{ c.label }}</span></sc-for></div>
 <div style="display:flex;flex-wrap:wrap;gap:6px 20px;font-size:15px;color:var(--color-neutral-800)">
 <span style="display:inline-flex;align-items:center;gap:6px">{{ I.pin }}{{ o.place }}</span>
 <sc-if value="{{ o.hasHours }}"><span style="display:inline-flex;align-items:center;gap:8px"><span style="{{ o.openDot }}"></span><sc-if value="{{ o.openWord }}"><span>{{ o.openWord }}</span></sc-if><span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700);padding:1px 6px;border:1px solid var(--color-neutral-400)">Today</span><span>{{ o.todayHours }}</span></span></sc-if>
 </div>
-<span style="font-size:13px;color:var(--color-neutral-700)">{{ o.confText }}</span>
 <div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:4px">
 <button onClick="{{ o.view }}" class="btn btn-secondary" style="min-height:44px;font-size:16px;padding:0 18px">View details</button>
-
+<button onClick="{{ o.apply }}" class="btn btn-primary" style="min-height:44px;font-size:16px;padding:0 18px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">{{ o.applyLabel }}</button><sc-if value="{{ o.showAvail }}"><span style="display:inline-flex;align-self:center;margin-left:4px"><span style="{{ o.dirAvailStyle }}">{{ o.dirAvailIcon }}{{ o.availLabel }}</span></span></sc-if>
 </div>
 </article>
 </sc-for>
 </sc-if>
 <sc-if value="{{ dir.compact }}"><div style="border:1px solid var(--color-neutral-400);background:var(--color-bg);box-shadow:var(--shadow-sm)">
-<sc-for list="{{ dir.results }}" as="o"><div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--color-divider)">
+<sc-for list="{{ dir.results }}" as="o"><div onClick="{{ o.view }}" title="Open {{ o.name }}" style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 16px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--color-divider);cursor:pointer" style-hover="background:var(--color-accent-100)">
 <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
-<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center"><button onClick="{{ o.view }}" style="background:none;border:0;padding:0;font-family:var(--font-heading);font-weight:600;font-size:19px;color:inherit;cursor:pointer;text-align:left" style-hover="color:var(--color-accent-800);text-decoration:underline">{{ o.name }}</button><sc-if value="{{ o.verified }}"><span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:500;color:var(--color-accent-800)">{{ I.shieldCheck }}Verified</span></sc-if><sc-if value="{{ o.pending }}"><span style="font-size:12px;color:var(--color-neutral-700)">Pending</span></sc-if></div>
+<div style="display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center"><button onClick="{{ o.view }}" style="background:none;border:0;padding:0;font-family:var(--font-heading);font-weight:600;font-size:19px;color:inherit;cursor:pointer;text-align:left" style-hover="color:var(--color-accent-800);text-decoration:underline">{{ o.name }}</button><sc-if value="{{ o.verified }}"><span style="display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:500;color:var(--color-accent-800)">{{ I.shieldCheck }}Verified</span></sc-if><sc-if value="{{ o.claimed }}"><span title="Claimed: this organization manages its own listing and keeps it up to date" style="display:inline-flex;align-items:center;gap:3px;font-size:12px;font-weight:500;color:oklch(0.40 0.13 250)">{{ I.userCheck }}Claimed</span></sc-if><sc-if value="{{ o.pending }}"><span style="font-size:12px;color:var(--color-neutral-700)">Pending</span></sc-if></div>
 <div style="display:flex;flex-wrap:wrap;gap:4px 14px;font-size:14px;color:var(--color-neutral-800)"><span>{{ o.type }}</span><span style="display:inline-flex;align-items:center;gap:5px">{{ I.pin }}{{ o.place }}</span><sc-if value="{{ o.hasHours }}"><span style="display:inline-flex;align-items:center;gap:6px"><span style="{{ o.openDot }}"></span><sc-if value="{{ o.openWord }}"><span>{{ o.openWord }}</span></sc-if><span style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;color:var(--color-neutral-700);padding:1px 6px;border:1px solid var(--color-neutral-400)">Today</span><span>{{ o.todayHours }}</span></span></sc-if></div>
 </div>
-<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><span style="{{ o.availStyle }}">{{ o.availIcon }}{{ o.availLabel }}</span></div>
+<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:flex-end"><button onClick="{{ o.apply }}" class="btn btn-primary" style="min-height:40px;font-size:15px;padding:0 14px;white-space:nowrap;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">{{ o.applyLabel }}</button></div>
 </div></sc-for>
 </div></sc-if>
 </div>
@@ -277,7 +278,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <sc-if value="{{ dir.showMap }}">
 <div style="display:flex;flex-direction:column;gap:14px">
 <div style="border:1px solid var(--color-neutral-400);box-shadow:var(--shadow-sm);position:relative;height:min(62vh,520px);min-height:340px;overflow:hidden;background:var(--color-neutral-100)">
-<iframe ref="{{ mapFrame }}" src="co-map.html" title="Map of organizations in Birmingham, AL" style="border:0;width:100%;height:100%;display:block"></iframe>
+<iframe ref="{{ mapFrame }}" src="co-map.html" title="Map of organizations" style="border:0;width:100%;height:100%;display:block"></iframe>
 </div>
 <sc-if value="{{ dir.hasPrivate }}"><p style="margin:0;font-size:14px;color:var(--color-neutral-800)">{{ I.shield }} Safety-sensitive services are not shown on the map. Switch to List view to see them.</p></sc-if>
 <sc-if value="{{ dir.hasMapSel }}">
@@ -376,19 +377,6 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 </section>
 </div>
 
-<section style="display:flex;flex-direction:column;gap:18px">
-<h2 style="margin:0;font-size:30px">Organizations that often work with this one</h2>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px">
-<sc-for list="{{ listing.partnerOrgs }}" as="o">
-<button onClick="{{ o.view }}" class="card" style="border:1px solid var(--color-neutral-400);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);padding:18px;gap:8px;text-align:left;cursor:pointer;color:var(--color-text)" style-hover="background:color-mix(in srgb,var(--color-accent) 7%,transparent)">
-
-<span style="font-family:var(--font-heading);font-weight:600;font-size:20px;line-height:1.15">{{ o.name }}</span>
-<span style="font-size:14px;color:var(--color-neutral-800)">{{ o.type }} · {{ o.place }}</span>
-<span style="{{ o.availStyle }}">{{ o.availIcon }}{{ o.availLabel }}</span>
-</button>
-</sc-for>
-</div>
-</section>
 </main>
 </sc-if>
 <sc-if value="{{ scr.refer }}" hint-placeholder-val="{{ false }}">
@@ -598,7 +586,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <div style="display:flex;flex-direction:column;gap:20px">
 <span style="display:inline-flex;align-self:flex-start;align-items:center;gap:8px;padding:6px 12px;background:var(--color-bg);border:1px solid var(--color-accent-300);color:var(--color-accent-800);font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:600">About {{ brand }}</span>
 <h1 id="about-title" style="margin:0;font-size:clamp(40px,6vw,64px);line-height:1;text-wrap:balance;color:var(--color-accent-900)">One trusted list. Every community. <span style="color:var(--color-accent-600)">Many hands serving together.</span></h1>
-<p style="margin:0;font-size:19px;line-height:1.6;color:var(--color-neutral-800);text-wrap:pretty;max-width:34em">{{ brand }} is a shared, verified resource directory for the churches, ministries, nonprofits, schools, and public agencies serving communities across the country — starting in Birmingham, Alabama.</p>
+<p style="margin:0;font-size:19px;line-height:1.6;color:var(--color-neutral-800);text-wrap:pretty;max-width:34em">{{ brand }} is a shared, verified resource directory for the churches, ministries, nonprofits, schools, and public agencies serving communities across the country — starting in Birmingham, Alabama and Coweta County, Georgia.</p>
 <div style="display:flex;flex-wrap:wrap;gap:12px;margin-top:6px">
 <button type="button" onClick="{{ nav.directory }}" class="btn btn-primary" style="min-height:48px;padding:0 22px;font-size:17px;gap:8px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)" style-hover="background:var(--color-accent-800)">{{ I.search }}Find help</button>
 </div>
@@ -811,10 +799,10 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <ol style="list-style:none;margin:0;padding:0;border-top:1px solid var(--color-divider)">
 <li style="display:grid;grid-template-columns:56px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-size:28px;color:var(--color-accent-700)">01</span><span><strong>A person reviews your claim</strong> within 2–5 business days.</span></li>
 <li style="display:grid;grid-template-columns:56px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-size:28px;color:var(--color-accent-700)">02</span><span><strong>We confirm with the organization</strong> by email or at the phone number on the listing.</span></li>
-<li style="display:grid;grid-template-columns:56px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-size:28px;color:var(--color-accent-700)">03</span><span><strong>You get an email</strong> when you can start managing the listing.</span></li>
+<li style="display:grid;grid-template-columns:56px 1fr;gap:12px;padding:14px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-size:28px;color:var(--color-accent-700)">03</span><span><strong>You can start right away.</strong> Your dashboard opens now, and your changes go live once we approve.</span></li>
 </ol>
 <sc-if value="{{ claim.confirm }}"><div role="note" style="display:flex;gap:10px;padding:14px 16px;border:1px solid var(--color-accent-300);background:var(--color-accent-100);color:var(--color-accent-900);font-size:16px">{{ I.mail }}<span><strong style="font-weight:600">First, check your email.</strong> Click the link we sent to confirm your address, then log in on this same device. Your claim is sent when you do.</span></div></sc-if>
-<div style="display:flex;flex-wrap:wrap;gap:12px"><button type="button" onClick="{{ nav.home }}" class="btn btn-secondary" style="min-height:48px;padding:0 22px;font-size:17px">Back to home</button></div>
+<div style="display:flex;flex-wrap:wrap;gap:12px"><sc-if value="{{ claim.noConfirm }}"><button type="button" onClick="{{ nav.dash }}" class="btn btn-primary" style="min-height:48px;padding:0 22px;font-size:17px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Go to your dashboard</button></sc-if><button type="button" onClick="{{ nav.home }}" class="btn btn-secondary" style="min-height:48px;padding:0 22px;font-size:17px">Back to home</button></div>
 </sc-if>
 </div>
 </sc-if>
@@ -835,6 +823,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <p style="margin:0;font-size:16px;color:var(--color-neutral-800)">For churches, ministries, and nonprofits with a listing.</p>
 <div class="field"><label for="l-email" style="font-size:15px;color:var(--color-neutral-900)">Email</label><input id="l-email" type="email" class="input" value="{{ login.email.v }}" onChange="{{ login.email.on }}" style="min-height:48px;font-size:17px"></div>
 <div class="field"><label for="l-pw" style="font-size:15px;color:var(--color-neutral-900)">Password</label><input id="l-pw" type="password" class="input" value="{{ login.pw.v }}" onChange="{{ login.pw.on }}" style="min-height:48px;font-size:17px"></div>
+<label style="display:flex;align-items:center;gap:10px;min-height:40px;font-size:16px;cursor:pointer"><input type="checkbox" checked="{{ login.remember }}" onChange="{{ login.rememberOn }}" style="width:20px;height:20px;accent-color:var(--color-accent-700)">Keep me logged in on this device</label>
 <sc-if value="{{ login.hasErr }}"><span role="alert" style="font-size:15px;font-weight:500">{{ I.info }} {{ login.err }}</span></sc-if>
 <button type="submit" class="btn btn-primary" style="min-height:52px;font-size:18px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)"><sc-if value="{{ login.loading }}">{{ spinner }}Logging in…</sc-if><sc-if value="{{ login.notLoading }}" hint-placeholder-val="{{ true }}">Log in</sc-if></button>
 <button type="button" onClick="{{ login.forgot }}" class="btn btn-ghost" style="align-self:flex-start;min-height:40px;font-size:15px;color:var(--color-accent-700)">Forgot password?</button>
@@ -901,8 +890,8 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <li style="display:grid;grid-template-columns:64px 1fr;gap:12px;padding:16px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-size:30px;color:var(--color-accent-700)">02</span><span><strong>A personal review — usually 3 to 5 business days.</strong> The founder reads your listing and calls your main phone number.</span></li>
 <li style="display:grid;grid-template-columns:64px 1fr;gap:12px;padding:16px 0;border-bottom:1px solid var(--color-divider)"><span style="font-family:var(--font-heading);font-size:30px;color:var(--color-accent-700)">03</span><span><strong>Your listing goes live as Verified.</strong> Until then, it can appear marked “Pending verification.”</span></li>
 </ol>
-<sc-if value="{{ signup.confirm }}"><div role="note" style="display:flex;gap:10px;padding:14px 16px;border:1px solid var(--color-accent-300);background:var(--color-accent-100);color:var(--color-accent-900);font-size:16px">{{ I.mail }}<span><strong style="font-weight:600">One more step: check your email.</strong> Click the link we sent to confirm your address, then log in on this same device to send your request.</span></div></sc-if><p style="margin:0;font-size:16px">While you wait, you can log in to see where your request stands.</p>
-<div style="display:flex;flex-wrap:wrap;gap:12px"><button onClick="{{ nav.dash }}" class="btn btn-primary" style="min-height:48px;padding:0 22px;font-size:17px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Go to your account</button><button onClick="{{ nav.home }}" class="btn btn-secondary" style="min-height:48px;padding:0 22px;font-size:17px">Back to home</button></div>
+<sc-if value="{{ signup.confirm }}"><div role="note" style="display:flex;gap:10px;padding:14px 16px;border:1px solid var(--color-accent-300);background:var(--color-accent-100);color:var(--color-accent-900);font-size:16px">{{ I.mail }}<span><strong style="font-weight:600">One more step: check your email.</strong> Click the link we sent to confirm your address, then log in on this same device to send your request.</span></div></sc-if><p style="margin:0;font-size:16px">While you wait, you can open your dashboard and start filling in your listing. Nothing goes public until we approve it.</p>
+<div style="display:flex;flex-wrap:wrap;gap:12px"><button onClick="{{ nav.dash }}" class="btn btn-primary" style="min-height:48px;padding:0 22px;font-size:17px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Go to your dashboard</button><button onClick="{{ nav.home }}" class="btn btn-secondary" style="min-height:48px;padding:0 22px;font-size:17px">Back to home</button></div>
 </main>
 </sc-if>
 
@@ -917,7 +906,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 </nav>
 <div style="display:flex;flex-direction:column;gap:6px;font-size:15px"><strong style="font-weight:600">Crisis resources</strong><span>Emergency: <a href="tel:911">911</a></span><span>Suicide &amp; Crisis Lifeline: call or text <a href="tel:988">988</a></span><span>United Way helpline: <a href="tel:211">211</a></span><span>Domestic Violence Hotline: <a href="tel:18007997233">1-800-799-7233</a></span></div>
 </div>
-<div style="max-width:1200px;margin:0 auto;padding:0 20px 28px;font-size:13px;color:var(--color-neutral-700)">© 2026 Compassion Catalyst · Birmingham, Alabama. Details can change, so please call ahead before you go.</div>
+<div style="max-width:1200px;margin:0 auto;padding:0 20px 28px;font-size:13px;color:var(--color-neutral-700)">© 2026 Compassion Catalyst. Details can change, so please call ahead before you go.</div>
 </footer>
 </sc-if>
 
@@ -1325,14 +1314,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <section style="padding:22px;border-right:1px solid var(--color-divider);border-bottom:1px solid var(--color-divider);display:flex;flex-direction:column;gap:10px"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="margin:0;font-size:26px">Contact person</h2><sc-if value="{{ dash.org.e.contact.off }}"><button type="button" onClick="{{ dash.org.e.contact.start }}" class="btn btn-ghost" style="min-height:32px;font-size:14px;padding:0 8px;color:var(--color-accent-700)">{{ I.edit }}Edit</button></sc-if></div><sc-if value="{{ dash.org.e.contact.off }}"><strong style="font-size:18px;font-weight:600">{{ dash.org.L.contactName }}</strong><span style="color:var(--color-neutral-800)">{{ dash.org.L.contactRole }}</span><span style="display:inline-flex;align-items:center;gap:8px;min-height:36px">{{ I.phone }}{{ dash.org.L.phone }}</span><sc-if value="{{ dash.org.L.contactEmail }}"><span style="display:inline-flex;align-items:center;gap:8px;min-height:36px">{{ I.mail }}{{ dash.org.L.contactEmail }}</span></sc-if></sc-if><sc-if value="{{ dash.org.e.contact.on }}"><div style="display:flex;flex-direction:column;gap:10px;padding:14px;border:1px solid var(--color-accent-300);background:var(--color-accent-100);animation:bbin .18s ease-out"><sc-for list="{{ dash.org.contactRows }}" as="c"><div class="field"><label style="font-size:14px">{{ c.label }}</label><input class="input" style="min-height:40px;font-size:15px" value="{{ c.v }}" onChange="{{ c.on }}"></div></sc-for><div style="display:flex;gap:8px;justify-content:flex-end"><button type="button" onClick="{{ dash.org.e.contact.cancel }}" class="btn btn-secondary" style="min-height:38px;font-size:14px">Cancel</button><button type="button" onClick="{{ dash.org.e.contact.save }}" class="btn btn-primary" style="min-height:38px;font-size:14px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Save</button></div></div></sc-if></section>
 </div>
 
-<sc-if value="{{ dash.org.hasPartners }}"><section style="display:flex;flex-direction:column;gap:18px">
-<h2 style="margin:0;font-size:30px">Organizations that often work with this one</h2>
-<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:20px">
-<sc-for list="{{ dash.org.L.partnerOrgs }}" as="o"><div class="card" style="border:1px solid var(--color-neutral-400);background:var(--color-neutral-100);box-shadow:var(--shadow-sm);padding:18px;gap:8px;color:var(--color-text)"><span style="font-family:var(--font-heading);font-weight:600;font-size:20px;line-height:1.15">{{ o.name }}</span><span style="font-size:14px;color:var(--color-neutral-800)">{{ o.type }} · {{ o.place }}</span><span style="{{ o.availStyle }}">{{ o.availIcon }}{{ o.availLabel }}</span></div></sc-for>
-</div>
-</section></sc-if>
-</section>
-
+<sc-if value="{{ dash.org.hasPartners }}">
 <section aria-label="Statistics" style="border:1px solid var(--color-neutral-400);background:var(--color-bg);box-shadow:var(--shadow-sm);padding:20px 22px;display:flex;flex-direction:column;gap:18px">
 <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px"><h2 style="margin:0;font-size:24px">Statistics</h2><span style="font-size:14px;color:var(--color-neutral-700)">All time, unless noted</span></div>
 <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,170px),1fr));border-top:1px solid var(--color-divider);border-left:1px solid var(--color-divider)">
@@ -1716,7 +1698,8 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px;cursor:pointer"><input type="checkbox" checked="{{ dir.openNow.v }}" onChange="{{ dir.openNow.on }}" style="width:20px;height:20px;accent-color:var(--color-accent-700)">Open now</label>
 <label style="display:flex;align-items:center;gap:10px;min-height:44px;font-size:16px;cursor:pointer"><input type="checkbox" checked="{{ dir.accepting.v }}" onChange="{{ dir.accepting.on }}" style="width:20px;height:20px;accent-color:var(--color-accent-700)">Accepting applications now</label>
 </div>
-<div class="field"><label for="f-hood" style="font-size:14px;color:var(--color-neutral-800)">Neighborhood</label><select id="f-hood" class="input" value="{{ dir.hood.v }}" onChange="{{ dir.hood.on }}" style="min-height:44px;font-size:16px"><option value="">Anywhere nearby</option><sc-for list="{{ dir.hoods }}" as="h"><option value="{{ h }}">{{ h }}</option></sc-for></select></div>
+<div class="field"><label for="f-st" style="font-size:14px;color:var(--color-neutral-800)">State</label><select id="f-st" class="input" value="{{ dir.st.v }}" onChange="{{ dir.st.on }}" style="min-height:44px;font-size:16px"><option value="">All states</option><sc-for list="{{ dir.states }}" as="h"><option value="{{ h }}">{{ h }}</option></sc-for></select></div>
+<div class="field"><label for="f-county" style="font-size:14px;color:var(--color-neutral-800)">County</label><select id="f-county" class="input" value="{{ dir.county.v }}" onChange="{{ dir.county.on }}" style="min-height:44px;font-size:16px"><option value="">{{ dir.countyAll }}</option><sc-for list="{{ dir.counties }}" as="h"><option value="{{ h }}">{{ h }}</option></sc-for></select></div>
 <div class="field"><label for="f-lang" style="font-size:14px;color:var(--color-neutral-800)">Language spoken</label><select id="f-lang" class="input" value="{{ dir.lang.v }}" onChange="{{ dir.lang.on }}" style="min-height:44px;font-size:16px"><option value="">Any language</option><sc-for list="{{ dir.langs }}" as="h"><option value="{{ h }}">{{ h }}</option></sc-for></select></div>
 <fieldset style="border:0;padding:0;margin:0"><legend style="font-size:14px;color:var(--color-neutral-800);margin-bottom:6px">Cost</legend>
 <div class="seg" role="radiogroup" style="display:flex"><sc-for list="{{ dir.costSeg }}" as="v"><label class="seg-opt" style="min-height:44px;flex:1;justify-content:center;font-size:14px"><input type="radio" name="f-cost" checked="{{ v.on }}" onChange="{{ v.pick }}">{{ v.label }}</label></sc-for></div>
@@ -1740,7 +1723,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 
 <h2 style="margin:0;font-size:30px">No organizations match all of those filters</h2>
 <p style="margin:0;color:var(--color-neutral-800);font-size:17px">That doesn’t mean there’s no help. Try one of these:</p>
-<ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:16px"><li>Remove a filter or two — “Open now” and “Faith-based” narrow things a lot.</li><li>Search the whole city instead of one neighborhood.</li><li>Call <a href="tel:211">211</a> — the United Way helpline knows resources across Alabama.</li></ul>
+<ul style="margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:16px"><li>Remove a filter or two — “Open now” and “Faith-based” narrow things a lot.</li><li>Search the whole city instead of one neighborhood.</li><li>Call <a href="tel:211">211</a> — the United Way helpline knows resources in your area.</li></ul>
 <div style="display:flex;flex-wrap:wrap;gap:10px"><button onClick="{{ dir.clear }}" class="btn btn-primary" style="min-height:44px;font-size:16px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Clear all filters</button><button onClick="{{ dir.tryFood }}" class="btn btn-secondary" style="min-height:44px;font-size:16px">Show food resources</button></div>
 </div>
 </sc-if>
@@ -1830,7 +1813,7 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <sc-if value="{{ dir.showMap }}">
 <div style="display:flex;flex-direction:column;gap:14px">
 <div style="border:1px solid var(--color-neutral-400);box-shadow:var(--shadow-sm);position:relative;height:min(62vh,520px);min-height:340px;overflow:hidden;background:var(--color-neutral-100)">
-<iframe ref="{{ mapFrame }}" src="co-map.html" title="Map of organizations in Birmingham, AL" style="border:0;width:100%;height:100%;display:block"></iframe>
+<iframe ref="{{ mapFrame }}" src="co-map.html" title="Map of organizations" style="border:0;width:100%;height:100%;display:block"></iframe>
 </div>
 <sc-if value="{{ dir.hasPrivate }}"><p style="margin:0;font-size:14px;color:var(--color-neutral-800)">{{ I.shield }} Safety-sensitive services are not shown on the map. Switch to List view to see them.</p></sc-if>
 <sc-if value="{{ dir.hasMapSel }}">
@@ -1936,6 +1919,25 @@ window.APP_SCREENS = String.raw`<div ref="{{ frameRef }}" style="{{ frameStyle }
 <div role="dialog" aria-modal="true" class="dialog" onClick="{{ modal.stop }}" style="{{ modal.dlgStyle }}">
 
 
+<sc-if value="{{ modal.nextSteps }}">
+<sc-if value="{{ modal.ns.isSteps }}">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);font-weight:600">Next steps</span><h2 class="dialog-title" style="margin:0;font-size:26px">How to get help from {{ modal.ns.name }}</h2><span style="font-size:16px;color:var(--color-neutral-800)">Reach out to them directly. Here’s how.</span></div>
+<ul style="list-style:none;margin:0;padding:0;border:1px solid var(--color-neutral-400);border-bottom:0">
+<li style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--color-divider)"><span style="display:grid;place-items:center;width:38px;height:38px;flex:none;background:var(--color-accent-100);color:var(--color-accent-800)">{{ I.phone }}</span><span style="display:flex;flex-direction:column;gap:2px"><strong style="font-size:17px">Call</strong><a href="{{ modal.ns.phoneHref }}" style="font-size:17px">{{ modal.ns.phone }}</a><span style="font-size:14px;color:var(--color-neutral-800)">{{ modal.ns.today }}</span></span></li>
+<sc-if value="{{ modal.ns.hasEmail }}"><li style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--color-divider)"><span style="display:grid;place-items:center;width:38px;height:38px;flex:none;background:var(--color-accent-100);color:var(--color-accent-800)">{{ I.mail }}</span><span style="display:flex;flex-direction:column;gap:2px"><strong style="font-size:17px">Email</strong><a href="{{ modal.ns.mailHref }}" style="font-size:17px;overflow-wrap:anywhere">{{ modal.ns.email }}</a><span style="font-size:14px;color:var(--color-neutral-800)">{{ modal.ns.contactLine }}</span></span></li></sc-if>
+<li style="display:flex;gap:14px;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--color-divider)"><span style="display:grid;place-items:center;width:38px;height:38px;flex:none;background:var(--color-accent-100);color:var(--color-accent-800)">{{ I.pin }}</span><span style="display:flex;flex-direction:column;gap:2px"><strong style="font-size:17px">Visit</strong><span style="font-size:17px">{{ modal.ns.addr }}</span></span></li>
+</ul>
+<div style="display:flex;flex-direction:column;gap:4px;padding:12px 14px;background:var(--color-neutral-100);border:1px solid var(--color-divider)"><strong style="font-size:15px">Before you go</strong><span style="font-size:15px">{{ modal.ns.docs }}</span></div>
+<div class="dialog-actions"><button onClick="{{ modal.close }}" class="btn btn-primary" style="min-height:44px;font-size:16px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Done</button></div>
+</sc-if>
+<sc-if value="{{ modal.ns.isWeb }}">
+<div style="display:flex;flex-direction:column;gap:4px"><span style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--color-accent-700);font-weight:600">Apply online</span><h2 class="dialog-title" style="margin:0;font-size:26px">Apply on {{ modal.ns.name }}’s website</h2></div>
+<p style="margin:0;font-size:16px;line-height:1.55">{{ modal.ns.name }} takes applications on their own website. It opens in a new tab, and this page stays open.</p>
+<div style="padding:10px 12px;border:1px solid var(--color-divider);background:var(--color-neutral-100);font-size:15px;overflow-wrap:anywhere">{{ modal.ns.url }}</div>
+<span style="font-size:14px;color:var(--color-neutral-800)">Questions first? Call {{ modal.ns.phone }}.</span>
+<div class="dialog-actions"><button onClick="{{ modal.close }}" class="btn btn-secondary" style="min-height:44px;font-size:16px">Cancel</button><a href="{{ modal.ns.url }}" target="_blank" rel="noopener noreferrer" class="btn btn-primary" style="min-height:44px;font-size:16px;display:inline-flex;align-items:center;background:var(--color-accent-700);border-color:var(--color-accent-700);color:var(--color-bg)">Continue to their website ↗</a></div>
+</sc-if>
+</sc-if>
 <sc-if value="{{ modal.report }}">
 <h2 class="dialog-title" style="margin:0;font-size:26px">Report this listing or post</h2>
 <span style="font-size:15px;color:var(--color-neutral-800)">{{ modal.target }}</span>

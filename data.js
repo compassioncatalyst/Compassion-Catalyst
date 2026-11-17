@@ -17,7 +17,13 @@ window.BBData = (function () {
     { k: 'dv', label: 'Domestic violence support', icon: 'shield' },
     { k: 'youth', label: 'Youth & family', icon: 'users' },
     { k: 'senior', label: 'Senior services', icon: 'sun' },
-    { k: 'reentry', label: 'Re-entry support', icon: 'door' }
+    { k: 'reentry', label: 'Re-entry support', icon: 'door' },
+    { k: 'disability', label: 'Disability services', icon: 'users' },
+    { k: 'education', label: 'Education', icon: 'compass' },
+    { k: 'veterans', label: 'Veterans', icon: 'flag' },
+    { k: 'insurance', label: 'Health insurance', icon: 'shieldCheck' },
+    { k: 'gov', label: 'Government & public safety', icon: 'layers' },
+    { k: 'community', label: 'Other community services', icon: 'grid' }
   ];
   const LANGS = ['English', 'Spanish', 'Arabic', 'Vietnamese', 'ASL'];
   const ELIG = ['No restrictions', 'Men', 'Women', 'Families', 'Women & children', 'Seniors', 'Veterans', 'Adults 18+', 'County residents', 'Income limits apply', 'No insurance', 'Disabilities'];
