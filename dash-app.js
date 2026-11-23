@@ -388,6 +388,8 @@
    ========================================================================== */
 class Component extends DCLogic {
   ICONS = {
+    arrowLeft: ['m12 19-7-7 7-7', 'M19 12H5'],
+    pointer: ['M22 14a8 8 0 0 1-8 8', 'M18 11v-1a2 2 0 0 0-2-2a2 2 0 0 0-2 2', 'M14 10V9a2 2 0 0 0-2-2a2 2 0 0 0-2 2v1', 'M10 9.5V4a2 2 0 0 0-2-2a2 2 0 0 0-2 2v10', 'M18 11a2 2 0 1 1 4 0v3a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15'],
     search: [['circle', { cx: 11, cy: 11, r: 8 }], 'm21 21-4.3-4.3'],
     shieldCheck: ['M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z', 'm9 12 2 2 4-4'],
     shield: ['M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z'],
@@ -456,11 +458,21 @@ class Component extends DCLogic {
 
   state = Object.assign({
     screen: 'dash', navMini: true, apply: { mode: 'steps', url: '' }, w: 1200, mobilePreview: false, guideOpen: false, toast: null, modal: null, menuOpen: false,
-    filters: this.blankFilters(), sort: 'relevance', view: 'list', density: 'compact', favs: ['clinic', 'legal', 'newground'], filtersOpen: false, loading: false, homeQ: '', homeCat: '', homeZip: '', mapSel: null,
+    filters: this.blankFilters(), sort: 'relevance', view: 'list', density: 'compact', favs: ['newground', 'firehouse', 'ridgeview', 'clinic', 'magnolia', 'mpower', 'zion', 'brendan', 'unitedway', 'legal', 'career'], filtersOpen: false, loading: false, homeQ: '', homeCat: '', homeZip: '', mapSel: null,
     orgId: 'hope', verPop: false, ref: this.blankRef(), refStep: 1, refErr: {}, refSending: false, lastRef: null,
     trackIn: '', trackCode: null, trackErr: '', prefs: { email: true, text: false, app: true },
     login: { email: 'denise@hopeharbor.example', pw: '', err: '', loading: false },
     signup: { step: 1, name: '', type: 'Church', faith: 'yes', hood: '', phone: '', email: '', cats: [], services: '', serves: '', method: 'doc', fileName: '', refOrg: '', refName: '', err: {} },
+    // Dashboards this account can open (sample). kind 'admin' is the site's Admin page.
+    myDash: [{ id: 'hope', kind: 'org', name: 'Hope Harbor Community Pantry', role: 'Admin', status: 'Live' }, { id: 'coats', kind: 'org', name: 'Woodlawn Winter Coat Closet', role: 'Staff', status: 'Waiting for approval',
+      org: { name: 'Woodlawn Winter Coat Closet', type: 'Church', faith: 'Methodist', cats: ['clothing'], hood: 'Woodlawn', addr: '5520 1st Ave N, Birmingham, AL 35212', phone: '205-555-0188', verified: false, vDate: null, updated: 'Nov 12, 2026', updN: 6, avail: 'Accepting', hours: ['Closed', 'Closed', '4–7 PM', 'Closed', 'Closed', '9 AM–12 PM', 'Closed'], open: null, mi: 1.4, langs: ['English'], cost: 'Free', elig: ['No restrictions'], docs: 'Nothing needed. One coat per person each winter.', docsTitle: '', contact: ['Front desk', 'Coat closet volunteers', ''], about: 'A winter coat closet in the fellowship hall. Neighbors pick out a warm coat, hat and gloves, with sizes for kids and adults.', services: { clothing: ['Winter coats for all ages', 'Hats, gloves and scarves'] }, partners: [], x: 64, y: 32, cap: 'Open Wednesday evenings and Saturday mornings, November to March.' } },
+      { id: 'circle', kind: 'org', name: 'Eastside Recovery Circle', role: 'Admin', status: 'Not approved', org: { name: 'Eastside Recovery Circle', type: 'Nonprofit', faith: '', cats: ['recovery'], hood: 'East Lake', addr: '', phone: '205-555-0193', verified: false, vDate: null, updated: 'Nov 10, 2026', updN: 8, avail: 'Accepting', hours: ['Call for hours', 'Call for hours', 'Call for hours', 'Call for hours', 'Call for hours', 'Call for hours', 'Call for hours'], open: null, mi: 3.1, langs: ['English'], cost: 'Free', elig: ['Adults 18+'], docs: '', docsTitle: '', contact: ['Main line', '', ''], about: 'Peer support meetings for adults in recovery.', services: { recovery: ['Weekly peer support meetings'] }, partners: [], x: 70, y: 22, cap: '' } },
+      { id: 'admin', kind: 'admin', name: 'Compassion Catalyst Admin', role: 'Site admin', status: '', info: '3 requests waiting for review · 1 new report' }],
+    // Sample folders: two filled in, the rest of the favorites aren't in a folder
+    favFolders: [{ id: 'fold-housing', name: 'Housing partners', desc: 'Who we call first when a family needs a place to stay tonight.', icon: 'home' },
+      { id: 'fold-health', name: 'Health & counseling', desc: 'Clinics and counselors we refer to most.', icon: 'cross' }],
+    favFolderOf: { newground: 'fold-housing', firehouse: 'fold-housing', ridgeview: 'fold-housing', clinic: 'fold-health', magnolia: 'fold-health', mpower: 'fold-health' }, favOpenFolder: null, favExpanded: {}, favShow: { firehouse: ['phone', 'addr'], zion: ['phone', 'email'] }, favAllOpen: true, favDensity: 'compact',
+    pickOpen: true, pickRemember: false, autoOpen: '', curDash: 'hope',
     dashTab: 'org', selRef: null, note: '', qFilter: 'all', needF: { cat: '', urg: '', status: '' }, selThread: null, msg: '',
     invite: { email: '', role: 'Staff', err: '' },
     settings: { name: 'Denise Carter', email: 'denise@hopeharbor.example', phone: '205-555-0142', n: { reports: { email: true, text: false, app: true }, checkin: { email: true, text: false, app: true }, team: { email: true, text: false, app: true }, favs: { email: false, text: false, app: true }, digest: { email: true, text: false, app: false } }, quiet: true, p: { showContact: true, shareCase: true, suggest: true, readReceipts: true, hideAddr: false }, twoStep: false },
@@ -487,6 +499,8 @@ class Component extends DCLogic {
   componentDidMount() {
     this._onMsg = e => { const d = e.data || {}; if (d.coMapReady) this.sendMap(); if (d.coMapPick) this.setState({ mapSel: d.coMapPick }); };
     window.addEventListener('message', this._onMsg);
+    this._onTourMove = () => { if (this.state.modal && this.state.modal.kind === 'tour') { cancelAnimationFrame(this._tourRaf); this._tourRaf = requestAnimationFrame(() => this.measureTour()); } };
+    window.addEventListener('resize', this._onTourMove); window.addEventListener('scroll', this._onTourMove, true);
     const ftick = () => { const el = this._feat; if (el && el.isConnected) { const half = el.scrollWidth / 2; this._fpos = (this._fpos ?? 0) + 0.4; if (this._fpos >= half) this._fpos -= half; el.scrollLeft = this._fpos; } this._fraf = requestAnimationFrame(ftick); };
     this._fraf = requestAnimationFrame(ftick);
     if (!this.state.ready) this._poll = setInterval(() => { if (window.BBData) { clearInterval(this._poll); this.setState(this.dataState()); } }, 50);
@@ -495,6 +509,9 @@ class Component extends DCLogic {
   sendMap() { const f = this._mapEl; if (f && f.contentWindow && this._mapPins) f.contentWindow.postMessage({ coMapPins: this._mapPins, sel: this._mapSel }, '*'); }
   componentDidUpdate(pp, ps) {
     this.sendMap();
+    const tm = this.state.modal, tk = tm && tm.kind === 'tour' ? 'tour' + tm.step : '';
+    if (tk && (tk !== this._tourKey || !this.state.tourRect)) { this._tourKey = tk; clearTimeout(this._tourT); this._tourT = setTimeout(() => this.measureTour(), 60); }
+    if (!tk) this._tourKey = '';
     const k = this.state.dashTab + '|' + this.state.selRef;
     if (k !== this._lastDashKey) { this._lastDashKey = k; const m = document.querySelector('[data-dash-main]'); if (m) m.scrollTop = 0; }
   }
@@ -534,7 +551,7 @@ class Component extends DCLogic {
   segOf(path, opts) { const v = this.get(path); return opts.map(o => { const [val, label] = Array.isArray(o) ? o : [o, o]; return { label, on: v === val, pick: () => this.upd(path, val) }; }); }
   toggleIn(path, val) { const arr = this.get(path) || []; this.upd(path, arr.includes(val) ? arr.filter(x => x !== val) : arr.concat(val)); }
   chip(on) { return { display: 'inline-flex', alignItems: 'center', gap: 6, minHeight: 40, padding: '6px 12px', fontSize: 14, cursor: 'pointer', border: '1px solid ' + (on ? 'var(--color-accent-700)' : 'var(--color-divider)'), background: on ? 'var(--color-accent-700)' : 'transparent', color: on ? 'var(--color-bg)' : 'var(--color-text)', textAlign: 'left' }; }
-  setState(o, cb) { const ok = ['org', 'directory', 'favs', 'settings', 'profile'], fix = x => { if (!x) return x; if (x.screen && x.screen !== 'dash') x = Object.assign({}, x, { screen: 'dash' }); if (x.dashTab && !ok.includes(x.dashTab)) x = Object.assign({}, x, { dashTab: 'org' }); return x; }; const now = Date.now(); if (!this._capAt || now - this._capAt > 300) this._prevState = Object.assign({}, this.state); this._capAt = now; return super.setState(typeof o === 'function' ? (st, p) => fix(o(st, p)) : fix(o), cb); }
+  setState(o, cb) { const ok = ['org', 'directory', 'favs', 'dashes', 'settings', 'profile'], fix = x => { if (!x) return x; if (x.screen && x.screen !== 'dash') x = Object.assign({}, x, { screen: 'dash' }); if (x.dashTab && !ok.includes(x.dashTab)) x = Object.assign({}, x, { dashTab: 'org' }); return x; }; const now = Date.now(); if (!this._capAt || now - this._capAt > 300) this._prevState = Object.assign({}, this.state); this._capAt = now; return super.setState(typeof o === 'function' ? (st, p) => fix(o(st, p)) : fix(o), cb); }
   go(screen, extra = {}) { this.setState(Object.assign({ screen, menuOpen: false, verPop: false, filtersOpen: false }, extra)); try { window.scrollTo(0, 0); } catch (e) {} }
   static BIG_EVENTS = [
     { id: 'e1', org: 'hope', mine: true, kind: 'Event', title: 'Woodlawn Thanksgiving Outreach', place: 'Hope Harbor Community Pantry · Woodlawn', desc: 'A week of getting Thanksgiving to 250 Woodlawn families: sorting donated groceries, packing boxes, delivering to homebound neighbors, and a sit-down community dinner on Thanksgiving Day.' },
@@ -779,9 +796,146 @@ class Component extends DCLogic {
     const list = ids.map(id => this.org(id)).filter(Boolean).map(o => Object.assign(this.dec(o), {
       phoneHref: 'tel:' + (o.phone || '').replace(/\D/g, ''), email: (o.contact || [])[2] || '', mailHref: 'mailto:' + ((o.contact || [])[2] || ''), hasEmail: !!(o.contact || [])[2],
       catLine: o.cats.map(k => this.cat(k).label).join(' · '), todayLine: 'Today: ' + (o.hours[2] || 'Call for hours'),
-      remove: () => { this.setState(st => ({ favs: (st.favs || []).filter(x => x !== o.id) })); this.toast('Removed ' + o.name + ' from favorites.'); } }));
-    return { list, has: list.length > 0, none: !list.length, countText: list.length === 1 ? '1 saved organization' : list.length + ' saved organizations',
+      stop: e => { if (e && e.stopPropagation) e.stopPropagation(); },
+      view: e => { if (e && e.stopPropagation) e.stopPropagation(); this.openOrg(o.id); },
+      remove: e => { if (e && e.stopPropagation) e.stopPropagation(); this.setState(st => ({ favs: (st.favs || []).filter(x => x !== o.id) })); this.toast('Removed ' + o.name + ' from favorites.'); } }));
+    // Folders (optional): each favorite can go in one folder
+    const FF = this.state.favFolders || [], FO = this.state.favFolderOf || {}, open = FF.find(f => f.id === this.state.favOpenFolder) || null;
+    const moveF = (id, d) => this.setState(st => { const a = (st.favFolders || []).slice(), i = a.findIndex(f => f.id === id), j = i + d; if (i < 0 || j < 0 || j >= a.length) return null; const x = a[i]; a[i] = a[j]; a[j] = x; return { favFolders: a }; });
+    const arrowSt = dis => ({ minHeight: 36, minWidth: 36, padding: 0, fontSize: 17, color: dis ? 'var(--color-neutral-400)' : 'var(--color-accent-700)', cursor: dis ? 'default' : 'pointer' });
+    const S0 = this.state, dragging = S0.favDrag;
+    const baseCard = { border: '1px solid var(--color-neutral-400)', background: 'var(--color-bg)', boxShadow: 'var(--shadow-sm)', padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 12, minWidth: 0, cursor: 'pointer' };
+    // Click a row to drop down the basics; click the name to go straight to the public listing
+    const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], TODAY = 2;
+    const rowDrop = (o, key) => { const on = S0.favRowOpen === key, raw = this.org(o.id) || {}, C = raw.contact || [];
+      const person = C[0] && C[0] !== 'Main line' ? C[0] : '', web = String(raw.website || '').trim(), hrs = raw.hours || [];
+      const addr = raw.sensitive ? 'Shared when you call, for everyone’s safety' : raw.addr || ((raw.hood || 'Address') + ' · call for the address');
+      o.ci = { hasPerson: !!person, person, hasTitle: !!(person && C[1]), title: C[1] || '', hasHow: !person && !!C[1], how: C[1] || '',
+        hasWeb: !!web, web: web.replace(/^https?:\/\//, '').replace(/\/$/, ''), webHref: /^https?:/.test(web) ? web : 'https://' + web,
+        addr, hasMap: !raw.sensitive && !!raw.addr, mapHref: 'https://www.google.com/maps/dir/?api=1&destination=' + encodeURIComponent(raw.addr || ''),
+        week: [TODAY].map(i => ({ day: 'Today (' + DAYS[i] + ')', hours: hrs[i] || 'Call for hours',
+          style: { display: 'flex', justifyContent: 'space-between', gap: 12, padding: '4px 8px', fontWeight: i === TODAY ? 600 : 400, background: i === TODAY ? 'var(--color-bg)' : 'transparent', borderLeft: '3px solid ' + (i === TODAY ? 'var(--color-accent-700)' : 'transparent') } })) };
+      // Contact boxes on the row: each organization can show phone, email, website and/or address
+      const em = (raw.contact || [])[2] || '', avail = [['phone', 'Phone', !!raw.phone], ['email', 'Email', !!em], ['web', 'Website', !!web], ['addr', 'Address', !raw.sensitive && !!raw.addr]].filter(a => a[2]);
+      const shown = ((S0.favShow || {})[o.id] || ['phone']).filter(k => avail.some(a => a[0] === k));
+      const setShow = v => this.setState(st => ({ favShow: Object.assign({}, st.favShow, { [o.id]: v }) }));
+      const CHIP = { phone: { icon: this.ic('phone', 16), label: raw.phone, href: 'tel:' + String(raw.phone || '').replace(/[^0-9+]/g, ''), target: '_self', title: 'Call ' + raw.name },
+        email: { icon: this.ic('mail', 16), label: em, href: 'mailto:' + em, target: '_self', title: 'Email ' + raw.name },
+        web: { icon: this.ic('link', 16), label: 'Website', href: o.ci.webHref, target: '_blank', title: 'Open their website' },
+        addr: { icon: this.ic('pin', 16), label: 'Directions', href: o.ci.mapHref, target: '_blank', title: 'Directions to ' + (raw.addr || '') } };
+      o.chips = shown.map(k => CHIP[k]);
+      const pk = S0.favPick === key;
+      Object.assign(o.ci, { picking: on && pk, notPicking: !pk, startPick: () => this.setState({ favPick: key }), donePick: () => this.setState({ favPick: null }),
+        opts: avail.map(([k, label]) => ({ label, on: shown.includes(k), toggle: () => setShow(shown.includes(k) ? shown.filter(x => x !== k) : avail.map(a => a[0]).filter(x => x === k || shown.includes(x))) })) });
+      Object.assign(o, { rowOpen: on, rowAria: on ? 'true' : 'false', toggleRow: () => this.setState(st => ({ favRowOpen: st.favRowOpen === key ? null : key })),
+        chev: { flex: 'none', fontSize: 15, color: 'var(--color-accent-700)', transition: 'transform .2s', transform: on ? 'rotate(90deg)' : 'none' } }); return o; };
+    const fileTo = (orgId, fid) => { this.setState(st => ({ favFolderOf: Object.assign({}, st.favFolderOf, { [orgId]: fid }), favDrag: null, favOver: null })); };
+    list.forEach(o => { const id = o.id;
+      o.rowStyle = Object.assign({ display: 'flex', alignItems: 'center', gap: '8px 16px', flexWrap: 'wrap', padding: '10px 16px', borderBottom: '1px solid var(--color-divider)', cursor: FF.length && !open ? 'grab' : 'pointer' }, dragging === id ? { opacity: .45 } : {});
+      o.cardStyle = Object.assign({}, baseCard, dragging === id ? { opacity: .45, cursor: 'grabbing' } : {}, FF.length && !open ? { cursor: 'grab' } : {});
+      o.dragStart = e => { try { e.dataTransfer.setData('text/plain', id); e.dataTransfer.effectAllowed = 'move'; } catch (x) {} this.setState({ favDrag: id }); };
+      o.unfile = e => { if (e && e.stopPropagation) e.stopPropagation(); fileTo(id, ''); this.toast(o.name + ' taken out of this folder.'); };
+      rowDrop(o, 'all:' + id);
+      o.folder = { v: FO[id] || '', on: e => { const v = e.target.value; this.setState(st => ({ favFolderOf: Object.assign({}, st.favFolderOf, { [id]: v }) })); const f = FF.find(x => x.id === v); this.toast(f ? o.name + ' moved to ' + f.name + '.' : o.name + ' taken out of its folder.'); } }; });
+    const EXP = S0.favExpanded || {};
+    const folders = FF.map((f, i) => { const inF = list.filter(o => FO[o.id] === f.id), n = inF.length, over = S0.favOver === f.id, ex = !!EXP[f.id]; return {
+      isOver: over && !!dragging, expanded: ex, aria: ex ? 'true' : 'false', empty: ex && !n, tAdd: i === 0 ? 'fav-add' : '', tEdit: i === 0 ? 'fav-edit' : '',
+      toggle: () => this.setState(st => ({ favExpanded: Object.assign({}, st.favExpanded, { [f.id]: !(st.favExpanded || {})[f.id] }) })),
+      add: e => { if (e && e.stopPropagation) e.stopPropagation(); this.modal({ kind: 'folderAdd', fid: f.id, sel: [] }); },
+      orgs: inF.map(o => rowDrop(Object.assign({}, o), 'f:' + o.id)).map(o => Object.assign(o, { unfileHere: e => { if (e && e.stopPropagation) e.stopPropagation(); fileTo(o.id, ''); this.toast(o.name + ' taken out of ' + f.name + '.'); } })),
+      wrapStyle: { border: (dragging ? '2px dashed ' : '1px solid ') + (over && dragging ? 'var(--color-accent-700)' : dragging ? 'var(--color-accent-500)' : 'var(--color-accent-300)'), borderLeft: '6px solid var(--color-accent-700)', boxShadow: ex ? 'var(--shadow-md)' : 'var(--shadow-sm)', background: 'var(--color-accent-100)', transition: 'box-shadow .15s, border-color .15s' },
+      headStyle: { display: 'flex', alignItems: 'center', gap: 16, width: '100%', minHeight: 84, padding: '14px 20px', border: 0, background: over && dragging ? 'var(--color-accent-200)' : 'transparent', color: 'inherit', font: 'inherit', textAlign: 'left', cursor: 'pointer' },
+      chev: { flex: 'none', fontSize: 20, color: 'var(--color-accent-700)', transition: 'transform .2s', transform: ex ? 'rotate(90deg)' : 'none' },
+      cardStyle: { border: (dragging ? '2px dashed ' : '1px solid ') + (over && dragging ? 'var(--color-accent-700)' : dragging ? 'var(--color-accent-400)' : 'var(--color-neutral-400)'), background: over && dragging ? 'var(--color-accent-100)' : 'var(--color-bg)', boxShadow: 'var(--shadow-sm)', padding: dragging ? '15px 17px' : '16px 18px', display: 'flex', flexDirection: 'column', gap: 10, cursor: 'pointer', minWidth: 0, transition: 'background .15s, border-color .15s' },
+      dragOver: e => { if (!this.state.favDrag) return; e.preventDefault(); try { e.dataTransfer.dropEffect = 'move'; } catch (x) {} if (this.state.favOver !== f.id) this.setState({ favOver: f.id }); },
+      dragLeave: () => { if (this.state.favOver === f.id) this.setState({ favOver: null }); },
+      drop: e => { e.preventDefault(); let id = this.state.favDrag; try { id = id || e.dataTransfer.getData('text/plain'); } catch (x) {} if (!id) return; const o = list.find(x => x.id === id); fileTo(id, f.id); this.toast((o ? o.name : 'It') + ' added to ' + f.name + '.'); },
+      name: f.name, desc: f.desc || '', hasDesc: !!f.desc, icon: this.ic(f.icon || 'folder', 22), countText: n === 1 ? '1 organization' : n + ' organizations',
+      open: () => this.setState({ favOpenFolder: f.id }), edit: e => { if (e && e.stopPropagation) e.stopPropagation(); this.modal({ kind: 'folder', fid: f.id, fname: f.name, fdesc: f.desc || '', ficon: f.icon || 'folder', fpos: String(i) }); },
+      up: e => { if (e && e.stopPropagation) e.stopPropagation(); moveF(f.id, -1); }, down: e => { if (e && e.stopPropagation) e.stopPropagation(); moveF(f.id, 1); },
+      isFirst: i === 0, isLast: i === FF.length - 1, upStyle: arrowSt(i === 0), downStyle: arrowSt(i === FF.length - 1) }; });
+    const shown = open ? list.filter(o => FO[o.id] === open.id) : list;
+    const oi = open ? FF.indexOf(open) : -1;
+    return { list: shown, has: list.length > 0, none: !list.length, countText: open ? (shown.length === 1 ? '1 organization in this folder' : shown.length + ' organizations in this folder') : (list.length === 1 ? '1 saved organization' : list.length + ' saved organizations'),
+      hasFolders: FF.length > 0, showFolders: FF.length > 0 && !open, inFolder: !!open, folderEmpty: !!open && !shown.length, showAllHeading: FF.length > 0 && !open, folders,
+      folderOpts: FF.map(f => ({ id: f.id, name: f.name })), closeFolder: () => this.setState({ favOpenFolder: null }),
+      collapsible: FF.length > 0 && !open, notCollapsible: !(FF.length > 0 && !open), total: list.length,
+      showList: !(FF.length > 0 && !open) || !!this.state.favAllOpen, allAria: this.state.favAllOpen ? 'true' : 'false',
+      toggleAll: () => this.setState(st => ({ favAllOpen: !st.favAllOpen })),
+      chev: { display: 'inline-block', fontSize: 16, color: 'var(--color-accent-700)', transition: 'transform .2s', transform: this.state.favAllOpen ? 'rotate(90deg)' : 'none' },
+      compact: (this.state.favDensity || 'compact') === 'compact', detailed: this.state.favDensity === 'detailed',
+      densitySeg: [['compact', 'Compact', 'Short rows'], ['detailed', 'Detailed', 'Full cards with email and hours']].map(([k, label, tip]) => ({ label, tip, on: (this.state.favDensity || 'compact') === k, pick: () => this.setState({ favDensity: k }) })),
+      canDrag: FF.length && !open ? 'true' : 'false', dragEnd: () => this.setState({ favDrag: null, favOver: null }), showMove: FF.length > 0 && !open,
+      folderHint: 'Drag an organization onto a folder to add it. Arrows change the order.',
+      cur: open ? { name: open.name, desc: open.desc || '', hasDesc: !!open.desc, icon: this.ic(open.icon || 'folder', 26), add: () => this.modal({ kind: 'folderAdd', fid: open.id, sel: [] }), edit: () => this.modal({ kind: 'folder', fid: open.id, fname: open.name, fdesc: open.desc || '', ficon: open.icon || 'folder', fpos: String(oi) }) } : {},
+      newFolder: () => this.modal({ kind: 'folder', fid: null, fname: '', fdesc: '', ficon: 'folder', fpos: String(FF.length) }),
       goFind: () => this.setState({ dashTab: 'directory', view: 'list', density: 'compact', mapSel: null }) };
+  }
+  // The big "wasn't approved" pop-up, with the option to delete that dashboard
+  deniedVals(M) {
+    const s = this.state, d = (s.myDash || []).find(x => x.id === M.did) || { name: 'this organization' };
+    const setM = o => this.setState(st => ({ modal: Object.assign({}, st.modal, o) }));
+    return { ask: M.step !== 'confirm', confirm: M.step === 'confirm', name: d.name,
+      title: 'We couldn’t approve ' + d.name, text: 'Thanks for wanting to serve your neighbors. After reviewing your request, our team wasn’t able to approve this listing. Nothing about it is public.',
+      note: d.note || 'We couldn’t confirm the phone number or address you gave. If you have a document showing your organization’s address, reply to our email and we’ll take another look.',
+      startDelete: () => setM({ step: 'confirm' }), cancelDelete: () => setM({ step: 'ask' }),
+      doDelete: () => {
+        this.setState(st => {
+          const rest = (st.myDash || []).filter(x => x.id !== d.id), next = rest.find(x => x.kind === 'org') || rest[0];
+          const saved = Object.assign({}, st.dashSaved || {}), nextOrg = next && (saved[next.id] || next.org);
+          return { myDash: rest, modal: null, notice: null, curDash: next ? next.id : st.curDash, dashTab: 'org', pickOpen: false, autoOpen: st.autoOpen === d.id ? '' : st.autoOpen,
+            orgs: next && nextOrg ? st.orgs.map(o => o.id === 'hope' ? Object.assign({}, nextOrg, { id: 'hope' }) : o) : st.orgs };
+        });
+        this.toast(d.name + ' was deleted from your account.');
+      } };
+  }
+  // "Add organizations" to a folder: pick from your favorites
+  folderAddVals(M) {
+    const s = this.state, FF = s.favFolders || [], FO = s.favFolderOf || {}, f = FF.find(x => x.id === M.fid) || { name: '' }, sel = M.sel || [];
+    const favs = (s.favs || []).map(id => this.org(id)).filter(Boolean).filter(o => FO[o.id] !== f.id);
+    const set = o => this.setState(st => ({ modal: Object.assign({}, st.modal, o) }));
+    return { title: 'Add to ' + f.name, none: !favs.length, nothing: !sel.length, saveLabel: sel.length ? 'Add ' + sel.length + (sel.length === 1 ? ' organization' : ' organizations') : 'Add',
+      list: favs.map(o => { const inF = FF.find(x => x.id === FO[o.id]); return { name: o.name, sub: inF ? 'Now in ' + inF.name : (o.cats || []).map(k => this.cat(k).label).slice(0, 2).join(' · '), on: sel.includes(o.id),
+        toggle: () => set({ sel: sel.includes(o.id) ? sel.filter(x => x !== o.id) : sel.concat(o.id) }) }; }),
+      save: () => { if (!sel.length) return; this.setState(st => { const of = Object.assign({}, st.favFolderOf); sel.forEach(id => { of[id] = f.id; }); return { favFolderOf: of, modal: null }; }); this.toast(sel.length + (sel.length === 1 ? ' organization' : ' organizations') + ' added to ' + f.name + '.'); } };
+  }
+  // The "New folder" / "Edit folder" pop-up on Favorites
+  folderModalVals(M) {
+    const FF = this.state.favFolders || [], isNew = !M.fid;
+    const set = o => this.setState(st => ({ modal: Object.assign({}, st.modal, o) }));
+    const ICONS = [['folder', 'Folder'], ['home', 'Housing'], ['utensils', 'Food'], ['shirt', 'Clothing'], ['cross', 'Health'], ['users', 'Families'], ['briefcase', 'Jobs'], ['scale', 'Legal'], ['bus', 'Transportation'], ['church', 'Churches'], ['sprout', 'Recovery'], ['shield', 'Safety'], ['sun', 'Seasonal'], ['flag', 'Priority'], ['zap', 'Urgent'], ['star', 'Favorites']].filter(([k]) => this.ICONS[k]);
+    return { title: isNew ? 'New folder' : 'Edit folder', saveLabel: isNew ? 'Create folder' : 'Save', err: M.err || '', canDelete: !isNew, noDelete: isNew,
+      name: { v: M.fname || '', on: e => set({ fname: e.target.value, err: '' }) }, desc: { v: M.fdesc || '', on: e => set({ fdesc: e.target.value }) },
+      icons: ICONS.map(([k, label]) => { const on = (M.ficon || 'folder') === k; return { label, on: on ? 'true' : 'false', svg: this.ic(k, 20), pick: () => set({ ficon: k }),
+        style: { width: 44, height: 44, display: 'grid', placeItems: 'center', cursor: 'pointer', border: '1px solid ' + (on ? 'var(--color-accent-700)' : 'var(--color-neutral-400)'), background: on ? 'var(--color-accent-700)' : 'var(--color-bg)', color: on ? 'var(--color-bg)' : 'var(--color-accent-800)' } }; }),
+      // Which saved organizations go in this folder
+      ...(() => { const FO = this.state.favFolderOf || {}, favs = (this.state.favs || []).map(id => this.org(id)).filter(Boolean);
+        const sel = M.fsel || (M.fid ? favs.filter(o => FO[o.id] === M.fid).map(o => o.id) : []);
+        return { hasFavs: favs.length > 0, noFavs: !favs.length, orgCount: sel.length === 1 ? '1 organization' : sel.length + ' organizations',
+          orgs: favs.map(o => { const inF = FF.find(x => x.id === FO[o.id] && x.id !== M.fid); return { name: o.name, on: sel.includes(o.id),
+            sub: inF ? 'Now in ' + inF.name + (sel.includes(o.id) ? ' · moves here when you save' : '') : (o.cats || []).map(k => this.cat(k).label).slice(0, 2).join(' · '),
+            toggle: () => set({ fsel: sel.includes(o.id) ? sel.filter(x => x !== o.id) : sel.concat(o.id) }) }; }) }; })(),
+      save: () => {
+        const name = (M.fname || '').trim();
+        if (!name) return set({ err: 'Give the folder a name.' });
+        if (FF.some(f => f.id !== M.fid && f.name.toLowerCase() === name.toLowerCase())) return set({ err: 'You already have a folder with that name.' });
+        const rec = { id: M.fid || 'f' + Date.now(), name, desc: (M.fdesc || '').trim(), icon: M.ficon || 'folder' };
+        const old = FF.findIndex(f => f.id === rec.id), next = FF.slice();
+        if (old >= 0) next[old] = rec; else next.push(rec);
+        const FO0 = this.state.favFolderOf || {}, favIds = this.state.favs || [];
+        const sel = M.fsel || (M.fid ? favIds.filter(id => FO0[id] === M.fid) : []);
+        this.setState(st => { const of = Object.assign({}, st.favFolderOf);
+          Object.keys(of).forEach(k => { if (of[k] === rec.id && !sel.includes(k)) delete of[k]; });
+          sel.forEach(id => { of[id] = rec.id; });
+          return { favFolders: next, favFolderOf: of, modal: null, favExpanded: Object.assign({}, st.favExpanded, { [rec.id]: true }) }; });
+        const k = sel.length === 1 ? '1 organization' : sel.length + ' organizations';
+        this.toast(isNew ? 'Folder “' + name + '” created' + (sel.length ? ' with ' + k + '.' : '. Add organizations any time with “Add organizations”.') : 'Folder saved.');
+      },
+      del: () => {
+        const f = FF.find(x => x.id === M.fid); if (!f) return;
+        this.setState(st => { const of = Object.assign({}, st.favFolderOf); Object.keys(of).forEach(k => { if (of[k] === f.id) delete of[k]; }); return { favFolders: FF.filter(x => x.id !== f.id), favFolderOf: of, favOpenFolder: st.favOpenFolder === f.id ? null : st.favOpenFolder, modal: null }; });
+        this.toast('Folder “' + f.name + '” deleted. The organizations in it are still in your favorites.');
+      } };
   }
   apVals() {
     const A = this.state.apply || { mode: 'steps', url: '' }, set = o => this.setState(st => ({ apply: Object.assign({}, st.apply, o) }));
@@ -789,7 +943,7 @@ class Component extends DCLogic {
     const eff = A.mode === 'web' && urlOk ? 'web' : 'steps';
     const O = [['steps', 'Show next steps', 'People see your phone, email and address so they can reach you. This is the default.'], ['web', 'Apply on our website', 'Send people to the online application you already use.']]; // 'Contact us here' (form) is on hold until the full dashboard is built; its code stays below.
     return { opts: O.map(([k, label, hint]) => { const on = A.mode === k; return { label, hint, on, pick: () => set({ mode: k }),
-        style: { display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 14px', cursor: 'pointer', background: on ? 'var(--color-accent-100)' : 'var(--color-bg)', border: '1px solid ' + (on ? 'var(--color-accent-700)' : 'var(--color-neutral-400)'), boxShadow: on ? 'inset 0 0 0 1px var(--color-accent-700)' : 'none' } }; }),
+        style: { display: 'flex', gap: 12, alignItems: 'flex-start', padding: '8px 12px', cursor: 'pointer', background: on ? 'var(--color-accent-100)' : 'var(--color-bg)', border: '1px solid ' + (on ? 'var(--color-accent-700)' : 'var(--color-neutral-400)'), boxShadow: on ? 'inset 0 0 0 1px var(--color-accent-700)' : 'none' } }; }),
       isWeb: A.mode === 'web', isForm: A.mode === 'form', url: { v: A.url || '', on: e => set({ url: e.target.value }) },
       hasUrlErr: A.mode === 'web' && !!url && !urlOk, urlErr: 'Enter the full link, starting with https://', noUrl: A.mode === 'web' && !url,
       btnLabel: eff === 'web' ? 'Apply on their website' : eff === 'form' ? 'Contact them here' : 'See next steps',
@@ -839,7 +993,7 @@ class Component extends DCLogic {
     const dotIcon = React.createElement('span', { 'aria-hidden': 'true', style: { display: 'inline-block', width: 9, height: 9, background: DC[0], borderRadius: '50%', boxShadow: '0 0 0 3px rgba(' + DC[2] + ',.18)', flex: '0 0 auto' } });
     const dotStyle = Object.assign({}, this.chipBase, av.style, { gap: 8, color: DC[1] });
     return Object.assign({}, o, {
-      isFaith: !!o.faith, pending: !o.verified, claimed: cl, showAvail: cl && !o.hideAvail,
+      tourId: o.id === 'hope' ? 'result-own' : 'result', isFaith: !!o.faith, pending: !o.verified, claimed: cl, showAvail: cl && !o.hideAvail,
       dirAvailStyle: dotStyle, dirAvailIcon: dotIcon, availDotColor: DC[1],
       applyLabel: mine ? this.apVals().btnLabel : aUrl ? 'Apply on their website' : 'See next steps',
       apply: e => { if (e && e.stopPropagation) e.stopPropagation(); return mine ? this.apVals().preview() : this.modal({ kind: 'applyPrev', mode: aUrl ? 'web' : 'steps', oid: o.id, url: aUrl }); },
@@ -851,22 +1005,181 @@ class Component extends DCLogic {
       view: () => this.openOrg(o.id), refer: () => this.startRef(o.id)
     });
   }
-  // The welcome tour on the dashboard
-  tourSteps() {
-    const name = (this.org('hope') || {}).name || 'your organization';
-    return [
-      ['Welcome to your dashboard', 'This is where ' + name + ' keeps its listing up to date. Here’s a quick look around. It takes less than a minute.' + (this.state.tourPending ? ' Your listing isn’t public yet, but you can set everything up now.' : '')],
-      ['Your public listing', 'My organization shows your listing exactly as people see it. Use the Edit links beside each part (description, services, hours, location, contact) to change it. “View as the public” shows the finished page.'],
-      ['Availability and how people apply', 'On the right, tell people if you’re Accepting, Limited, on a Waitlist, or Full. Then choose what your button does: show your next steps (phone, email, address) or send people to your own online application.'],
-      ['Find help and Favorites', 'Use Find help (the magnifying glass in the left menu) to look up other organizations for the people you serve. Open one and add it to Favorites (the star) to keep it close.'],
-      ['Your team and settings', 'Invite teammates and set their roles in “Your team” at the bottom of My organization. Settings (the gear) has your account, privacy choices, and password.']
-    ];
+  // "Which dashboard?" for accounts connected to more than one organization (or to the Admin page)
+  pickVals() {
+    const s = this.state, list = s.myDash || [], first = (s.settings && s.settings.name || '').split(' ')[0];
+    const cur = list.find(d => d.id === s.curDash) || list[0] || { name: '' };
+    const open = d => {
+      const auto = s.pickOpen && s.pickRemember ? d.id : s.autoOpen;
+      this.setState(st => {
+        const out = { pickOpen: false, autoOpen: auto };
+        if (d.kind === 'admin' || d.id === st.curDash) return out;
+        // Put away the dashboard that's open, and bring in the one picked
+        const saved = Object.assign({}, st.dashSaved || {}), curOrg = st.orgs.find(o => o.id === 'hope');
+        saved[st.curDash] = curOrg;
+        const nextOrg = saved[d.id] || d.org;
+        const waiting = d.status === 'Waiting for approval';
+        return Object.assign(out, { curDash: d.id, dashSaved: saved, dashTab: 'org', pubView: false, orgEdit: null,
+          orgs: nextOrg ? st.orgs.map(o => o.id === 'hope' ? Object.assign({}, nextOrg, { id: 'hope' }) : o) : st.orgs,
+          notice: waiting ? { kind: 'wait', title: 'Your listing is waiting for approval', text: 'Our team is reviewing ' + d.name + '. You can keep editing it while you wait. It goes live once it’s approved.', canDismiss: false }
+            : d.status === 'Not approved' ? { kind: 'wait', title: 'This request wasn’t approved', text: 'We weren’t able to approve ' + d.name + '. You can delete this dashboard from Your dashboards or Settings.', canDismiss: false } : null,
+          modal: d.status === 'Not approved' ? { kind: 'denied', did: d.id, step: 'ask' } : st.modal });
+      });
+      if (s.pickOpen && s.pickRemember) this.toast(d.name + ' will open automatically when you log in. Change this any time in Settings.');
+      else if (d.kind === 'admin') this.toast('Opening the Admin page…');
+      else if (!s.pickOpen) this.toast('Switched to ' + d.name + '.');
+    };
+    const orgOf = d => d.id === cur.id ? this.org('hope') : ((s.dashSaved || {})[d.id] || d.org || (d.id === 'hope' ? this.org('hope') : null));
+    const infoOf = d => { if (d.kind === 'admin') return d.info || ''; const o = orgOf(d); if (!o) return ''; const cats = (o.cats || []).map(k => this.cat(k).label).slice(0, 2).join(' & '); return [cats, o.hood, o.updated ? 'Updated ' + o.updated : ''].filter(Boolean).join(' · '); };
+    const CH = { 'Live': { background: 'oklch(0.96 0.04 150)', color: 'oklch(0.40 0.12 150)', border: '1px solid oklch(0.80 0.09 150)', dot: 'oklch(0.60 0.14 150)' }, 'Waiting for approval': { background: 'oklch(0.97 0.05 85)', color: 'oklch(0.45 0.11 70)', border: '1px dashed oklch(0.72 0.13 80)', dot: 'oklch(0.75 0.15 80)' }, 'Not approved': { background: 'oklch(0.96 0.03 27)', color: 'oklch(0.48 0.17 27)', border: '1px solid oklch(0.82 0.08 27)', dot: 'oklch(0.58 0.19 27)' } };
+    const items = list.map(d => ({ name: d.name, line: d.kind === 'admin' ? 'Review listings, claims and reports' : [d.role === 'Admin' ? 'You’re an admin' : 'You’re on the team (' + d.role + ')'].filter(Boolean).join(' · '),
+      hasChip: d.kind !== 'admin', chip: { 'Live': 'Live', 'Waiting for approval': 'Waiting for review', 'Not approved': 'Not approved' }[d.status] || d.status || 'Live',
+      chipStyle: Object.assign({ flex: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, padding: '4px 10px', whiteSpace: 'nowrap' }, CH[d.status] || CH.Live),
+      chipStyleSm: Object.assign({ alignSelf: 'flex-start', display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600, padding: '2px 8px', marginTop: 4, whiteSpace: 'nowrap' }, CH[d.status] || CH.Live),
+      chipDot: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: (CH[d.status] || CH.Live).dot },
+      info: infoOf(d), infoStyle: { fontSize: 14, color: d.kind === 'admin' ? 'var(--color-accent-200)' : 'var(--color-neutral-700)' }, infoSmall: { fontSize: 13, color: d.kind === 'admin' ? 'var(--color-accent-200)' : 'var(--color-neutral-700)' },
+      icon: this.ic(d.kind === 'admin' ? 'shield' : 'home', 22), isAuto: s.autoOpen === d.id,
+      // The Compassion Catalyst Admin page is shown in dark blue
+      card: d.kind === 'admin' ? { border: '1px solid var(--color-accent-900)', background: 'var(--color-accent-900)', color: 'var(--color-bg)', boxShadow: 'var(--shadow-md)', display: 'flex', alignItems: 'center', gap: 16, width: '100%', padding: '18px 20px', textAlign: 'left', font: 'inherit', cursor: 'pointer' }
+        : { border: '1px solid var(--color-neutral-400)', background: 'var(--color-bg)', color: 'inherit', boxShadow: 'var(--shadow-md)', display: 'flex', alignItems: 'center', gap: 16, width: '100%', padding: '18px 20px', textAlign: 'left', font: 'inherit', cursor: 'pointer' },
+      iconBig: { flex: 'none', width: 48, height: 48, display: 'grid', placeItems: 'center', background: d.kind === 'admin' ? 'var(--color-accent-800)' : 'var(--color-accent-100)', color: d.kind === 'admin' ? 'var(--color-bg)' : 'var(--color-accent-800)', border: '1px solid ' + (d.kind === 'admin' ? 'var(--color-accent-700)' : 'var(--color-accent-300)') },
+      iconSmall: { flex: 'none', width: 36, height: 36, display: 'grid', placeItems: 'center', background: d.kind === 'admin' ? 'var(--color-accent-800)' : 'var(--color-accent-100)', color: d.kind === 'admin' ? 'var(--color-bg)' : 'var(--color-accent-800)' },
+      lineStyle: { fontSize: 15, color: d.kind === 'admin' ? 'var(--color-accent-200)' : 'var(--color-neutral-800)' },
+      lineSmall: { fontSize: 14, color: d.kind === 'admin' ? 'var(--color-accent-200)' : 'var(--color-neutral-700)' },
+      arrowStyle: { flex: 'none', color: d.kind === 'admin' ? 'var(--color-bg)' : 'var(--color-accent-700)' },
+      switchBtn: Object.assign({ minHeight: 40, fontSize: 15 }, d.kind === 'admin' ? { background: 'var(--color-bg)', color: 'var(--color-accent-900)', borderColor: 'var(--color-bg)' } : {}),
+      hereStyle: { fontSize: 14, fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6, color: d.kind === 'admin' ? 'var(--color-bg)' : 'var(--color-accent-800)' },
+      row: { display: 'flex', gap: 14, alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', padding: '12px 20px', borderBottom: '1px solid var(--color-divider)', background: d.kind === 'admin' ? 'var(--color-accent-900)' : 'transparent', color: d.kind === 'admin' ? 'var(--color-bg)' : 'inherit' }, isCur: d.id === cur.id, notCur: d.id !== cur.id, open: () => open(d) }));
+    return { show: !!s.pickOpen && list.length > 1, many: list.length > 1, list: items, orgList: items.filter((x, k) => list[k].kind !== 'admin'), adminList: items.filter((x, k) => list[k].kind === 'admin'), hasAdmin: list.some(x => x.kind === 'admin'), curName: cur.name, hello: first ? 'Welcome back, ' + first + '.' : 'Welcome back.',
+      remember: { v: !!s.pickRemember, on: e => this.setState({ pickRemember: e.target.checked }) },
+      autoOpts: [{ id: '', label: 'Ask me which dashboard to open' }].concat(list.map(d => ({ id: d.id, label: 'Always open ' + d.name }))).map(a => ({ label: a.label, on: (s.autoOpen || '') === a.id,
+        pick: () => { this.setState({ autoOpen: a.id }); this.toast(a.id ? 'Saved. ' + a.label.replace('Always open ', '') + ' will open when you log in.' : 'Saved. We’ll ask which dashboard to open each time you log in.'); } })) };
   }
-  tourVals(M) {
-    const S = this.tourSteps(), i = Math.min(M.step || 0, S.length - 1), last = i === S.length - 1;
-    return { stepText: 'Step ' + (i + 1) + ' of ' + S.length, title: S[i][0], body: S[i][1], hasBack: i > 0, noBack: i === 0, nextLabel: last ? 'Get started' : 'Next',
-      back: () => this.setState({ modal: { kind: 'tour', step: i - 1 } }), next: () => this.setState({ modal: last ? null : { kind: 'tour', step: i + 1 } }),
-      dots: S.map((_, k) => ({ style: { width: k === i ? 22 : 8, height: 8, borderRadius: 4, background: k === i ? 'var(--color-accent-700)' : 'var(--color-neutral-400)' } })) };
+  // The welcome tour on the dashboard
+  // The overview tour (shown the first time someone logs in) and a short tour for each page.
+  // Each step: title, text, what to light up, how the page should look, and (for "click" steps) what the person clicks.
+  tourSteps(which) {
+    const name = (this.org('hope') || {}).name || 'your organization', many = (this.state.myDash || []).length > 1;
+    const firstF = ((this.state.favFolders || [])[0] || {}).id || null, hasF = !!firstF;
+    const ORG = { dashTab: 'org', pubView: false }, DIR = { dashTab: 'directory', view: 'list', density: 'compact', mapSel: null, pubView: false }, FAV = { dashTab: 'favs', pubView: false, favOpenFolder: null, favAllOpen: true, favExpanded: {} }, SET = { dashTab: 'settings', pubView: false }, DSH = { dashTab: 'dashes', pubView: false };
+    const T = {
+      overview: [
+        { welcome: true, title: 'Welcome to your dashboard', body: 'This is where ' + name + ' keeps its listing up to date, and where your team finds help for the people you serve. Here’s a 30-second look around.' + (this.state.tourPending ? ' Your listing isn’t public yet, but you can set everything up now.' : ''), set: ORG },
+        { title: 'My organization', body: 'Your listing lives here: exactly what people see when they find you. Edit any part of it, set your availability, and invite your team.', target: 'nav-org', set: ORG },
+        { title: 'Find help', body: 'Search every organization in the directory for the people you serve, by need and by area.', target: 'nav-directory', set: ORG },
+        { title: 'Favorites', body: 'The organizations your team refers people to most, saved in one place. You can sort them into folders.', target: 'nav-favs', set: ORG }
+      ].concat(many ? [{ title: 'Your dashboards', body: 'Your account is connected to more than one dashboard. Switch between them here.', target: 'nav-dashes', set: ORG }] : []).concat([
+        { title: 'Settings', body: 'Your account, notifications, privacy choices and password.', target: 'nav-settings', set: ORG },
+        { title: 'Want the details?', body: 'Every page has a small “Tour this page” link next to its title. Use it any time for a closer look at what that page can do.', target: 'page-tour', set: ORG }
+      ]),
+      org: [
+        { title: 'This is your listing', body: 'Everything here is what people see when they find you. Use the Edit links beside each part (name, description, services, hours, location, contact) to change it.', target: 'listing', set: ORG },
+        { title: 'See it like the public does', body: '“View as the public” opens your finished listing, exactly the way neighbors will see it.', target: 'public', set: ORG },
+        { title: 'Tell people if you can help right now', body: 'Choose Accepting, Limited, Waitlist or Full. It shows on your listing as a colored dot, so people know before they call.', target: 'avail', set: ORG },
+        { title: 'Choose how people apply', body: 'Show your next steps (phone, email, address), or send people straight to your own online application.', target: 'apply', set: ORG },
+        { title: 'Bring in your team', body: 'Invite teammates and choose what each one can do.', target: 'team', set: ORG }
+      ],
+      directory: [
+        { title: 'Search for what someone needs', body: 'Type a need (like “rent help” or “groceries”), an organization’s name, or a neighborhood.', target: 'dir-search', set: DIR },
+        { title: 'Narrow it down', body: 'Filters let you pick the state and county, the kind of help, who it’s for, and who’s open or accepting people right now.', target: 'dir-filters', set: DIR },
+        { title: 'List or map', body: 'Switch between a list and a map. In the list, choose Detailed for full cards or Compact for short rows.', target: 'dir-view', set: DIR },
+        { title: 'Open a listing', body: 'Every organization has a full listing with its services, hours, and how to reach them.', target: 'result', click: 'Click this organization to open it', set: DIR },
+        { title: 'How to reach them', body: 'Their next steps (or their own application) and their phone number are always right here.', target: 'pub-actions', set: null },
+        { title: 'Save it to Favorites', body: 'Organizations your team refers people to often can be saved, so they’re one click away.', target: 'pub-fav', click: 'Click the star to save it', press: true, set: null },
+        { title: 'Head back', body: 'That’s a listing. Click here to go back to your results.', target: 'pub-close', click: 'Click here to go back', set: null }
+      ],
+      favs: [
+        { title: 'Everything you saved', body: 'Each one shows their name, what they do and their phone number. Switch to Detailed to see email, where they are and today’s hours too.', target: 'favcard', set: FAV },
+        { title: 'See their full listing', body: 'Click anywhere on an organization to open everything about them: services, hours, who it’s for, and how to apply.', target: 'favcard', set: FAV },
+        { title: 'Find more organizations', body: '“Find more in Find help” takes you to the directory. Tap the star on any organization there and it shows up here.', target: 'fav-find', set: FAV },
+        { title: 'Folders (optional)', body: hasF ? 'Sort your favorites into folders, like “Housing partners”. Click “New folder” any time to make another.' : 'Want to sort your favorites, like “Housing partners” or “Food”? Click “New folder”. Give it a name, a short description and an icon, and check the organizations to put in it. Folders are optional; your favorites work fine without them.', target: 'fav-new', set: FAV },
+        { title: 'Your folders', body: 'Each folder is a row with its icon, name, description and how many organizations are in it. Click a folder to drop it down and see what’s inside.', target: 'fav-folder', set: FAV, when: hasF },
+        { title: 'Put organizations in a folder', body: 'Drag any saved organization and drop it on a folder. Or open a folder and click “Add organizations” to check off the ones you want.', target: 'favcard', set: FAV, when: hasF },
+        { title: 'Inside a folder: add organizations', body: 'When a folder is open, click “Add organizations” to pick several favorites at once with checkboxes.', target: 'fav-add', set: Object.assign({}, FAV, { favExpanded: { [firstF]: true } }), when: hasF },
+        { title: 'Edit or remove', body: '“Edit folder” lets you rename it, change its description or icon, check which organizations are in it, or delete it. Deleting a folder never removes anything from your favorites. Each organization in a folder also has “Remove from folder”, and the ↑ ↓ arrows change the order of your folders.', target: 'fav-edit', set: Object.assign({}, FAV, { favExpanded: { [firstF]: true } }), when: hasF }
+      ],
+      settings: [
+        { title: 'Your account', body: 'Your name, email and phone number. Change them here any time.', target: 'set-account', set: SET },
+        { title: 'Notifications', body: 'Choose how you hear about corrections, check-in reminders and team changes: email, text, or just here on your dashboard.', target: 'set-notes', set: SET, optional: true },
+        { title: 'Privacy & sharing', body: 'Decide what the public sees, like your contact person or your street address.', target: 'set-privacy', set: SET },
+        { title: 'See the tour again', body: 'Start the welcome tour again from here whenever you like.', target: 'set-tour', set: SET },
+        { title: 'Security', body: 'Change your password, or sign out on your other devices.', target: 'set-security', set: SET }
+      ],
+      dashes: [
+        { title: 'Your dashboards', body: 'Every dashboard your account is connected to. “Switch to this dashboard” opens a different one.', target: 'dash-list', set: DSH },
+        { title: 'When you log in', body: 'Choose to be asked each time, or to always open one dashboard automatically.', target: 'dash-auto', set: DSH }
+      ]
+    };
+    const S = T[which] || T.overview;
+    // leave out steps whose part isn't on the page (for example, no folders yet)
+    return S.filter(x => x.when !== false && (!x.optional || this.tourTarget(x.target)));
+  }
+  tourVals(M) { return this.tourLayer(); }
+  // The guided tour: dims the page, lights up the part each step talks about, and points to it
+  tourLayer() {
+    const s = this.state, M = s.modal || {};
+    if (M.kind !== 'tour') return { show: false };
+    const S = this.tourSteps(M.tour), i = Math.min(M.step || 0, S.length - 1), last = i === S.length - 1, step = S[i];
+    const hasWelcome = !!(S[0] && S[0].welcome), real = S.length - (hasWelcome ? 1 : 0), num = i + (hasWelcome ? 0 : 1);
+    const go = (n, viaClick) => {
+      if (n == null) return this.setState({ modal: null, tourRect: null });
+      const st = S[n].set, extra = Object.assign({}, st || {});
+      // coming back to a listing step: reopen the listing that was opened earlier
+      if (!st && !viaClick && this._tourOrg) Object.assign(extra, { pubView: true, orgId: this._tourOrg, dashTab: 'directory' });
+      this.setState(Object.assign(viaClick ? {} : extra, { modal: { kind: 'tour', tour: M.tour, step: n } }));
+    };
+    const ease = 'cubic-bezier(.4,0,.2,1)';
+    const vw = window.innerWidth || 1200, vh = window.innerHeight || 800, W = Math.min(360, vw - 32);
+    const R = step.target && s.tourRect ? s.tourRect : null;
+    let card = { position: 'fixed', zIndex: 96, width: W, boxSizing: 'border-box', background: 'var(--color-bg)', border: '1px solid var(--color-neutral-400)', boxShadow: '0 18px 50px rgba(0,0,0,.3)', padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: 12, transition: 'left .5s ' + ease + ', top .5s ' + ease + ', width .5s ' + ease };
+    let spot = null, arrow = null, hit = null;
+    if (R) {
+      const p = 8, x = R.left - p, y = R.top - p, w = R.width + p * 2, h = R.height + p * 2;
+      spot = { position: 'fixed', left: x, top: y, width: w, height: h, borderRadius: 6, pointerEvents: 'none', transition: 'left .5s ' + ease + ', top .5s ' + ease + ', width .5s ' + ease + ', height .5s ' + ease, boxShadow: '0 0 0 9999px rgba(15,23,32,.6), 0 0 0 3px #b5d9fd', animation: 'tourring 1.6s ease-out infinite' };
+      hit = { position: 'fixed', zIndex: 96, left: x, top: y, width: w, height: h, background: 'transparent', border: 0, padding: 0, cursor: 'pointer', borderRadius: 6 };
+      const A = { position: 'absolute', width: 16, height: 16, background: 'var(--color-bg)', transform: 'rotate(45deg)', transition: 'top .5s ' + ease + ', left .5s ' + ease };
+      const cy = y + h / 2, cx = x + w / 2, gap = 18, estH = step.click ? 300 : 250;
+      if (vw - (x + w) >= W + gap + 16) { const top = Math.max(16, Math.min(vh - estH - 16, cy - 90)); Object.assign(card, { left: x + w + gap, top }); arrow = Object.assign(A, { left: -9, top: Math.max(16, Math.min(estH - 32, cy - top - 8)), borderLeft: '1px solid var(--color-neutral-400)', borderBottom: '1px solid var(--color-neutral-400)' }); }
+      else if (x >= W + gap + 16) { const top = Math.max(16, Math.min(vh - estH - 16, cy - 90)); Object.assign(card, { left: x - gap - W, top }); arrow = Object.assign(A, { right: -9, top: Math.max(16, Math.min(estH - 32, cy - top - 8)), borderRight: '1px solid var(--color-neutral-400)', borderTop: '1px solid var(--color-neutral-400)' }); }
+      else if (vh - (y + h) >= estH + gap) { const left = Math.max(16, Math.min(vw - W - 16, cx - W / 2)); Object.assign(card, { left, top: y + h + gap }); arrow = Object.assign(A, { top: -9, left: Math.max(16, Math.min(W - 32, cx - left - 8)), borderLeft: '1px solid var(--color-neutral-400)', borderTop: '1px solid var(--color-neutral-400)' }); }
+      else { const left = Math.max(16, Math.min(vw - W - 16, cx - W / 2)); Object.assign(card, { left, top: Math.max(16, y - gap - estH) }); arrow = Object.assign(A, { bottom: -9, left: Math.max(16, Math.min(W - 32, cx - left - 8)), borderRight: '1px solid var(--color-neutral-400)', borderBottom: '1px solid var(--color-neutral-400)' }); }
+    } else {
+      const CW = Math.min(460, vw - 32);
+      Object.assign(card, { width: CW, left: Math.round((vw - CW) / 2), top: Math.max(16, Math.round(vh / 2 - 170)), padding: '26px 28px' });
+    }
+    // "Click" steps: clicking the lit-up part (or Next) does the real thing, then the tour moves on
+    const doClick = () => {
+      const el = this.tourTarget(step.target);
+      if (el && !(step.press && el.getAttribute('aria-pressed') === 'true')) el.click();
+      if (step.target === 'result') setTimeout(() => { this._tourOrg = this.state.orgId; }, 0);
+      setTimeout(() => go(last ? null : i + 1, true), 60);
+    };
+    return { show: true, hasTarget: !!R, noTarget: !R, spot, arrow, card, hit, isWelcome: !!step.welcome, count: real,
+      clickable: !!(step.click && R), clickHint: step.click || '', clickLabel: step.click || '', doClick,
+      stepText: step.welcome ? 'Quick tour' : (M.tour && M.tour !== 'overview' ? 'This page · ' : '') + num + ' of ' + real, title: step.title, body: step.body, titleSize: step.welcome ? '30px' : '22px',
+      hasBack: i > 0, back: () => go(i - 1), next: () => step.click ? doClick() : go(last ? null : i + 1), skip: () => go(null),
+      nextLabel: step.welcome ? 'Show me around' : last ? (M.tour && M.tour !== 'overview' ? 'Done' : 'Get started') : step.click ? 'Do it for me' : 'Next',
+      stop: e => { if (e && e.stopPropagation) e.stopPropagation(); },
+      dots: S.slice(hasWelcome ? 1 : 0).map((_, k) => ({ style: { width: k === num - 1 ? 18 : 6, height: 6, borderRadius: 4, background: k === num - 1 ? 'var(--color-accent-700)' : 'var(--color-neutral-400)', transition: 'width .3s ' + ease } })) };
+  }
+  tourTarget(id) { return Array.from(document.querySelectorAll('[data-tour="' + id + '"]')).find(x => { const b = x.getBoundingClientRect(); return b.width > 0 && b.height > 0; }); }
+  // Smoothly scrolls the step's part into view (the light glides along with it), then measures it
+  measureTour(tries) {
+    const M = this.state.modal || {};
+    if (M.kind !== 'tour') return;
+    const S = this.tourSteps(M.tour), step = S[Math.min(M.step || 0, S.length - 1)] || {}, id = step.target;
+    if (!id) { if (this.state.tourRect) this.setState({ tourRect: null }); return; }
+    const el = this.tourTarget(id);
+    if (!el) { if ((tries || 0) < 15) { clearTimeout(this._tourT); this._tourT = setTimeout(() => this.measureTour((tries || 0) + 1), 100); } return; }
+    const key = id + ':' + M.step;
+    if (this._tourScrolled !== key) {
+      this._tourScrolled = key;
+      const b0 = el.getBoundingClientRect(), vh = window.innerHeight;
+      if (b0.top < 80 || b0.bottom > vh - 80) { try { el.scrollIntoView({ block: 'center', behavior: 'smooth' }); } catch (e) {} }
+    }
+    const b = el.getBoundingClientRect(), cur = this.state.tourRect;
+    const nr = { id, left: Math.round(b.left), top: Math.round(b.top), width: Math.round(b.width), height: Math.round(Math.min(b.height, window.innerHeight * 0.7)) };
+    if (!cur || cur.id !== nr.id || cur.left !== nr.left || cur.top !== nr.top || cur.width !== nr.width || cur.height !== nr.height) this.setState({ tourRect: nr });
   }
   // State and County filters. A listing matches if it's in that place, or serves all of it (statewide or nationwide).
   static ST = { AL: 'Alabama', GA: 'Georgia' };
@@ -1003,7 +1316,9 @@ class Component extends DCLogic {
     const I = {}; Object.keys(this.ICONS).forEach(k => I[k] = this.ic(k, k === 'mark' ? 24 : 18));
     I.bigCheck = this.ic('check', 36); I.markLg = this.ic('mark', 40);
     const spinner = React.createElement('span', { 'aria-hidden': true, style: { width: 18, height: 18, border: '2px solid currentColor', borderRightColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'bbspin .7s linear infinite' } });
-    const base = { brand, I, spinner, narrow, wide, frameRef: this.frameRef, ready: !!s.ready,
+    const pk = this.pickVals();
+    const tour = this.tourLayer();
+    const base = { tour, pk, brand, I, spinner, narrow, wide, frameRef: this.frameRef, ready: !!s.ready,
       frameStyle: s.mobilePreview ? { maxWidth: 390, margin: '0 auto', minHeight: '100vh', background: 'var(--color-bg)', boxShadow: 'var(--shadow-lg)', position: 'relative' } : { minHeight: '100vh', background: 'var(--color-bg)', position: 'relative' } };
     if (!s.ready) return base;
     const D = this.D, PUBLIC = ['home', 'directory', 'listing', 'refer', 'refDone', 'track', 'about', 'login', 'signup', 'pending'];
@@ -1083,14 +1398,14 @@ class Component extends DCLogic {
 
     // listing
     const lo = this.dec(this.org(s.orgId));
-    const mkL = lo => Object.assign(lo, { availBox: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 14, fontWeight: 500, color: lo.availDotColor || 'var(--color-text)', fontWeight: 600, gap: 8 },
+    const mkL = lo => Object.assign(lo, { hasMap: !lo.sensitive && !!lo.addr && !!(lo.lat || GEO[lo.id]), mapSrc: 'co-map.html#one=' + (lo.lat || (GEO[lo.id] || [])[0]) + ',' + (lo.lng || (GEO[lo.id] || [])[1]), availBox: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontSize: 14, fontWeight: 500, color: lo.availDotColor || 'var(--color-text)', fontWeight: 600, gap: 8 },
       showFav: s.pubView ? s.orgId !== 'hope' : !!s.fromDash, favBtn: favBits(s.orgId),
       addrLine: lo.sensitive ? 'Address shared after contact' : lo.addr || (lo.hood + ' · No walk-in address listed — call or visit online'), hasAddr: !lo.sensitive && !!lo.addr, mapHref: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(lo.addr || ''), hasAddr2: !lo.sensitive && !!lo.addr2, phoneHref: /^[0-9+(]/.test(lo.phone) ? 'tel:' + lo.phone : 'https://' + lo.phone,
       noHours: !(lo.hours || []).some(h => h && !/call for hours|no hours/i.test(h)), hasHours: (lo.hours || []).some(h => h && !/call for hours|no hours/i.test(h)),
       hoursRows: D.ORGS && ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((d, i) => ({ d, h: lo.hours[i], today: i === 2, style: { display: 'grid', gridTemplateColumns: '112px 1fr', gap: 12, padding: '9px 12px', borderBottom: '1px solid var(--color-divider)', borderLeft: '3px solid ' + (i === 2 ? 'var(--color-accent-700)' : 'transparent'), background: i === 2 ? 'var(--color-accent-100)' : (i % 2 ? 'var(--color-neutral-100)' : 'transparent'), fontWeight: i === 2 ? 600 : 400, fontVariantNumeric: 'tabular-nums' } })),
       groups: Object.keys(lo.services).map(k => ({ label: this.cat(k).label, icon: this.ic(this.cat(k).icon, 20), items: lo.services[k] })),
       partnerOrgs: (lo.partners || []).map(id => this.dec(this.org(id))),
-      langList: lo.langs.join(', '), eligList: lo.elig.join(' · '),
+      langList: lo.langs.join(', '), docsTitle: (lo.docsTitle || '').trim() || 'Good to know', eligList: lo.elig.join(' · '),
       contactName: lo.contact[0], contactRole: lo.contact[1], contactEmail: lo.contact[2],
       notSensitive: !lo.sensitive, vDateText: lo.vDate || 'not yet confirmed', verifiedLine: lo.verified ? 'Verified · Checked ' + lo.vDate : ''
     });
@@ -1173,11 +1488,11 @@ class Component extends DCLogic {
     const unread = s.threads.reduce((a, t) => a + t.unread, 0);
     const newN = hopeR.filter(x => ['Submitted', 'Seen'].includes(x.stage)).length;
     const openNeeds = s.needs.filter(n => n.status === 'Unclaimed' && !n.notFit && (!(s.needRad ?? 25) || n.mi <= (s.needRad ?? 25))).length;
-    const tabs = [['org', 'My organization', 'home'], ['directory', 'Find help', 'search'], ['favs', 'Favorites', 'star'], ['settings', 'Settings', 'gear']];
+    const tabs = [['org', 'My organization', 'home'], ['directory', 'Find help', 'search'], ['favs', 'Favorites', 'star']].concat((s.myDash || []).length > 1 ? [['dashes', 'Your dashboards', 'grid']] : []).concat([['settings', 'Settings', 'gear']]);
     const tab = {}; tabs.forEach(([k]) => tab[k] = s.dashTab === k); tab.history = s.dashTab === 'history'; tab.profile = s.dashTab === 'profile'; tab.cases = s.dashTab === 'cases';
     const mini = wide && s.navMini;
-    const dashTabs = tabs.map(([k, label, icon, n]) => { const a = s.dashTab === k; return { label, icon: this.ic(icon, 18), count: n, hasCount: !!n, showLabel: !mini, dot: mini && !!n, aria: mini ? label + (n ? ', ' + n + ' new' : '') : undefined, tip: mini ? label : undefined, cur: a ? 'page' : undefined, go: () => { this.setState(Object.assign(k === 'directory' ? { view: 'list', density: 'compact', mapSel: null } : {}, { dashTab: k, selRef: k === 'referrals' && !s.ovPop && !s.casePop ? s.selRef : null, ovPop: false, casePop: false, selThread: k === 'messages' ? null : s.selThread })); try { window.scrollTo(0, 0); } catch (e) {} },
-      style: Object.assign({ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, padding: '0 12px', border: 0, cursor: 'pointer', fontSize: 15, color: a ? 'var(--color-accent-900)' : 'var(--color-text)', background: a ? 'var(--color-accent-100)' : 'transparent', textAlign: 'left' }, narrow ? { flex: 'none', borderBottom: '2px solid ' + (a ? 'var(--color-accent-700)' : 'transparent') } : Object.assign({ width: '100%', borderLeft: '2px solid ' + (a ? 'var(--color-accent-700)' : 'transparent') }, mini ? { justifyContent: 'center', padding: 0, minHeight: 48 } : {}, k === 'settings' ? { marginTop: 'auto' } : {})) }; });
+    const dashTabs = tabs.map(([k, label, icon, n]) => { const a = s.dashTab === k; return { tour: 'nav-' + k, label, icon: this.ic(icon, 18), count: n, hasCount: !!n, showLabel: !mini, dot: mini && !!n, aria: mini ? label + (n ? ', ' + n + ' new' : '') : undefined, tip: mini ? label : undefined, cur: a ? 'page' : undefined, go: () => { this.setState(Object.assign(k === 'directory' ? { view: 'list', density: 'compact', mapSel: null } : {}, { dashTab: k, selRef: k === 'referrals' && !s.ovPop && !s.casePop ? s.selRef : null, ovPop: false, casePop: false, selThread: k === 'messages' ? null : s.selThread })); try { window.scrollTo(0, 0); } catch (e) {} },
+      style: Object.assign({ display: 'flex', alignItems: 'center', gap: 10, minHeight: 44, padding: '0 12px', border: 0, cursor: 'pointer', fontSize: 15, color: a ? 'var(--color-accent-900)' : 'var(--color-text)', background: a ? 'var(--color-accent-100)' : 'transparent', textAlign: 'left' }, narrow ? { flex: 'none', borderBottom: '2px solid ' + (a ? 'var(--color-accent-700)' : 'transparent') } : Object.assign({ width: '100%', borderLeft: '2px solid ' + (a ? 'var(--color-accent-700)' : 'transparent') }, mini ? { justifyContent: 'center', padding: 0, minHeight: 48 } : {}, k === (tabs.some(x => x[0] === 'dashes') ? 'dashes' : 'settings') ? { marginTop: 'auto' } : {})) }; });
     const hope = this.dec(this.org('hope'));
     const qf = s.qFilter;
     const kindOf = x => x.shared ? 'shared' : /^Self/.test(x.from || '') ? 'app' : 'ref', ck = s.caseKind || 'all';
@@ -1402,7 +1717,7 @@ class Component extends DCLogic {
       e: ['ident', 'about', 'cats', 'hours', 'services', 'who', 'contact'].reduce((o, key) => { o[key] = { on: s.orgEdit === key, off: s.orgEdit !== key,
         start: () => this.setState({ orgEdit: key, orgDraft: JSON.parse(JSON.stringify(HO)) }), cancel: () => this.setState({ orgEdit: null }),
         save: () => { this.toast('Listing updated. Changes are live.'); this.setState(st => ({ orgEdit: null, orgs: st.orgs.map(o2 => o2.id === 'hope' ? Object.assign({}, o2, st.orgDraft, { services: Object.keys((st.orgDraft || {}).services || {}).reduce((m, k) => { m[k] = st.orgDraft.services[k].map(x => x.trim()).filter(Boolean); return m; }, {}), updated: 'Just now', updN: (o2.updN || 0) + 1 }) : o2) })); } }; return o; }, {}),
-      d: ['name', 'type', 'faith', 'addr', 'phone', 'about', 'cost', 'docs'].reduce((o, k) => { o[k] = { v: DR[k] == null ? '' : DR[k], on: e => setDr(k, e.target.value) }; return o; }, {}),
+      d: ['name', 'type', 'faith', 'addr', 'phone', 'about', 'cost', 'docs', 'docsTitle'].reduce((o, k) => { o[k] = { v: DR[k] == null ? '' : DR[k], on: e => setDr(k, e.target.value) }; return o; }, {}),
       aboutCount: (DR.about || '').length + ' characters · shown on your public listing',
       catOpts: D.CATS.map(c => { const on = (DR.cats || []).includes(c.k); return { label: c.label, icon: this.ic(c.icon, 14), on: on ? 'true' : 'false', style: this.chip(on), toggle: () => setDr('cats', on ? DR.cats.filter(x => x !== c.k) : (DR.cats || []).concat(c.k)) }; }),
       langOpts: D.LANGS.map(l => { const on = (DR.langs || []).includes(l); return { label: l, on: on ? 'true' : 'false', style: this.chip(on), toggle: () => setDr('langs', on ? DR.langs.filter(x => x !== l) : (DR.langs || []).concat(l)) }; }),
@@ -1435,7 +1750,8 @@ class Component extends DCLogic {
       notice: s.notice ? { show: true, title: s.notice.title, text: s.notice.text, canDismiss: !!s.notice.canDismiss, dismiss: () => this.setState({ notice: null }),
         boxStyle: s.notice.tone === 'live' ? { display: 'flex', gap: 14, alignItems: 'flex-start', padding: '16px 18px', marginBottom: 22, border: '1px solid #2f8f4e', borderLeft: '6px solid #2f8f4e', background: '#eef7f0', color: '#173f24' }
           : { display: 'flex', gap: 14, alignItems: 'flex-start', padding: '16px 18px', marginBottom: 22, border: '1px solid #c98a10', borderLeft: '6px solid #c98a10', background: '#fdf6e7', color: '#4a3203' } } : { show: false },
-      startTour: () => this.setState({ modal: { kind: 'tour', step: 0 } }),
+      startTour: () => this.setState({ modal: { kind: 'tour', tour: 'overview', step: 0 }, dashTab: 'org', pubView: false }),
+      pageTour: () => { const tk = s.dashTab; const first = (this.tourSteps(tk)[0] || {}).set || {}; this.setState(Object.assign({}, first, { modal: { kind: 'tour', tour: tk, step: 0 }, pubView: false })); },
       info: { open: infoOpen, hidden: infoOpen ? 'false' : 'true', wrap: { display: 'grid', gridTemplateRows: infoOpen ? '1fr' : '0fr', opacity: infoOpen ? 1 : 0, transform: infoOpen ? 'translateY(0)' : 'translateY(-6px)', transition: 'grid-template-rows .35s ease, opacity .3s ease, transform .35s ease' }, aria: infoOpen ? 'true' : 'false', label: infoOpen ? 'Hide page info' : 'About this page', toggle: () => this.setState(st => ({ pageInfo: st.pageInfo === st.dashTab ? null : st.dashTab })) },
       postsView: Object.assign(postsView, { has: posts.length > 0, count: posts.length + (posts.length === 1 ? ' post' : ' posts'), empty: !s.showHiddenPosts && posts.length === 0 && !pfN, filteredEmpty: posts.length === 0 && !!pfN }), feed, fp, pop, cpop: Object.assign({}, pop, { open: !!s.casePop && !!sr && s.dashTab === 'overview' }), settings: this.settingsVals(), ov, history, backToRefs: () => this.setState({ dashTab: 'referrals', selRef: null }), historyCount: history.length + ' completed referrals', backOverview: () => this.setState({ dashTab: 'overview' }), tabs: dashTabs, tab, hope, availSeg, availShow: { v: !hope.hideAvail, hidden: !!hope.hideAvail, on: () => { const nv = !hope.hideAvail; this.setState(st => ({ orgs: st.orgs.map(o => o.id === 'hope' ? Object.assign({}, o, { hideAvail: nv }) : o) })); this.toast(nv ? 'Availability is now hidden from your public listing.' : 'Availability is showing on your public listing again.'); } }, availHelp: this.AV[hope.avail].help, stats, queue, queuePreview: hopeR.filter(x => !['Completed', 'Declined', 'Redirected'].includes(x.stage)).map(x => this.decRef(x)),
       queueEmpty: queue.length === 0, caseCards, caseTitle: (KD.find(k => k[0] === ck) || KD[0])[1], caseCount: queue.length + (queue.length === 1 ? ' case' : ' cases'), qSeg: this.segOf('qFilter', [['all', 'All'], ['new', 'New'], ['active', 'In progress'], ['closed', 'Closed']]), sharedToggle: () => this.setState({ sharedF: s.sharedF === 'only' ? 'show' : 'only', qFilter: s.sharedF === 'only' ? s.qFilter : 'all' }), sharedPressed: s.sharedF === 'only' ? 'true' : 'false',
@@ -1471,8 +1787,8 @@ class Component extends DCLogic {
     const reasonOpts = list => list.map(l => ({ label: l, on: M.reason === l, pick: () => this.setState({ modal: Object.assign({}, M, { reason: l, err: '' }) }) }));
     const close = () => this.setState({ modal: null });
     const modal = {
-      tour: mk === 'tour', tr: mk === 'tour' ? this.tourVals(M) : {},
-      open: !!mk, teamMsg: mk === 'teamMsg', tmTo: M.to || '', tmText: { v: M.text || '', on: e => this.setState(st => ({ modal: Object.assign({}, st.modal, { text: e.target.value, err: '' }) })) }, tmSend: () => { if (!(M.text || '').trim()) return this.upd('modal.err', 'Write a message first.'); this.setState({ modal: null }); this.toast('Message sent to ' + M.to + '.'); }, applyPrev: mk === 'applyPrev', af: mk === 'applyPrev' ? this.afVals(M) : {}, report: mk === 'report', decline: mk === 'decline', pass: mk === 'pass', notfit: mk === 'notfit', ask: mk === 'ask', invite: mk === 'invite', post: mk === 'post', dlgStyle: { background: 'var(--color-bg)', width: mk === 'claim' && M.browse ? 'min(1120px, calc(100vw - 32px))' : mk === 'claim' && M.mode === 'share' ? 'min(940px, calc(100vw - 32px))' : (mk === 'volPost' || mk === 'applyPrev' || mk === 'event' || mk === 'appQs' || mk === 'volView' || mk === 'evView' || mk === 'projForm') ? 'min(820px, calc(100vw - 32px))' : (mk === 'volSign' || mk === 'signups') ? 'min(680px, calc(100vw - 32px))' : mk === 'offerMsg' ? 'min(460px, calc(100vw - 32px))' : 'min(560px, calc(100vw - 32px))', maxWidth: 'none', maxHeight: '90vh', overflowY: mk === 'claim' && (M.browse || M.mode === 'share') && s.w >= 760 ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column', padding: 24, gap: 14, animation: 'bbin .18s ease-out', transition: 'width .3s cubic-bezier(.2,.7,.2,1)' },
+      tour: mk === 'tour', tr: mk === 'tour' ? this.tourVals(M) : {}, denied: mk === 'denied', dn: mk === 'denied' ? this.deniedVals(M) : {}, folder: mk === 'folder', fd: mk === 'folder' ? this.folderModalVals(M) : {}, folderAdd: mk === 'folderAdd', fa: mk === 'folderAdd' ? this.folderAddVals(M) : {},
+      open: !!mk && mk !== 'tour', teamMsg: mk === 'teamMsg', tmTo: M.to || '', tmText: { v: M.text || '', on: e => this.setState(st => ({ modal: Object.assign({}, st.modal, { text: e.target.value, err: '' }) })) }, tmSend: () => { if (!(M.text || '').trim()) return this.upd('modal.err', 'Write a message first.'); this.setState({ modal: null }); this.toast('Message sent to ' + M.to + '.'); }, applyPrev: mk === 'applyPrev', af: mk === 'applyPrev' ? this.afVals(M) : {}, report: mk === 'report', decline: mk === 'decline', pass: mk === 'pass', notfit: mk === 'notfit', ask: mk === 'ask', invite: mk === 'invite', post: mk === 'post', dlgStyle: { background: 'var(--color-bg)', width: mk === 'claim' && M.browse ? 'min(1120px, calc(100vw - 32px))' : mk === 'claim' && M.mode === 'share' ? 'min(940px, calc(100vw - 32px))' : (mk === 'volPost' || mk === 'applyPrev' || mk === 'event' || mk === 'appQs' || mk === 'volView' || mk === 'evView' || mk === 'projForm') ? 'min(820px, calc(100vw - 32px))' : (mk === 'volSign' || mk === 'signups' || mk === 'denied') ? 'min(680px, calc(100vw - 32px))' : mk === 'offerMsg' ? 'min(460px, calc(100vw - 32px))' : 'min(560px, calc(100vw - 32px))', maxWidth: 'none', maxHeight: '90vh', overflowY: mk === 'claim' && (M.browse || M.mode === 'share') && s.w >= 760 ? 'hidden' : 'auto', display: 'flex', flexDirection: 'column', padding: 24, gap: 14, animation: 'bbin .18s ease-out', transition: 'width .3s cubic-bezier(.2,.7,.2,1)' },
       volSign: mk === 'volSign', signups: mk === 'signups', claim: mk === 'claim',
       offerMsg: mk === 'offerMsg', om: (() => { if (mk !== 'offerMsg') return {}; const p = (s.posts || []).find(x => x.id === M.pid) || {};
         return { org: p.org, title: p.title,
@@ -1694,7 +2010,7 @@ class Component extends DCLogic {
       scr, nav, isPublic: PUBLIC.includes(s.screen), pubLinks, menuShown: narrow && s.menuOpen, toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }), menuLabel: s.menuOpen ? 'Close menu' : 'Open menu', menuExpanded: s.menuOpen ? 'true' : 'false',
       homeQ: this.bind('homeQ'), homeCat: this.bind('homeCat'), homeZip: this.bind('homeZip'), catOptions, runSearch: this.runSearch, catCar, popular, heroSearchFull: { position: 'relative', minWidth: 0, gridColumn: s.w >= 900 ? 'auto' : '1 / -1' }, heroSearchBtn: { width: '100%', margin: 0, minHeight: 56, padding: '0 28px', fontSize: 18, background: 'var(--color-accent-700)', borderColor: 'var(--color-accent-700)', color: 'var(--color-bg)', gridColumn: s.w >= 900 ? 'auto' : '1 / -1' }, heroSearchGrid: { display: 'grid', gap: 14, alignItems: 'stretch', gridTemplateColumns: s.w >= 900 ? 'minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) auto' : s.w >= 600 ? 'minmax(0,1fr) minmax(0,1fr)' : 'minmax(0,1fr)' }, featured, featCardStyle, featRef: this.featRef, mapFrame: this.mapFrame,
       dir, listing, verPop: s.verPop, toggleVerPop: () => this.setState({ verPop: !s.verPop }), closeVerPop: () => this.setState({ verPop: false }),
-      openReport: () => this.modal({ kind: 'report', targetName: 'Listing · ' + lo.name }), quickExit: () => this.go('exit'), backToResults: () => this.state.fromDash ? this.go('dash', { dashTab: this.state.fromTab || 'directory', selRef: null }) : this.go('directory'), backLabel: s.fromDash ? ({ org: 'Back to My organization', overview: 'Back to Dashboard', directory: 'Back to results' }[s.fromTab] || 'Back') : 'Back to results',
+      openReport: () => this.modal({ kind: 'report', targetName: 'Listing · ' + lo.name }), quickExit: () => this.go('exit'), backToResults: () => this.state.fromDash ? this.go('dash', { dashTab: this.state.fromTab || 'directory', selRef: null }) : this.go('directory'), backLabel: s.fromDash ? ({ org: 'Back to My organization', overview: 'Back to Dashboard', directory: 'Back to results', favs: 'Back to Favorites' }[s.fromTab] || 'Back') : 'Back to results',
       refer, refDone, track, about, login, signup, dash, mod, modOpen, modal,
       toast: s.toast, hasToast: !!s.toast, toastUndo: !!s.toastUndo && !!this._undoSnap, undoToast: () => this.undoToast(),
       guideShown: this.props.showGuide === true, guideOpen: s.guideOpen, guideClosed: !s.guideOpen, toggleGuide: () => this.setState({ guideOpen: !s.guideOpen }), guideGroups, flows,
@@ -1712,8 +2028,11 @@ class Component extends DCLogic {
                                                  → the Hope Harbor sample, with all its made-up
                                                    people and numbers. Nothing is saved.
    • A member of an approved organization ..... their real organization. Changes save to Supabase.
-   • Nobody's organization yet ................ site admins go to admin.html, everyone else to
-                                                 account.html (where their request's status shows).
+   • More than one dashboard .................. a "Which dashboard?" screen first (or the one they
+                                                 chose to open automatically). Requests that are waiting
+                                                 or weren't approved show there with their status.
+   • Nobody's organization yet ................ site admins go to admin.html, everyone else sees
+                                                 how to add or claim their organization.
 
    The database decides what each person may change (see the setup and update SQL files),
    so this file can't give anyone more access than the database allows.
@@ -1740,7 +2059,11 @@ class Component extends DCLogic {
   Component.CLAIMED = ['hope'];
   Component.APPLY_URLS = {};
 
-  function say(html) { mount.innerHTML = '<div style="max-width:560px;margin:60px auto;padding:0 20px;font-size:18px;line-height:1.5">' + html + '</div>'; }
+  function say(html) {
+    mount.innerHTML = '<div style="max-width:560px;margin:60px auto;padding:0 20px;font-size:18px;line-height:1.5">' + html + '</div>';
+    var out = document.getElementById('cc-out');
+    if (out) out.addEventListener('click', function () { try { sessionStorage.removeItem('cc-dash-cur'); } catch (e) {} CC.signOut().then(function () { window.location.href = 'index.html'; }); });
+  }
   function same(a, b) { return JSON.stringify(a == null ? null : a) === JSON.stringify(b == null ? null : b); }
   function firstName(n) { return String(n || '').trim().split(/\s+/).map(function (w, i) { return i === 0 ? w : w[0] + '.'; }).slice(0, 2).join(' '); }
   function toast(msg) { if (app) app.toast(msg); }
@@ -1793,11 +2116,101 @@ class Component extends DCLogic {
     return out;
   }
 
+  // ---------- which dashboards this account can open ----------
+  // Every organization they're on the team of, every request still waiting or not approved,
+  // and the Admin page for the site's team. The picker shows when there's more than one.
+  var DASHES = [];     // the list the picker shows (the design's myDash)
+  var CUR = null;      // the dashboard that's open
+  var PREFS = {};      // this person's saved choices (profiles.prefs): autoDash = the dashboard that opens by itself
+  var STASH_FILE = null;
+  var TOUR_WAIT = null;
+  var CUR_KEY = 'cc-dash-cur';
+  function sget(k) { try { return sessionStorage.getItem(k); } catch (e) { return null; } }
+  function sset(k, v) { try { if (v == null) sessionStorage.removeItem(k); else sessionStorage.setItem(k, v); } catch (e) {} }
+  function savePrefs(patch) {
+    Object.assign(PREFS, patch);
+    try { localStorage.setItem('cc-prefs-' + ME.uid, JSON.stringify(PREFS)); } catch (e) {}
+    CC.sb.from('profiles').update({ prefs: PREFS }).eq('id', ME.uid).then(function () {});
+  }
+  function statusOf(o) { return o.status === 'paused' ? 'Paused' : 'Live'; }
+
+  // A request that was saved on this device (when the email had to be confirmed first) is sent now.
+  async function sendStash(email) {
+    var st = CC.stashed && CC.stashed(); if (!st || !st.data) return true;
+    var d = st.data, owner = String(d.email || '').trim().toLowerCase();
+    if (owner && owner !== email) return true; // started with a different account; leave it for that account
+    if (d.method === 'doc' && !STASH_FILE) { askForFile(st); return false; }
+    if (st.kind === 'new_listing') await CC.submitNewListing(d, STASH_FILE); else await CC.submitClaim(d, STASH_FILE);
+    CC.clearStash(); STASH_FILE = null;
+    sset(CUR_KEY, null);
+    setTimeout(function () { toast('Your request was sent. We’ll email you after we review it.'); }, 600);
+    return true;
+  }
+  function askForFile(st) {
+    var d = st.data || {}, isNew = st.kind === 'new_listing';
+    say('<h1 style="font-size:30px;margin:0 0 10px">Finish sending your request</h1>' +
+      '<p>' + (isNew ? 'Your new listing for <strong>' + CC.esc(d.name) + '</strong>' : 'Your claim for <strong>' + CC.esc(d.orgName) + '</strong>') + ' is almost ready. Because you chose to send a document, please choose it again so we can attach it.</p>' +
+      '<form id="cc-stash" style="display:flex;flex-direction:column;gap:14px;margin-top:16px"><label for="cc-sf" style="font-weight:600">Your document' + (st.fileName ? ' (' + CC.esc(st.fileName) + ')' : '') + '</label>' +
+      '<input id="cc-sf" type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/*" class="input" style="min-height:48px;font-size:16px">' +
+      '<span id="cc-sf-err" role="alert" style="color:#b4443a"></span>' +
+      '<div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn btn-primary" type="submit" style="min-height:48px;padding:0 22px;font-size:17px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:#fff">Send for review</button>' +
+      '<button class="btn btn-secondary" type="button" id="cc-sf-drop" style="min-height:48px;font-size:16px">Discard this request</button></div></form>');
+    document.getElementById('cc-stash').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var f = document.getElementById('cc-sf').files[0];
+      if (!f) { document.getElementById('cc-sf-err').textContent = 'Please choose your document first.'; return; }
+      STASH_FILE = f; say('<p>Sending…</p>'); start().catch(fail);
+    });
+    document.getElementById('cc-sf-drop').addEventListener('click', function () {
+      if (!confirm('Discard this request? You’d need to fill it out again.')) return;
+      CC.clearStash(); say('<p>Loading…</p>'); start().catch(fail);
+    });
+  }
+
+  async function loadDashes(sb, uid, isAdmin) {
+    var mem = await sb.from('organization_members').select('organization_id, role').eq('user_id', uid);
+    if (mem.error) throw mem.error;
+    var roles = {}; (mem.data || []).forEach(function (m) { roles[m.organization_id] = m.role; });
+    var ids = Object.keys(roles), rows = [];
+    if (ids.length) rows = (await sb.from('organizations').select('*').in('id', ids).in('status', ['approved', 'paused']).order('name')).data || [];
+    var have = {}; rows.forEach(function (o) { have[o.id] = 1; });
+    var list = rows.map(function (o) {
+      return { id: 'o-' + o.id, kind: 'org', name: o.name, role: ROLE_LABEL[roles[o.id]] || 'Staff', status: statusOf(o), org: myOrgShape(o), _row: o, _role: roles[o.id] };
+    });
+    // Requests still waiting, and ones that weren't approved
+    var rq = (await sb.from('claim_requests').select('id, organization_id, kind, status, draft, created_at, reviewer_note').eq('user_id', uid).in('status', ['pending', 'rejected']).order('created_at', { ascending: false })).data || [];
+    rq = rq.filter(function (q) { if (have[q.organization_id]) return false; have[q.organization_id] = 1; return true; });
+    if (rq.length) {
+      var newIds = rq.filter(function (q) { return q.kind === 'new_listing'; }).map(function (q) { return q.organization_id; });
+      var clIds = rq.filter(function (q) { return q.kind !== 'new_listing'; }).map(function (q) { return q.organization_id; });
+      var base = {};
+      if (newIds.length) ((await sb.from('organizations').select('*').in('id', newIds)).data || []).forEach(function (o) { base[o.id] = o; });
+      if (clIds.length) ((await sb.from('directory_listings').select('*').in('id', clIds)).data || []).forEach(function (o) { base[o.id] = o; });
+      rq.forEach(function (q) {
+        var b = base[q.organization_id]; if (!b) return;
+        var row = Object.assign({ apply_mode: 'steps', show_availability: true, show_contact: true, hide_address: false }, b, q.kind === 'claim' ? (q.draft || {}) : {});
+        var no = q.status === 'rejected';
+        list.push({ id: 'r-' + q.id, kind: 'org', name: row.name, role: 'Admin', status: no ? 'Not approved' : 'Waiting for approval', org: myOrgShape(row),
+          note: no ? (q.reviewer_note || 'If you have questions, reply to the email we sent you or write to ' + CONTACT_EMAIL + '.') : '',
+          _row: row, _role: 'owner', _req: { id: q.id, kind: q.kind, draft: q.draft || {}, rejected: no } });
+      });
+    }
+    if (isAdmin) {
+      var n = 0, rp = 0;
+      try { n = (await sb.from('claim_requests').select('id', { count: 'exact', head: true }).eq('status', 'pending')).count || 0; } catch (e) {}
+      try { rp = (await sb.from('listing_reports').select('id', { count: 'exact', head: true }).eq('status', 'open')).count || 0; } catch (e) {}
+      list.push({ id: 'admin', kind: 'admin', name: 'Compassion Catalyst Admin', role: 'Site admin', status: '',
+        info: (n === 1 ? '1 request' : n + ' requests') + ' waiting for review' + (rp ? ' · ' + rp + (rp === 1 ? ' open report' : ' open reports') : '') });
+    }
+    return list;
+  }
+
   async function start() {
     if (!CC.ok) return say('<h1 style="font-size:28px">We can’t reach the server</h1><p>Please check your internet connection and try again in a few minutes.</p>');
     var session = await CC.whenReady;
     if (!session) { window.location.replace('login.html'); return; }
     var sb = CC.sb, uid = session.user.id, email = String(session.user.email || '').toLowerCase();
+    ME = { uid: uid, email: email, role: 'owner' };
 
     // The Hope Harbor sample
     if (DEMO_EMAIL && email === DEMO_EMAIL) {
@@ -1810,58 +2223,61 @@ class Component extends DCLogic {
       return;
     }
 
-    // Site admins use the Admin page as their dashboard (add ?org=1 to open an organization's dashboard instead)
-    if (!/[?&]org=1\b/.test(location.search)) {
-      var adm = await sb.from('profiles').select('is_admin').eq('id', uid).maybeSingle();
-      if (adm.data && adm.data.is_admin) { window.location.replace('admin.html'); return; }
-    }
+    // A request saved on this device is sent first
+    if (!(await sendStash(email))) return;
 
-    // A real organization
     try { await sb.rpc('accept_my_invites'); } catch (e) { /* no invites */ }
-    var mem = await sb.from('organization_members').select('organization_id, role').eq('user_id', uid);
-    if (mem.error) return say('<h1 style="font-size:28px">Something went wrong</h1><p>' + CC.esc(CC.msg(mem.error)) + '</p>');
-    var roles = {}; (mem.data || []).forEach(function (m) { roles[m.organization_id] = m.role; });
-    var ids = Object.keys(roles), orgs = [];
-    if (ids.length) {
-      var o = await sb.from('organizations').select('*').in('id', ids).in('status', ['approved', 'paused']).order('name');
-      orgs = o.data || [];
-    }
-    if (!orgs.length) {
-      // Waiting for approval? Open the dashboard anyway so they can start setting up.
-      var rq = await sb.from('claim_requests').select('id, organization_id, kind, status, draft, created_at').eq('user_id', uid).eq('status', 'pending').order('created_at', { ascending: false }).limit(1);
-      var req = rq.data && rq.data[0];
-      var base = null;
-      if (req) {
-        if (req.kind === 'new_listing') base = (await sb.from('organizations').select('*').eq('id', req.organization_id).maybeSingle()).data;
-        else base = (await sb.from('directory_listings').select('*').eq('id', req.organization_id).maybeSingle()).data;
-      }
-      if (!req || !base) {
-        if (CC.stashed && CC.stashed()) { window.location.replace('account.html'); return; } // a request still to send
-        var p = await sb.from('profiles').select('is_admin').eq('id', uid).maybeSingle();
-        window.location.replace(p.data && p.data.is_admin ? 'admin.html' : 'account.html');
-        return;
-      }
-      PEND = { id: req.id, kind: req.kind, draft: req.draft || {} };
-      ORG = Object.assign({ apply_mode: 'steps', show_availability: true, show_contact: true, hide_address: false }, base, req.kind === 'claim' ? PEND.draft : {});
-      ORG.status = 'pending';
-      orgs = [ORG];
-      roles[ORG.id] = 'owner';
-      NOTICE = { tone: 'wait', canDismiss: false,
-        title: req.kind === 'claim' ? 'Your claim is waiting for approval' : 'Your new listing is waiting for approval',
-        text: 'Go ahead and set up your listing now. Your changes are saved, but they won’t show on Find help until our team approves ' +
-          (req.kind === 'claim' ? 'your claim' : 'your listing') + ' (usually within 2–5 business days). We’ll email you when it’s live.' };
-    }
-    var pick = null; try { pick = localStorage.getItem('cc-dash-org'); } catch (e) {}
-    if (!PEND) ORG = orgs.find(function (x) { return x.id === pick; }) || orgs[0];
-    ME = { uid: uid, email: email, role: roles[ORG.id] };
-
-    var prof = await sb.from('profiles').select('full_name, email, phone, is_admin').eq('id', uid).maybeSingle();
+    var prof = await sb.from('profiles').select('*').eq('id', uid).maybeSingle();
     var P = prof.data || {};
+    PREFS = (P.prefs && typeof P.prefs === 'object') ? P.prefs : {};
+    if (!P.prefs) { try { PREFS = JSON.parse(localStorage.getItem('cc-prefs-' + uid) || '{}') || {}; } catch (e) {} }
+    var q = location.search, orgOnly = /[?&]org=1\b/.test(q), askAgain = /[?&]pick=1\b/.test(q);
+    DASHES = await loadDashes(sb, uid, !!P.is_admin && !orgOnly);
+    var orgDashes = DASHES.filter(function (d) { return d.kind !== 'admin'; });
+
+    if (!DASHES.length) {
+      var other = CC.stashed && CC.stashed();
+      return say('<h1 style="font-size:30px;margin:0 0 10px">You don’t have a dashboard yet</h1>' +
+        (other && other.data ? '<p>A request on this device was started with a different email (' + CC.esc(other.data.email || '') + '). Log out and log in with that email to send it.</p>' : '') +
+        '<p>To get one, add your organization to the directory or claim its listing. Our team reviews every request, and your dashboard opens as soon as you send it.</p>' +
+        '<p style="display:flex;gap:10px;flex-wrap:wrap;margin-top:18px"><a class="btn btn-primary" href="signup.html" style="min-height:48px;padding:0 20px;font-size:17px;background:var(--color-accent-700);border-color:var(--color-accent-700);color:#fff">Add your organization</a>' +
+        '<a class="btn btn-secondary" href="claim.html" style="min-height:48px;padding:0 20px;font-size:17px">Claim a listing</a>' +
+        '<button class="btn btn-ghost" type="button" id="cc-out" style="min-height:48px;font-size:17px">Log out</button></p>');
+    }
+    if (!orgDashes.length) { window.location.replace('admin.html'); return; } // only the Admin page
+
+    // Which one opens: one picked earlier in this visit, then the one set to open by itself, then ask
+    var pickedNow = sget(CUR_KEY), auto = PREFS.autoDash || '';
+    var byId = function (id) { return DASHES.find(function (d) { return d.id === id; }); };
+    var pickOpen = false;
+    if (askAgain) { CUR = orgDashes[0]; pickOpen = DASHES.length > 1; }
+    else if (pickedNow && byId(pickedNow) && byId(pickedNow).kind !== 'admin') CUR = byId(pickedNow);
+    else if (auto && byId(auto)) {
+      if (auto === 'admin') { window.location.replace('admin.html'); return; }
+      CUR = byId(auto);
+    } else { CUR = orgDashes[0]; pickOpen = DASHES.length > 1; }
+    if (!pickOpen) sset(CUR_KEY, CUR.id);
+
+    ORG = CUR._row; ME.role = CUR._role;
+    PEND = CUR._req || null;
+    var waiting = PEND && !PEND.rejected;
+    if (PEND && PEND.rejected) {
+      NOTICE = { tone: 'wait', canDismiss: false, title: 'This request wasn’t approved',
+        text: 'We weren’t able to approve ' + ORG.name + '. Nothing about it is public. You can delete this dashboard, or reply to our email if you have questions.' };
+    } else if (waiting) {
+      ORG.status = 'pending';
+      NOTICE = { tone: 'wait', canDismiss: false,
+        title: PEND.kind === 'claim' ? 'Your claim is waiting for approval' : 'Your new listing is waiting for approval',
+        text: 'Go ahead and set up your listing now. Your changes are saved, but they won’t show on Find help until our team approves ' +
+          (PEND.kind === 'claim' ? 'your claim' : 'your listing') + ' (usually within 2–5 business days). We’ll email you when it’s live.' };
+    }
+
     var res = await Promise.all([
       PEND ? Promise.resolve([]) : loadTeam(),
       PEND ? Promise.resolve({ data: [] }) : sb.from('org_favorites').select('favorite_id').eq('organization_id', ORG.id),
       loadListings(),
-      PEND ? Promise.resolve({ data: [] }) : sb.from('claim_requests').select('id, reviewed_at').eq('user_id', uid).eq('organization_id', ORG.id).eq('status', 'approved').order('reviewed_at', { ascending: false }).limit(1)
+      PEND ? Promise.resolve({ data: [] }) : sb.from('claim_requests').select('id, reviewed_at').eq('user_id', uid).eq('organization_id', ORG.id).eq('status', 'approved').order('reviewed_at', { ascending: false }).limit(1),
+      PEND ? Promise.resolve({ data: null }) : sb.from('org_settings').select('fav_folders').eq('organization_id', ORG.id).maybeSingle()
     ]);
     // Just approved? Say so once.
     var ok = res[3] && res[3].data && res[3].data[0];
@@ -1876,11 +2292,20 @@ class Component extends DCLogic {
     if (!team.some(function (m) { return m.uid === uid; })) team.unshift({ name: meName, email: email, role: ROLE_LABEL[ME.role] || 'Staff', uid: uid });
     team.forEach(function (m) { if (m.uid === uid) m.name = meName; });
 
+    // Favorites folders are saved by each listing's database id
+    var FF = (res[4] && res[4].data && res[4].data.fav_folders) || {}, ofDb = FF.of || {}, ofApp = {}, showDb = FF.show || {}, showApp = {};
+    others.forEach(function (o) { if (ofDb[o.dbId]) ofApp[o.id] = ofDb[o.dbId]; if (Array.isArray(showDb[o.dbId])) showApp[o.id] = showDb[o.dbId]; });
+    var density = 'compact'; try { density = localStorage.getItem('cc-fav-density-' + uid) || 'compact'; } catch (e) {}
+
     var S0 = new Component({}).state; // the design's starting state, for shapes we keep as they are
     window.CC_DASH_INIT = {
-      LIVE: true, tourPending: !!PEND, meName: meName, meRole: ROLE_LABEL[ME.role] || 'Staff', isSiteAdmin: !!P.is_admin, myOrgCount: orgs.length,
+      LIVE: true, tourPending: !!waiting, meName: meName, meRole: ROLE_LABEL[ME.role] || 'Staff', isSiteAdmin: !!P.is_admin, myOrgCount: orgDashes.length,
       orgs: [Object.assign(myOrgShape(ORG), PEND ? { claimed: false, verified: PEND.kind === 'claim' ? !!ORG.verified : false } : {})].concat(others),
       favs: others.filter(function (x) { return favIds.indexOf(x.dbId) >= 0; }).map(function (x) { return x.id; }),
+      favFolders: Array.isArray(FF.folders) ? FF.folders : [], favFolderOf: ofApp, favShow: showApp, favExpanded: {}, favRowOpen: null, favDensity: density === 'detailed' ? 'detailed' : 'compact',
+      myDash: DASHES.map(function (d) { return { id: d.id, kind: d.kind, name: d.name, role: d.role, status: d.status, org: d.org, note: d.note, info: d.info }; }),
+      curDash: CUR.id, pickOpen: pickOpen, pickRemember: false, autoOpen: auto && byId(auto) ? auto : '',
+      modal: PEND && PEND.rejected ? { kind: 'denied', did: CUR.id, step: 'ask' } : null,
       team: team,
       apply: { mode: ORG.apply_mode === 'web' ? 'web' : 'steps', url: ORG.apply_url || '' },
       settings: Object.assign({}, S0.settings, { name: P.full_name || '', email: email, phone: P.phone || '', twoStep: false,
@@ -1891,8 +2316,17 @@ class Component extends DCLogic {
     };
     LIVE = true;
     boot(true);
-    startTourOnce(uid);
+    if (!(PEND && PEND.rejected)) startTourOnce(uid);
     if (ORG.status === 'paused') toast('Your listing is paused, so it isn’t showing on Find help right now. Email ' + CONTACT_EMAIL + ' with questions.');
+  }
+
+  // Open another dashboard (this reloads the page with that organization's real data)
+  function openDash(d, remember) {
+    if (remember) savePrefs({ autoDash: d.id });
+    if (d.kind === 'admin') { window.location.href = 'admin.html'; return; }
+    if (CUR && d.id === CUR.id) { sset(CUR_KEY, d.id); if (app) app.setState({ pickOpen: false }); return; }
+    sset(CUR_KEY, d.id);
+    window.location.href = 'dashboard.html';
   }
 
   function boot(live) {
@@ -1939,8 +2373,40 @@ class Component extends DCLogic {
     var tipKey = 'cc-hide-pubtip-' + (ME ? ME.uid : 'demo'), tipHidden = false;
     try { tipHidden = localStorage.getItem(tipKey) === '1'; } catch (e) {}
     v.dash.pubTip = { show: !tipHidden, hidden: tipHidden, close: function () { try { localStorage.setItem(tipKey, '1'); } catch (e) {} self.setState({}); } };
-    v.dash.logout = function () { CC.signOut().then(function () { window.location.href = 'index.html'; }, function () { window.location.href = 'index.html'; }); };
+    v.dash.logout = function () { sset(CUR_KEY, null); CC.signOut().then(function () { window.location.href = 'index.html'; }, function () { window.location.href = 'index.html'; }); };
     if (!LIVE) return v;
+
+    // Which dashboard: real switching, "open this one automatically", and deleting one that wasn't approved
+    if (v.pk && v.pk.list) {
+      var D = s.myDash || [];
+      var GREY = { background: 'var(--color-neutral-200)', color: 'var(--color-neutral-800)', border: '1px solid var(--color-neutral-500)' };
+      v.pk.list.forEach(function (it, k) {
+        var d = D[k]; if (!d) return;
+        it.open = function () { openDash(d, !!(self.state.pickOpen && self.state.pickRemember)); };
+        if (d.status === 'Paused') { it.chip = 'Paused'; Object.assign(it.chipStyle, GREY); Object.assign(it.chipStyleSm, GREY); it.chipDot = Object.assign({}, it.chipDot, { background: 'var(--color-neutral-600)' }); }
+      });
+      var autoIds = [''].concat(D.map(function (d) { return d.id; }));
+      (v.pk.autoOpts || []).forEach(function (a, k) {
+        var basePick = a.pick;
+        a.pick = function () { basePick(); savePrefs({ autoDash: autoIds[k] || '' }); };
+      });
+    }
+    if (v.modal && v.modal.dn && s.modal && s.modal.kind === 'denied') {
+      var dd = (s.myDash || []).find(function (x) { return x.id === s.modal.did; }) || {};
+      v.modal.dn.note = dd.note || v.modal.dn.note;
+      v.modal.dn.doDelete = function () {
+        var reqId = String(dd.id || '').replace(/^r-/, '');
+        CC.sb.rpc('delete_my_request', { request_id: reqId }).then(function (r) {
+          if (r.error) return toast(CC.msg(r.error));
+          sset(CUR_KEY, null);
+          var rest = (self.state.myDash || []).filter(function (x) { return x.id !== dd.id; });
+          if (PREFS.autoDash === dd.id) savePrefs({ autoDash: '' });
+          self.setState({ modal: null });
+          toast(dd.name + ' was deleted from your account.');
+          setTimeout(function () { window.location.href = rest.length ? 'dashboard.html' : 'index.html'; }, 1200);
+        });
+      };
+    }
 
     // Settings → Account
     var st = v.dash.settings, S = s.settings;
@@ -2002,6 +2468,7 @@ class Component extends DCLogic {
   async function flushOrg() {
     var patch = pendingOrg; pendingOrg = {};
     if (!Object.keys(patch).length) return;
+    if (PEND && PEND.rejected) { if (!flushOrg._said) { flushOrg._said = 1; toast('This request wasn’t approved, so changes here aren’t saved.'); } return; }
     if (PEND && PEND.kind === 'claim') {
       // Not approved yet: keep the changes with the claim. They're published when it's approved.
       var draft = Object.assign({}, PEND.draft, patch);
@@ -2053,6 +2520,7 @@ class Component extends DCLogic {
     f('elig', 'eligibility', b.elig || []);
     f('cost', 'cost', b.cost || null);
     f('docs', 'what_to_bring', b.docs || null);
+    f('docsTitle', 'docs_title', String(b.docsTitle || '').trim() || null);
     f('avail', 'availability', b.avail);
     f('hideAvail', 'show_availability', !b.hideAvail);
     if (!same(a.addr, b.addr)) Object.assign(p, splitAddr(b.addr));
@@ -2066,6 +2534,8 @@ class Component extends DCLogic {
   var baseDU = Component.prototype.componentDidUpdate;
   Component.prototype.componentDidUpdate = function (pp, ps) {
     if (baseDU) baseDU.apply(this, arguments);
+    // The welcome tour waits until a dashboard is picked
+    if (TOUR_WAIT && ps && ps.pickOpen && !this.state.pickOpen) { var tw = TOUR_WAIT; TOUR_WAIT = null; startTourOnce(tw); }
     if (!LIVE || !ps) return;
     var s = this.state, self = this;
     if (this._skipSave) { this._skipSave = false; return; }
@@ -2091,6 +2561,9 @@ class Component extends DCLogic {
       if (Object.keys(pp2).length) queueOrg(pp2);
     }
     // Favorites (saved once the listing is approved)
+    // Favorites folders (shared by the team) and the Compact / Detailed choice (just for this person)
+    if (!PEND && (ps.favFolders !== s.favFolders || ps.favFolderOf !== s.favFolderOf || ps.favShow !== s.favShow)) queueFolders(this);
+    if (ps.favDensity !== s.favDensity) { try { localStorage.setItem('cc-fav-density-' + ME.uid, s.favDensity || 'compact'); } catch (e) {} }
     if (ps.favs !== s.favs && PEND) { if (!this._favNote) { this._favNote = 1; toast('Favorites are kept on this screen for now. They’ll save once your listing is approved.'); } }
     else if (ps.favs !== s.favs) {
       var add = (s.favs || []).filter(function (id) { return (ps.favs || []).indexOf(id) < 0; });
@@ -2127,11 +2600,27 @@ class Component extends DCLogic {
     }
   };
 
+  var folderTimer = null;
+  function queueFolders(c) {
+    clearTimeout(folderTimer);
+    folderTimer = setTimeout(function () {
+      var s = c.state, of = {};
+      Object.keys(s.favFolderOf || {}).forEach(function (id) { var o = c.org(id), f = s.favFolderOf[id]; if (o && o.dbId && f) of[o.dbId] = f; });
+      var show = {}; Object.keys(s.favShow || {}).forEach(function (id) { var o = c.org(id); if (o && o.dbId && Array.isArray(s.favShow[id])) show[o.dbId] = s.favShow[id]; });
+      var val = { folders: (s.favFolders || []).map(function (f) { return { id: f.id, name: f.name, desc: f.desc || '', icon: f.icon || 'folder' }; }), of: of, show: show };
+      CC.sb.from('org_settings').upsert({ organization_id: ORG.id, fav_folders: val, updated_at: new Date().toISOString() }).then(function (r) {
+        if (r.error) toast(/relation|does not exist|schema cache/i.test(r.error.message) ? 'Folders can’t be saved yet. Ask your site admin to run the latest database update.' : CC.msg(r.error));
+      });
+    }, 700);
+  }
+
   // ---------- the welcome tour (part of the dashboard design; shows once per person, Settings → Take the tour shows it again) ----------
   function startTourOnce(who) {
     var k = 'cc-tour-' + who, done = null;
     try { done = localStorage.getItem(k); localStorage.setItem(k, '1'); } catch (e) { return; }
-    if (!done) setTimeout(function () { if (app) app.setState({ modal: { kind: 'tour', step: 0 } }); }, 400);
+    if (done) return;
+    if (app && app.state.pickOpen) { TOUR_WAIT = who; try { localStorage.removeItem(k); } catch (e) {} return; }
+    setTimeout(function () { if (app) app.setState({ modal: { kind: 'tour', tour: 'overview', step: 0 } }); }, 400);
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', function () { start().catch(fail); }); else start().catch(fail);

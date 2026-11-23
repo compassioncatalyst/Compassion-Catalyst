@@ -389,6 +389,7 @@
    ========================================================================== */
 class Component extends DCLogic {
   ICONS = {
+    eye: ['M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z', ['circle', { cx: 12, cy: 12, r: 3 }]],
     userCheck: ['M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2', ['circle', { cx: 9, cy: 7, r: 4 }], 'm16 11 2 2 4-4'],
     search: [['circle', { cx: 11, cy: 11, r: 8 }], 'm21 21-4.3-4.3'],
     shieldCheck: ['M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z', 'm9 12 2 2 4-4'],
@@ -462,7 +463,7 @@ class Component extends DCLogic {
     orgId: 'hope', verPop: false, ref: this.blankRef(), refStep: 1, refErr: {}, refSending: false, lastRef: null,
     trackIn: '', trackCode: null, trackErr: '', prefs: { email: true, text: false, app: true },
     login: { email: '', pw: '', err: '', loading: false, remember: false },
-    claim: this.blankClaim(), signup: { step: 1, person: '', pw: '', sending: false, confirm: false, name: '', type: 'Church', faith: 'yes', hood: '', phone: '', email: '', cats: [], services: '', serves: '', method: 'doc', fileName: '', refOrg: '', refName: '', err: {} },
+    claim: this.blankClaim(), signup: { step: 1, person: '', pw: '', sending: false, confirm: false, name: '', type: 'Church', faith: 'yes', faithName: '', hood: '', phone: '', email: '', website: '', cname: '', ctitle: '', addr: '', city: '', st: '', zip: '', county: '', hideAddr: false, noHours: false, hours: ['', '', '', '', '', '', ''], svc: {}, about: '', elig: [], cost: 'Free', langs: ['English'], langOther: '', docs: '', docsTitle: '', applyMode: 'steps', applyUrl: '', avail: 'Accepting', cap: '', editing: false, snap: null, cats: [], services: '', serves: '', method: 'doc', fileName: '', refOrg: '', refName: '', err: {} },
     dashTab: 'overview', selRef: null, note: '', qFilter: 'all', needF: { cat: '', urg: '', status: '' }, selThread: null, msg: '',
     invite: { email: '', role: 'Staff', err: '' },
     settings: { name: 'Denise Carter', email: 'denise@hopeharbor.example', phone: '205-555-0142', n: { newRef: { email: true, text: true, app: true }, refUpdate: { email: true, text: false, app: true }, unclaimed: { email: false, text: false, app: true }, msgs: { email: true, text: false, app: true }, digest: { email: true, text: false, app: false } }, quiet: true, p: { showContact: true, shareCase: true, suggest: true, readReceipts: true, hideAddr: false }, twoStep: false },
@@ -774,7 +775,22 @@ class Component extends DCLogic {
     this._tt = setTimeout(() => this.setState({ toast: null }), 3000);
   }
   modal(m) { this.setState({ modal: Object.assign({ reason: '', note: '', q: '', pick: '', text: '', title: '', type: 'Supply request', urg: 'No rush', err: '' }, m) }); }
-  org(id) { return this.state.orgs.find(o => o.id === id); }
+  org(id) { if (id === 'mine') return this.myListing(); return this.state.orgs.find(o => o.id === id); }
+  // The listing a new organization is building (shown only to them as a preview until approved)
+  myListing() {
+    const su = this.state.signup || {};
+    const lines = x => String(x || '').split(/\n/).map(y => y.trim()).filter(Boolean);
+    const services = {}; (su.cats || []).forEach(k => { const l = lines((su.svc || {})[k]); services[k] = l.length ? l : [this.cat(k).label]; });
+    const hrs = su.noHours ? Array(7).fill('Call for hours') : (su.hours || []).map(h => (h || '').trim() || 'Closed');
+    const langs = (su.langs || []).concat(String(su.langOther || '').split(',').map(x => x.trim()).filter(Boolean));
+    const town = [(su.city || '').trim(), su.st].filter(Boolean).join(', ');
+    const addr = !su.hideAddr && (su.addr || '').trim() ? (su.addr.trim() + (town ? ', ' + town : '') + (su.zip ? ' ' + su.zip.trim() : '')) : '';
+    const web = (su.applyUrl || '').trim();
+    return { id: 'mine', name: (su.name || '').trim() || 'Your organization', type: su.type || 'Nonprofit', faith: su.faith === 'yes' ? ((su.faithName || '').trim() || 'Christian') : '', cats: su.cats || [], hood: su.hood || town || 'Your area', addr, sensitive: false, phone: (su.phone || '').trim() || 'No phone yet',
+      verified: false, vDate: null, updated: 'today', updN: 0, avail: su.avail || 'Accepting', hours: hrs, open: null, mi: null, langs: langs.length ? langs : ['English'], cost: su.cost || 'Free', elig: (su.elig || []).length ? su.elig : ['No restrictions'],
+      docs: (su.docs || '').trim() || 'Call ahead to confirm what to bring.', docsTitle: su.docsTitle, contact: [(su.cname || '').trim() || 'Main line', (su.ctitle || '').trim(), (su.email || '').trim()], about: (su.about || '').trim() || 'Tell neighbors about your organization.', services, partners: [], x: 50, y: 50,
+      cap: (su.cap || '').trim() || 'Call to confirm current availability.', claimed: true, applyUrl: su.applyMode === 'web' && /^https?:\/\//i.test(web) ? web : '', city: su.city, st: su.st, zip: su.zip, county: su.county, website: su.website };
+  }
 
   static CLAIMED = ['hope', 'steelcity', 'jimmiehale', 'greenleaf', 'firstlight', 'pathways', 'interfaith', 'fellowship', 'clinic', 'legal', 'career', 'zion', 'dreamcenter', 'unitedway'];
   static APPLY_URLS = { clinic: 'https://christhealthcenter.example/apply', career: 'https://careerconnect.example/apply', legal: 'https://legalaid.example/get-help' };
@@ -790,7 +806,7 @@ class Component extends DCLogic {
     const dotStyle = showAvail ? { display: 'inline-flex', alignItems: 'center', gap: 8, padding: 0, fontSize: 14, fontWeight: 600, lineHeight: 1.3, whiteSpace: 'nowrap', alignSelf: 'flex-start', background: 'transparent', border: 0, color: DC[1] } : { display: 'none' };
     return Object.assign({}, o, {
       isFaith: !!o.faith, pending: !o.verified, confText: o.updated ? 'Last confirmed ' + o.updated : 'Not confirmed yet',
-      claimed: cl, showAvail, dirAvailStyle: dotStyle, dirAvailIcon: showAvail ? dot : null, hasApplyUrl: !!aUrl, applyHref: aUrl, applyLabel: aUrl ? 'Apply on their website' : 'See next steps',
+      availDotColor: DC[1], claimed: cl, showAvail, dirAvailStyle: dotStyle, dirAvailIcon: showAvail ? dot : null, hasApplyUrl: !!aUrl, applyHref: aUrl, applyLabel: aUrl ? 'Apply on their website' : 'See next steps',
       apply: e => { if (e && e.stopPropagation) e.stopPropagation(); this.setState({ modal: { kind: 'next', oid: o.id } }); },
       chips: o.cats.map(k => ({ label: this.cat(k).label, icon: this.ic(this.cat(k).icon, 16) })),
       availLabel: showAvail ? av.label : '', availStyle: dotStyle, availIcon: showAvail ? dot : null,
@@ -968,7 +984,14 @@ class Component extends DCLogic {
     const I = {}; Object.keys(this.ICONS).forEach(k => I[k] = this.ic(k, k === 'mark' ? 24 : 18));
     I.bigCheck = this.ic('check', 36); I.markLg = this.ic('mark', 40);
     const spinner = React.createElement('span', { 'aria-hidden': true, style: { width: 18, height: 18, border: '2px solid currentColor', borderRightColor: 'transparent', borderRadius: '50%', display: 'inline-block', animation: 'bbspin .7s linear infinite' } });
-    const base = { brand, I, spinner, narrow, wide, frameRef: this.frameRef, ready: !!s.ready,
+    // "Log in to open your dashboard" right after sending a new listing or a claim
+    const AL = s.afterLogin || {}, alEmail = AL.email != null ? AL.email : (s.screen === 'pending' ? (s.signup || {}).email : ((s.claim || {}).email || '')) || '';
+    const setAL = o => this.setState(st => ({ afterLogin: Object.assign({}, st.afterLogin || {}, o) }));
+    const after = { email: { v: alEmail, on: e => setAL({ email: e.target.value, err: '' }) }, pw: { v: AL.pw || '', on: e => setAL({ pw: e.target.value, err: '' }) },
+      err: AL.err || '', label: AL.loading ? 'Logging in…' : 'Log in',
+      hint: 'If we asked you to confirm your email, click the link in that email first, then log in here.',
+      go: e => { if (e && e.preventDefault) e.preventDefault(); if (!/.+@.+\..+/.test(alEmail)) return setAL({ err: 'Enter the email you signed up with.' }); if (!AL.pw) return setAL({ err: 'Enter your password.' }); setAL({ loading: true, err: '' }); setTimeout(() => { setAL({ loading: false, pw: '' }); nav.dash(); }, 600); } };
+    const base = { after, homeQPh: narrow ? 'Try “groceries”' : 'Try “groceries”, “rent help”, or “coats”', brand, I, spinner, narrow, wide, frameRef: this.frameRef, ready: !!s.ready,
       frameStyle: s.mobilePreview ? { maxWidth: 390, margin: '0 auto', minHeight: '100vh', background: 'var(--color-bg)', boxShadow: 'var(--shadow-lg)', position: 'relative' } : { minHeight: '100vh', background: 'var(--color-bg)', position: 'relative' } };
     if (!s.ready) return base;
     const D = this.D, PUBLIC = ['home', 'directory', 'gethelp', 'listing', 'refer', 'refDone', 'track', 'about', 'orgs', 'claim', 'login', 'signup', 'pending'];
@@ -1049,14 +1072,22 @@ class Component extends DCLogic {
 
     // listing
     const lo = this.dec(this.org(s.orgId));
+    const startEdit = n => this.go('signup', { signup: Object.assign({}, s.signup, { editing: true, step: n, err: {}, snap: Object.assign({}, s.signup) }) });
+    const isPrev = s.orgId === 'mine';
     const mkL = lo => Object.assign(lo, {
-      showFav: !!s.fromDash, favBtn: favBits(s.orgId),
+      hasMap: !lo.sensitive && !!lo.addr && !!(lo.lat || GEO[lo.id]), mapSrc: 'co-map.html#one=' + (lo.lat || (GEO[lo.id] || [])[0]) + ',' + (lo.lng || (GEO[lo.id] || [])[1]),
+      availBox: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontSize: 14, fontWeight: 600, color: lo.availDotColor || 'var(--color-text)' },
+      isPreview: isPrev, editPreview: () => startEdit(1), donePreview: () => this.go('pending'),
+      edit: { about: () => startEdit(3), services: () => startEdit(3), who: () => startEdit(4), hours: () => startEdit(2), location: () => startEdit(2), contact: () => startEdit(1) },
+      refer: isPrev ? () => this.toast('This is a preview. Neighbors will use this button once your listing is live.') : lo.refer,
+      apply: isPrev ? () => this.toast('This is a preview. Neighbors will use this button once your listing is live.') : lo.apply,
+      showFav: !!s.fromDash && !isPrev, favBtn: favBits(s.orgId),
       addrLine: lo.sensitive ? 'Address shared after contact' : lo.addr || (lo.hood + ' · No walk-in address listed — call or visit online'), hasAddr: !lo.sensitive && !!lo.addr, mapHref: 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(lo.addr || ''), hasAddr2: !lo.sensitive && !!lo.addr2, phoneHref: /^[0-9+(]/.test(lo.phone) ? 'tel:' + lo.phone : 'https://' + lo.phone,
       noHours: !(lo.hours || []).some(h => h && !/call for hours|no hours/i.test(h)), hasHours: (lo.hours || []).some(h => h && !/call for hours|no hours/i.test(h)),
       hoursRows: D.ORGS && ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((d, i) => ({ d, h: lo.hours[i], today: i === 2, style: { display: 'grid', gridTemplateColumns: '120px 1fr', gap: 12, padding: '8px 10px', borderBottom: '1px solid color-mix(in srgb, var(--color-text) 8%, transparent)', background: i === 2 ? 'var(--color-accent-100)' : 'transparent', fontWeight: i === 2 ? 600 : 400 } })),
       groups: Object.keys(lo.services).map(k => ({ label: this.cat(k).label, icon: this.ic(this.cat(k).icon, 20), items: lo.services[k] })),
       partnerOrgs: (lo.partners || []).map(id => this.dec(this.org(id))),
-      langList: lo.langs.join(', '), eligList: lo.elig.join(' · '),
+      langList: lo.langs.join(', '), docsTitle: (lo.docsTitle || '').trim() || 'Good to know', eligList: lo.elig.join(' · '),
       contactName: lo.contact[0], contactRole: lo.contact[1], contactEmail: lo.contact[2],
       notSensitive: !lo.sensitive, vDateText: lo.vDate || 'not yet confirmed', verifiedLine: lo.verified ? 'Verified by ' + brand + ' on ' + lo.vDate : ''
     });
@@ -1121,17 +1152,58 @@ class Component extends DCLogic {
     const login = { email: this.bind('login.email'), pw: this.bind('login.pw'), remember: !!lg.remember, rememberOn: e => this.upd('login.remember', !!e.target.checked), err: lg.err, hasErr: !!lg.err, loading: lg.loading, notLoading: !lg.loading,
       go: e => { e.preventDefault(); if (!/.+@.+/.test(lg.email)) return this.upd('login.err', 'Enter the email your organization signed up with.'); if (!lg.pw) return this.upd('login.err', 'Enter your password.'); this.setState({ login: Object.assign({}, lg, { err: '', loading: true }) }); setTimeout(() => { this.setState({ login: Object.assign({}, this.state.login, { loading: false }) }); nav.dash(); }, 800); } };
     const su = s.signup;
-    const signup = { s1: su.step === 1, s2: su.step === 2, s3: su.step === 3, err: su.err, stepText: 'Step ' + su.step + ' of 3',
-      steps: ['About your organization', 'Services', 'Verification'].map((l, i) => { const a = i + 1 <= su.step; return { n: '0' + (i + 1), label: l, bar: { height: 3, background: a ? 'var(--color-accent-700)' : 'var(--color-divider)' }, lbl: { fontSize: 14, fontWeight: i + 1 === su.step ? 700 : 500, color: a ? 'var(--color-text)' : 'var(--color-neutral-700)' } }; }),
+    const ED = !!su.editing;
+    const SL = ED ? ['About you', 'Location & hours', 'Services', 'Who you help'] : ['About you', 'Location & hours', 'Services', 'Who you help', 'Verification'];
+    const LAST = SL.length;
+    const setSu = o => this.setState(st => ({ signup: Object.assign({}, st.signup, o) }));
+    const toPreview = () => this.go('listing', { orgId: 'mine', fromDash: false, fromTab: null });
+    const cancelEdit = () => { this.setState(st => ({ signup: Object.assign({}, st.signup.snap || st.signup, { editing: false, snap: null, err: {} }) })); toPreview(); };
+    const stepErr = n => { const err = {};
+      if (n === 1) { if (!su.name.trim()) err.name = 'Add your organization’s name.'; if (!/.+@.+\..+/.test(su.email)) err.email = 'Add an email for your organization.'; if (!/\d{3}\D*\d{4}/.test(su.phone || '')) err.phone = 'Add a phone number neighbors can call.'; if ((su.website || '').trim() && !/^(https?:\/\/)?[^\s.\/]+\.[^\s]+$/i.test(su.website.trim())) err.website = 'Check the website address.'; }
+      if (n === 2) { if (!(su.city || '').trim() || !su.st) err.addr = 'Add at least your city and state so neighbors near you can find you.'; if ((su.zip || '').trim() && !/^\d{5}$/.test(su.zip.trim())) err.zip = 'ZIP codes are 5 numbers.'; }
+      if (n === 3) { if (!su.cats.length) err.cats = 'Choose at least one kind of help you offer.'; if ((su.about || '').trim().length < 20) err.about = 'Write a sentence or two about what you do.'; }
+      if (n === 4) { if (su.applyMode === 'web' && !/^https?:\/\/\S+\.\S+/i.test((su.applyUrl || '').trim())) err.applyUrl = 'Add the full link, starting with https://'; }
+      if (n === 5) { if (su.method === 'doc' && !su.fileName) err.file = 'Add a document, or choose a reference instead.'; if (su.method === 'ref' && (!su.refOrg || !su.refName.trim())) err.ref = 'Choose the organization and add the person’s name.'; }
+      return err; };
+    const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const signup = { s1: su.step === 1, sLoc: su.step === 2, s2: su.step === 3, sWho: su.step === 4, s3: !ED && su.step === 5, err: su.err, editing: ED,
+      stepText: ED ? 'Editing · ' + SL[su.step - 1] : 'Step ' + su.step + ' of ' + LAST,
+      title: ED ? 'Edit your listing' : 'Add your organization',
+      sub: ED ? 'Changes show in your preview right away. They go live when our team approves your listing.' : 'Free for churches, ministries, nonprofits, schools, and public agencies serving your community. Everything you add here appears on your listing.',
+      topBack: ED ? 'Back to preview' : 'Back to For organizations', topBackGo: ED ? cancelEdit : nav.orgs,
+      steps: SL.map((l, i) => { const n = i + 1, a = n <= su.step, can = ED || n < su.step; return { n: '0' + n, label: l, cur: n === su.step ? 'step' : 'false', go: () => { if (can) setSu({ step: n, err: {} }); },
+        btn: { display: 'flex', flexDirection: 'column', gap: 8, width: '100%', alignItems: 'stretch', textAlign: 'left', background: 'none', border: 0, padding: 0, color: 'inherit', font: 'inherit', cursor: can ? 'pointer' : 'default' },
+        bar: { height: 3, background: a ? 'var(--color-accent-700)' : 'var(--color-divider)' }, lbl: { fontSize: 14, fontWeight: n === su.step ? 700 : 500, color: a ? 'var(--color-text)' : 'var(--color-neutral-700)', textDecoration: can && n !== su.step ? 'underline' : 'none', textUnderlineOffset: 3 } }; }),
       name: this.bind('signup.name'), type: this.bind('signup.type'), hood: this.bind('signup.hood'), phone: this.bind('signup.phone'), email: this.bind('signup.email'), services: this.bind('signup.services'), serves: this.bind('signup.serves'), refOrg: this.bind('signup.refOrg'), refName: this.bind('signup.refName'),
+      website: this.bind('signup.website'), cname: this.bind('signup.cname'), ctitle: this.bind('signup.ctitle'), faithName: this.bind('signup.faithName'), showFaithName: su.faith === 'yes',
+      addr: this.bind('signup.addr'), city: this.bind('signup.city'), st: this.bind('signup.st'), zip: this.bind('signup.zip'), county: this.bind('signup.county'), hideAddr: this.bind('signup.hideAddr'), noHours: this.bind('signup.noHours'), showHours: !su.noHours,
+      states: ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DC', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'],
+      hoursRows: DAYS.map((d, i) => ({ d, id: 's-h' + i, v: (su.hours || [])[i] || '', ph: i < 5 ? 'e.g. 9 AM – 4 PM' : 'Closed',
+        on: e => { const v = e.target.value; this.setState(st => { const h = (st.signup.hours || []).slice(); h[i] = v; return { signup: Object.assign({}, st.signup, { hours: h }) }; }); } })),
+      copyMon: () => { const h = (su.hours || []).slice(); for (let i = 1; i < 5; i++) h[i] = h[0] || ''; setSu({ hours: h }); },
+      about: this.bind('signup.about'),
+      svcRows: su.cats.map(k => ({ id: 's-svc-' + k, label: this.cat(k).label, v: (su.svc || {})[k] || '', ph: 'One per line, for example:\nGroceries every Tuesday\nDiapers and baby formula',
+        on: e => { const v = e.target.value; this.setState(st => ({ signup: Object.assign({}, st.signup, { svc: Object.assign({}, st.signup.svc, { [k]: v }) }) })); } })),
+      eligs: D.ELIG.filter(x => x !== 'No restrictions').map(x => ({ label: x, on: (su.elig || []).includes(x), style: this.chip((su.elig || []).includes(x)), toggle: () => this.toggleIn('signup.elig', x) })),
+      costSeg: this.segOf('signup.cost', [['Free', 'Free'], ['Sliding scale', 'Sliding scale'], ['Low cost', 'Low cost'], ['Fee', 'Fee']]),
+      langChips: D.LANGS.map(x => ({ label: x, on: (su.langs || []).includes(x), style: this.chip((su.langs || []).includes(x)), toggle: () => this.toggleIn('signup.langs', x) })), langOther: this.bind('signup.langOther'),
+      docs: this.bind('signup.docs'), docsTitle: this.bind('signup.docsTitle'), applyUrl: this.bind('signup.applyUrl'), cap: this.bind('signup.cap'), isWebApply: su.applyMode === 'web',
+      applyModes: [['steps', 'Show our next steps on Compassion Catalyst', 'Neighbors see your phone number, hours, and what to bring.'], ['web', 'People apply on our website', 'We’ll add an “Apply on their website” button that links to your form.']].map(([v, l, h]) => ({ label: l, hint: h, on: su.applyMode === v, pick: () => this.upd('signup.applyMode', v) })),
+      availSeg: this.segOf('signup.avail', [['Accepting', 'Accepting'], ['Limited', 'Limited'], ['Waitlist', 'Waitlist'], ['Full', 'Full']]),
       faith: this.segOf('signup.faith', [['yes', 'Yes, faith-based'], ['no', 'No']]), types: ['Church', 'Nonprofit', 'Government', 'School'], hoods: D.HOODS,
       cats: D.CATS.map(c => ({ label: c.label, icon: this.ic(c.icon, 16), style: this.chip(su.cats.includes(c.k)), on: su.cats.includes(c.k), toggle: () => this.toggleIn('signup.cats', c.k) })),
       methods: [['doc', 'Upload a document', 'IRS letter, church bulletin, or letterhead with your address'], ['ref', 'A reference from a verified organization', 'Someone already in the network who knows your work']].map(([v, l, h]) => ({ label: l, hint: h, on: su.method === v, pick: () => this.upd('signup.method', v) })),
       isDoc: su.method === 'doc', isRef: su.method === 'ref', fileName: su.fileName, hasFile: !!su.fileName, noFile: !su.fileName,
       pickFile: () => this.upd('signup.fileName', 'ministry-letterhead.pdf'), verifiedOrgs: s.orgs.filter(o => o.verified).map(o => o.name),
-      back: () => su.step > 1 ? this.upd('signup.step', su.step - 1) : this.go('login'), backLabel: su.step > 1 ? 'Back' : 'Cancel', nextLabel: su.step === 3 ? 'Request verification' : 'Continue',
-      next: () => { const err = {}; if (su.step === 1) { if (!su.name.trim()) err.name = 'Add your organization’s name.'; if (!/.+@.+\..+/.test(su.email)) err.email = 'Add an email for your organization.'; } if (su.step === 2 && !su.cats.length) err.cats = 'Choose at least one kind of help you offer.'; if (su.step === 3) { if (su.method === 'doc' && !su.fileName) err.file = 'Add a document, or choose a reference instead.'; if (su.method === 'ref' && (!su.refOrg || !su.refName.trim())) err.ref = 'Choose the organization and add the person’s name.'; }
-        if (Object.keys(err).length) return this.upd('signup.err', err); if (su.step < 3) return this.setState({ signup: Object.assign({}, su, { step: su.step + 1, err: {} }) }); this.go('pending'); },
+      back: () => ED ? cancelEdit() : su.step > 1 ? setSu({ step: su.step - 1, err: {} }) : this.go('login'), backLabel: ED ? 'Cancel' : su.step > 1 ? 'Back' : 'Cancel',
+      nextLabel: ED ? 'Save and preview' : su.step === LAST ? 'Request verification' : 'Continue',
+      showSkip: ED && su.step < LAST, skip: () => setSu({ step: su.step + 1, err: {} }),
+      next: () => {
+        if (ED) { for (let n = 1; n <= LAST; n++) { const e = stepErr(n); if (Object.keys(e).length) return setSu({ step: n, err: e }); } setSu({ editing: false, snap: null, err: {} }); toPreview(); return this.toast('Saved. Your preview is up to date.'); }
+        const err = stepErr(su.step); if (Object.keys(err).length) return setSu({ err });
+        if (su.step < LAST) { setSu({ step: su.step + 1, err: {} }); try { window.scrollTo(0, 0); } catch (e) {} return; }
+        this.go('pending'); },
+      preview: toPreview,
       orgName: su.name || 'Your organization',
       dupe: (() => { const n = (su.name || '').trim().toLowerCase(); if (n.length < 4) return null; const o = s.orgs.find(x => x.name.toLowerCase().includes(n) || n.includes(x.name.toLowerCase())); return o ? { name: o.name, claim: () => this.go('claim', { claim: Object.assign(this.blankClaim(), { q: o.name, orgId: o.id, step: 2 }) }) } : null; })() };
 
@@ -1682,7 +1754,7 @@ class Component extends DCLogic {
     const dt = k => () => this.go('dash', { dashTab: k, selRef: null });
     const guideGroups = [
       { title: 'Public site', items: [G('A · Home', nav.home, scr.home), G('B · Directory', nav.allOrgs, scr.directory), G('B · No-results state', () => this.go('directory', { filters: Object.assign(this.blankFilters(), { cats: ['legal'], faith: 'yes' }) }), false), G('C · Listing — Hope Harbor', () => this.openOrg('hope'), scr.listing && s.orgId === 'hope'), G('C · Listing — safety-sensitive', () => this.openOrg('haven'), scr.listing && s.orgId === 'haven'), G('C · Listing — pending verification', () => this.openOrg('career'), scr.listing && s.orgId === 'career'), G('D · Referral flow', () => this.startRef('hope'), scr.refer), G('J · Track a referral', () => this.go('track', { trackIn: 'CC-2611-4810', trackCode: 'CC-2611-4810', trackErr: '' }), scr.track), G('K · About', nav.about, scr.about)] },
-      { title: 'Organizations', items: [G('F · Log in', nav.login, scr.login), G('F · Join the network', () => this.go('signup', { signup: Object.assign({}, s.signup, { step: 1, err: {} }) }), scr.signup), G('F · Pending verification', () => this.go('pending'), scr.pending), G('G · Dashboard', dt('overview'), scr.dash && tab.overview), G('G · Referral detail', () => { this.go('dash'); this.openRef('r1'); }, scr.dash && tab.referrals && !!sr), G('E · Unclaimed needs', dt('needs'), scr.dash && tab.needs), G('H · Messages', dt('messages'), scr.dash && tab.messages), G('H · Community board', dt('community'), scr.dash && tab.community), G('H · Shared case (from a referral)', () => { this.go('dash'); this.openCase(); }, scr.dash && tab.cases), G('I · Team & permissions', dt('org'), scr.dash && tab.overview), G('Account settings', dt('settings'), scr.dash && tab.settings), G('G · Edit listing + preview', dt('profile'), scr.dash && tab.profile)] },
+      { title: 'Organizations', items: [G('F · Log in', nav.login, scr.login), G('F · Join the network', () => this.go('signup', { signup: Object.assign({}, s.signup, { step: 1, err: {} }) }), scr.signup), G('F · Pending verification', () => this.go('pending'), scr.pending), G('F · Preview your new listing', () => this.go('listing', { orgId: 'mine', fromDash: false, fromTab: null }), scr.listing && s.orgId === 'mine'), G('G · Dashboard', dt('overview'), scr.dash && tab.overview), G('G · Referral detail', () => { this.go('dash'); this.openRef('r1'); }, scr.dash && tab.referrals && !!sr), G('E · Unclaimed needs', dt('needs'), scr.dash && tab.needs), G('H · Messages', dt('messages'), scr.dash && tab.messages), G('H · Community board', dt('community'), scr.dash && tab.community), G('H · Shared case (from a referral)', () => { this.go('dash'); this.openCase(); }, scr.dash && tab.cases), G('I · Team & permissions', dt('org'), scr.dash && tab.overview), G('Account settings', dt('settings'), scr.dash && tab.settings), G('G · Edit listing + preview', dt('profile'), scr.dash && tab.profile)] },
       { title: 'Admin & reference', items: [G('L · Report modal', () => { if (s.screen !== 'listing') this.openOrg('clinic'); this.modal({ kind: 'report', targetName: 'Listing · ' + (s.screen === 'listing' ? lo.name : 'Christ Health Center') }); }, mk === 'report'), G('L · Moderation queue', nav.mod, scr.mod), G('Design system notes', nav.system, scr.system)] }
     ];
     const flows = [
@@ -1698,7 +1770,7 @@ class Component extends DCLogic {
       gh: this.ghVals(), scr, nav, isPublic: PUBLIC.includes(s.screen), pubLinks, menuShown: narrow && s.menuOpen, toggleMenu: () => this.setState({ menuOpen: !s.menuOpen }), menuLabel: s.menuOpen ? 'Close menu' : 'Open menu', menuExpanded: s.menuOpen ? 'true' : 'false',
       homeQ: this.bind('homeQ'), homeCat: this.bind('homeCat'), homeZip: this.bind('homeZip'), catOptions, runSearch: this.runSearch, catCar, popular, heroSearchFull: { position: 'relative', minWidth: 0, gridColumn: s.w >= 900 ? 'auto' : '1 / -1' }, heroSearchBtn: { width: '100%', margin: 0, minHeight: 56, padding: '0 28px', fontSize: 18, background: 'var(--color-accent-700)', borderColor: 'var(--color-accent-700)', color: 'var(--color-bg)', gridColumn: s.w >= 900 ? 'auto' : '1 / -1' }, heroSearchGrid: { display: 'grid', gap: 14, alignItems: 'stretch', gridTemplateColumns: s.w >= 900 ? 'minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) auto' : s.w >= 600 ? 'minmax(0,1fr) minmax(0,1fr)' : 'minmax(0,1fr)' }, featured, hasFeatured: featured.length > 0, featCardStyle, featRef: this.featRef, mapFrame: this.mapFrame,
       dir, listing, verPop: s.verPop, toggleVerPop: () => this.setState({ verPop: !s.verPop }), closeVerPop: () => this.setState({ verPop: false }),
-      openReport: () => this.modal({ kind: 'report', targetName: 'Listing · ' + lo.name }), quickExit: () => { try { window.location.replace('https://www.google.com/search?q=weather'); } catch (e) { this.go('exit'); } }, backToResults: () => this.state.fromDash ? this.go('dash', { dashTab: this.state.fromTab || 'directory', selRef: null }) : this.go('directory'), backLabel: s.fromDash ? ({ org: 'Back to My organization', overview: 'Back to Dashboard', directory: 'Back to results' }[s.fromTab] || 'Back') : 'Back to results',
+      openReport: () => this.modal({ kind: 'report', targetName: 'Listing · ' + lo.name }), quickExit: () => { try { window.location.replace('https://www.google.com/search?q=weather'); } catch (e) { this.go('exit'); } }, backToResults: () => this.state.orgId === 'mine' ? this.go('pending') : this.state.fromDash ? this.go('dash', { dashTab: this.state.fromTab || 'directory', selRef: null }) : this.go('directory'), backLabel: s.orgId === 'mine' ? 'Back to next steps' : s.fromDash ? ({ org: 'Back to My organization', overview: 'Back to Dashboard', directory: 'Back to results' }[s.fromTab] || 'Back') : 'Back to results',
       refer, refDone, track, about, login, signup, claim, dash, mod, modOpen, modal,
       toast: s.toast, hasToast: !!s.toast, toastUndo: !!s.toastUndo && !!this._undoSnap, undoToast: () => this.undoToast(),
       guideShown: this.props.showGuide === true, guideOpen: s.guideOpen, guideClosed: !s.guideOpen, toggleGuide: () => this.setState({ guideOpen: !s.guideOpen }), guideGroups, flows,
@@ -1779,6 +1851,7 @@ class Component extends DCLogic {
       CC.setRemember(!!lg.remember);
       CC.signIn(lg.email.trim(), lg.pw).then(function (r) {
         if (r.error) return app.setState({ login: Object.assign({}, app.state.login, { loading: false, err: CC.msg(r.error) }) });
+        try { sessionStorage.removeItem('cc-dash-cur'); } catch (e) {} // ask which dashboard again
         window.location.href = 'dashboard.html';
       }).catch(function (err) { app.setState({ login: Object.assign({}, app.state.login, { loading: false, err: CC.msg(err) }) }); });
     };
@@ -1795,9 +1868,34 @@ class Component extends DCLogic {
       });
     };
 
-    // Add your organization (3 steps)
+    // "Log in to open your dashboard" (shown right after someone sends a new listing or a claim)
+    if (v.after) {
+      var AL = s.afterLogin || {}, alEmail = String(v.after.email.v || '').trim();
+      var setAL = function (o) { app.setState(function (st) { return { afterLogin: Object.assign({}, st.afterLogin || {}, o) }; }); };
+      v.after.go = function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        if (AL.loading) return;
+        if (!/.+@.+\..+/.test(alEmail)) return setAL({ err: 'Enter the email you signed up with.' });
+        if (!AL.pw) return setAL({ err: 'Enter your password.' });
+        if (!CC.ok) return setAL({ err: 'Log in isn’t available right now. Please try again later.' });
+        setAL({ loading: true, err: '' });
+        CC.signIn(alEmail, AL.pw).then(function (r) {
+          if (r.error) {
+            var m = /confirm/i.test(r.error.message || '') ? 'Please confirm your email first: click the link in the email we just sent you, then log in here.' : CC.msg(r.error);
+            return setAL({ loading: false, err: m });
+          }
+          try { sessionStorage.removeItem('cc-dash-cur'); } catch (x) {}
+          window.location.href = 'dashboard.html';
+        }).catch(function (err) { setAL({ loading: false, err: CC.msg(err) }); });
+      };
+    }
+
+    // Add your organization (5 steps, then "Preview and edit your listing" while it waits for review)
     var su = s.signup;
-    v.signup.needPw = true;
+    var FORM_KEYS = ['name', 'type', 'faith', 'faithName', 'hood', 'phone', 'email', 'website', 'cname', 'ctitle', 'addr', 'city', 'st', 'zip', 'county', 'hideAddr', 'noHours', 'hours',
+      'cats', 'svc', 'about', 'services', 'serves', 'elig', 'cost', 'langs', 'langOther', 'docs', 'docsTitle', 'applyMode', 'applyUrl', 'avail', 'cap', 'person', 'method', 'refOrg', 'refName'];
+    var formData = function (x) { var d = {}; FORM_KEYS.forEach(function (k) { d[k] = x[k]; }); return d; };
+    v.signup.needPw = !su.editing;
     v.signup.person = app.bind('signup.person');
     v.signup.pw = app.bind('signup.pw');
     v.signup.verifiedOrgs = s.orgs.map(function (o) { return o.name; });
@@ -1807,32 +1905,45 @@ class Component extends DCLogic {
     var baseNext = v.signup.next;
     v.signup.next = function () {
       if (su.sending) return;
+      if (su.editing) {
+        baseNext();
+        // Once the edits pass the checks, save them to the waiting listing
+        setTimeout(function () {
+          var now = app.state.signup;
+          if (now.editing) return;
+          var d = formData(now);
+          if (now.orgDbId && CC.session) {
+            CC.updatePendingListing(now.orgDbId, d).catch(function (err) { app.toast(CC.msg(err)); });
+          } else if (now.confirm) {
+            var w = CC.stashed(); if (w && w.kind === 'new_listing') { w.data = d; CC.stash(w); }
+          }
+        }, 0);
+        return;
+      }
       if (su.step === 1) {
         var err = {};
         if (!(su.person || '').trim()) err.person = 'Add your full name.';
         if ((su.pw || '').length < 8) err.pw = 'Create a password with at least 8 characters (or enter your current password).';
-        if (!su.name.trim()) err.name = 'Add your organization’s name.';
-        if (!/.+@.+\..+/.test(su.email)) err.email = 'Add an email for your organization.';
         if (Object.keys(err).length) return app.upd('signup.err', err);
       }
-      if (su.step < 3) return baseNext();
+      if (su.step < 5) return baseNext();
       var e3 = {};
       if (su.method === 'doc' && !files.signup) e3.file = 'Add a document, or choose a reference instead.';
       if (su.method === 'ref' && (!su.refOrg || !(su.refName || '').trim())) e3.ref = 'Choose the organization and add the person’s name.';
       if (Object.keys(e3).length) return app.upd('signup.err', e3);
       if (!CC.ok) return app.upd('signup.err', { file: 'We couldn’t reach the server. Please try again later.' });
-      var d = { name: su.name, type: su.type, faith: su.faith, hood: su.hood, phone: su.phone, email: su.email, cats: su.cats, services: su.services, serves: su.serves, person: su.person, method: su.method, refOrg: su.refOrg, refName: su.refName };
+      var d = formData(su);
       var fail = function (err) { app.setState({ signup: Object.assign({}, app.state.signup, { sending: false, err: { file: CC.msg(err), ref: CC.msg(err) } }) }); };
       app.setState({ signup: Object.assign({}, su, { sending: true, err: {} }) });
       CC.ensureSession(su.email.trim(), su.pw || '').then(function (res) {
         if (res.needsConfirm) {
           CC.stash({ kind: 'new_listing', data: d, fileName: su.method === 'doc' ? su.fileName : '' });
-          app.setState({ signup: Object.assign({}, app.state.signup, { sending: false, confirm: true }) });
+          app.setState({ signup: Object.assign({}, app.state.signup, { sending: false, confirm: true, pw: '' }) });
           return app.go('pending');
         }
         CC.session = res.session;
-        return CC.submitNewListing(d, files.signup).then(function () {
-          app.setState({ signup: Object.assign({}, app.state.signup, { sending: false, confirm: false }) });
+        return CC.submitNewListing(d, files.signup).then(function (id) {
+          app.setState({ signup: Object.assign({}, app.state.signup, { sending: false, confirm: false, orgDbId: id, pw: '' }) });
           app.go('pending');
         });
       }).catch(fail);
@@ -1942,6 +2053,7 @@ class Component extends DCLogic {
 
   // Hope Harbor is a made-up organization used by the sample workspace screens. Keep it out of the public lists.
   Component.prototype.org = function (id) {
+    if (id === 'mine') return this.myListing();
     return this.state.orgs.find(function (o) { return o.id === id; }) || (this._allOrgs || []).find(function (o) { return o.id === id; });
   };
 

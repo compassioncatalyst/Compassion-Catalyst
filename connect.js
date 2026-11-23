@@ -86,14 +86,40 @@
   };
 
   // ---- "Add your organization" ----
-  // d = { name, type, faith, hood, phone, email, cats, services, serves, person, method, refOrg, refName }
+  // d = everything from the 5-step form (see CC.listingRow below) plus person, method, refOrg, refName
+  // Turns the sign-up form into the columns of the organizations table.
+  CC.listingRow = function (d) {
+    var lines = function (x) { return String(x || '').split(/\n/).map(function (s) { return s.trim(); }).filter(Boolean); };
+    var services = {}; (d.cats || []).forEach(function (k) { services[k] = lines((d.svc || {})[k]); });
+    var langs = (d.langs || []).concat(String(d.langOther || '').split(',').map(function (s) { return s.trim(); }).filter(Boolean));
+    var county = String(d.county || '').trim(); if (county && !/county$/i.test(county)) county += ' County';
+    var st = d.st || null, zip = String(d.zip || '').trim() || null;
+    var area = null;
+    if (st === 'GA' && /^coweta/i.test(county)) area = 'Coweta County, GA';
+    if (st === 'AL' && zip && ['350', '351', '352'].indexOf(zip.slice(0, 3)) >= 0) area = 'Birmingham, AL';
+    var web = String(d.website || '').trim(); if (web && !/^https?:\/\//i.test(web)) web = 'https://' + web;
+    var applyUrl = String(d.applyUrl || '').trim();
+    return {
+      name: String(d.name || '').trim(), org_type: d.type || null,
+      faith: d.faith === 'yes' ? (String(d.faithName || '').trim() || 'Faith-based') : null,
+      categories: d.cats || [], neighborhood: d.hood || null,
+      address: String(d.addr || '').trim() || null, city: String(d.city || '').trim() || null, state: st, zip: zip,
+      county: county || null, service_area: area, hide_address: !!d.hideAddr,
+      phone: String(d.phone || '').trim() || null, email: String(d.email || '').trim() || null, website: web || null,
+      contact_name: String(d.cname || '').trim() || null, contact_title: String(d.ctitle || '').trim() || null,
+      about: String(d.about || d.services || '').trim() || null, services: services,
+      hours: d.noHours ? [] : (d.hours || []).map(function (h) { return String(h || '').trim() || 'Closed'; }),
+      languages: langs.length ? langs : ['English'], cost: d.cost || null, eligibility: d.elig || [],
+      what_to_bring: String(d.docs || '').trim() || null, docs_title: String(d.docsTitle || '').trim() || null,
+      apply_mode: d.applyMode === 'web' && /^https?:\/\//i.test(applyUrl) ? 'web' : 'steps',
+      apply_url: d.applyMode === 'web' && /^https?:\/\//i.test(applyUrl) ? applyUrl : null,
+      availability: ['Accepting', 'Limited', 'Waitlist', 'Full'].indexOf(d.avail) >= 0 ? d.avail : 'Accepting'
+    };
+  };
   CC.submitNewListing = async function (d, file) {
     var docPath = d.method === 'doc' ? await CC.upload(file) : null;
-    var ins = await CC.sb.from('organizations').insert({
-      name: d.name.trim(), org_type: d.type || null, faith: d.faith === 'yes' ? 'Faith-based' : null,
-      categories: d.cats || [], neighborhood: d.hood || null, phone: d.phone || null, email: d.email || null,
-      about: d.services || null, eligibility: d.serves ? [d.serves] : [], status: 'pending', verified: false
-    }).select('id').single();
+    var row = Object.assign(CC.listingRow(d), { status: 'pending', verified: false });
+    var ins = await CC.sb.from('organizations').insert(row).select('id').single();
     if (ins.error) throw ins.error;
     var req = await CC.sb.from('claim_requests').insert({
       organization_id: ins.data.id, kind: 'new_listing', full_name: d.person.trim(), contact_email: d.email.trim(),
@@ -103,6 +129,12 @@
     if (req.error) throw req.error;
     await CC.saveName(d.person);
     return ins.data.id;
+  };
+  // Edits made in "Preview and edit your listing" while it waits for review
+  CC.updatePendingListing = async function (orgDbId, d) {
+    var r = await CC.sb.from('organizations').update(CC.listingRow(d)).eq('id', orgDbId).select('id');
+    if (r.error) throw r.error;
+    if (!r.data || !r.data.length) throw new Error('This listing can’t be changed here anymore. If it was approved, edit it from your dashboard.');
   };
 
   // ---- "Claim your listing" ----
@@ -157,7 +189,7 @@
       verified: !!r.verified, vDate: shortDate(r.verified_at), updated: shortDate(upd), updN: upd ? Math.max(0, Math.round((Date.now() - new Date(upd)) / 864e5)) : 0,
       avail: ['Accepting', 'Limited', 'Waitlist', 'Full'].indexOf(r.availability) >= 0 ? r.availability : 'Accepting',
       hours: hours, open: b ? o.open : null, langs: r.languages && r.languages.length ? r.languages : ['English'], cost: r.cost || 'Free',
-      elig: r.eligibility && r.eligibility.length ? r.eligibility : ['No restrictions'], docs: r.what_to_bring || '',
+      elig: r.eligibility && r.eligibility.length ? r.eligibility : ['No restrictions'], docs: r.what_to_bring || '', docsTitle: r.docs_title || '',
       contact: [r.contact_name || 'Main line', r.contact_title || '', r.email || ''], about: r.about || '',
       services: r.services && typeof r.services === 'object' ? r.services : {}, sensitive: !!r.is_sensitive,
       lat: r.is_sensitive ? null : r.latitude, lng: r.is_sensitive ? null : r.longitude, website: r.website || '',

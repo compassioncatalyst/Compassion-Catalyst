@@ -384,6 +384,10 @@
 /* ===== PART 2 — the Admin page ===== */
 class Component extends DCLogic {
   state = Object.assign({
+    // Dashboards this account can open besides this Admin page (sample)
+    myDash: [{ id: 'hope', name: 'Hope Harbor Community Pantry', role: 'Admin', status: 'Live', info: 'Food & Clothing · Woodlawn · Updated Nov 14, 2026' },
+      { id: 'coats', name: 'Woodlawn Winter Coat Closet', role: 'Staff', status: 'Waiting for approval', info: 'Clothing · Woodlawn · Updated Nov 12, 2026' }],
+    dashOpen: false, autoOpen: 'admin',
     tab: 'overview', q: '', toast: '', mini: false, lf: {}, lfOpen: false, lsort: '', crop: null, repStage: 'new', repCompose: false, repMsg: '', repMsgErr: '', mailF: 'open', mailQ: '', mailMine: false, mailPop: null, mailReply: '', mailErr: '',
     mails: [], asg: { open: false, member: '', sel: {} }, repPop: null, repNote: '', msgTo: null, msgText: '', msgErr: '',
     me: { name: '', title: 'Founder', email: '', phone: '', photo: '' },
@@ -447,6 +451,79 @@ class Component extends DCLogic {
     this.setState({ pop: { kind, id, key, list, note: '', checks: {}, editing: false, f } });
   }
   popAdvance(P) { const rest = (P.list || []).filter(x => x !== P.id), i = (P.list || []).indexOf(P.id); const nxt = rest[Math.min(i, rest.length - 1)]; if (nxt) this.openPop(P.kind, nxt, rest); else this.setState({ pop: null }); }
+  // Preview of the automatic email sent when you approve, reject, verify, pause or change a listing's status
+  emailVals() {
+    const E = this.state.emailPrev;
+    if (!E) return { open: false };
+    const n = E.name;
+    const T = {
+      approved: ['Approved', n + ' is live on Compassion Catalyst', 'Your listing is live', 'Good news! We reviewed ' + n + ' and it’s now in the directory, so neighbors and partner organizations can find you. Open your dashboard to see your listing and keep it up to date.'],
+      claimed: ['Approved', 'You now manage ' + n + ' on Compassion Catalyst', 'Your claim was approved', 'You’re now the manager of ' + n + '’s listing. Open your dashboard to see it, update your hours and services, and invite your team.'],
+      rejected: ['Not approved', 'About your request for ' + n, 'We couldn’t approve this request', 'Thanks for reaching out about ' + n + '. We weren’t able to approve your request this time. You can still open your dashboard to see what you sent, and reply to this email if you have questions.'],
+      verified: ['Verified', n + ' is now Verified', 'Your listing is Verified', 'Our team checked ' + n + '’s details, and your listing now shows a Verified badge. Open your dashboard to see your listing.'],
+      paused: ['Paused', n + ' is paused for now', 'Your listing is paused', 'We’ve paused ' + n + '’s listing, so it’s hidden from the directory for now. Open your dashboard to see your listing and what needs updating.'],
+      live: ['Live again', n + ' is live again', 'Your listing is live again', n + ' is back in the directory. Open your dashboard to see your listing.']
+    };
+    const cur = T[E.k] || T.approved;
+    return { open: true, to: E.to, subject: cur[1], heading: cur[2], body: cur[3], hasNote: E.k === 'rejected' && !!E.note, note: E.note,
+      after: 'The button opens their dashboard (they log in first if they need to).',
+      kinds: E.kinds.map(k => ({ label: T[k][0], on: E.k === k, pressed: E.k === k ? 'true' : 'false', style: { flex: 1, minHeight: 38, fontSize: 14, border: 0, cursor: 'pointer', background: E.k === k ? 'var(--color-accent-700)' : 'var(--color-bg)', color: E.k === k ? 'var(--color-bg)' : 'var(--color-text)', font: 'inherit' }, pick: () => this.setState({ emailPrev: Object.assign({}, E, { k }) }) })),
+      close: () => this.setState({ emailPrev: null }), stop: e => { if (e && e.stopPropagation) e.stopPropagation(); } };
+  }
+  // Overview you can customize: order, size, remove and add sections (saved per person)
+  ovVals() {
+    const s = this.state, W = Object.assign({ team: 0, waiting: 0, health: 0, glance: 0, links: 0, note: 0 }, {});
+    const DEF = [{ id: 'team', size: 'full' }, { id: 'waiting', size: 'full' }, { id: 'health', size: 'half' }];
+    const INFO = { team: ['Team updates', 'What each person on your team did, by week or month.'], waiting: ['Waiting on you', 'New listings, claims, reports and changes to review.'],
+      health: ['Directory health', 'How many listings are verified and up to date.'], glance: ['At a glance', 'Big numbers for everything waiting, with one click to each.'],
+      links: ['Quick links', 'Buttons to the pages you use most.'], note: ['Team note', 'A pinned note everyone on your team sees.'] };
+    const lay = s.ovLayout || DEF, edit = !!s.ovEdit, set = l => this.setState({ ovLayout: l });
+    const SPAN = { full: 6, two: 4, half: 3, third: 2 }, narrow = (window.innerWidth || 1200) < 900;
+    const move = (id, d) => { const a = lay.slice(), i = a.findIndex(x => x.id === id), j = i + d; if (i < 0 || j < 0 || j >= a.length) return; const x = a[i]; a[i] = a[j]; a[j] = x; set(a); };
+    const w = {};
+    Object.keys(INFO).forEach(id => {
+      const i = lay.findIndex(x => x.id === id), it = lay[i];
+      w[id] = { show: i >= 0, name: INFO[id][0],
+        cell: it ? { gridColumn: 'span ' + (narrow ? 6 : SPAN[it.size] || 6), order: i, minWidth: 0, display: 'flex', flexDirection: 'column', outline: edit ? '2px dashed ' + (s.ovOver === id ? 'var(--color-accent-700)' : 'var(--color-accent-400)') : 'none', outlineOffset: 6, opacity: s.ovDrag === id ? .5 : 1, transition: 'outline-color .15s' } : {},
+        up: () => move(id, -1), down: () => move(id, 1),
+        size: { v: it ? it.size : 'full', on: e => { const v = e.target.value; set(lay.map(x => x.id === id ? Object.assign({}, x, { size: v }) : x)); } },
+        remove: () => { set(lay.filter(x => x.id !== id)); this.say(INFO[id][0] + ' removed. Add it back any time with “Add a section”.'); },
+        dragStart: e => { if (!edit) return; try { e.dataTransfer.setData('text/plain', id); e.dataTransfer.effectAllowed = 'move'; } catch (x) {} this.setState({ ovDrag: id }); },
+        dragOver: e => { if (!this.state.ovDrag || this.state.ovDrag === id) return; e.preventDefault(); if (this.state.ovOver !== id) this.setState({ ovOver: id }); },
+        drop: e => { e.preventDefault(); const from = this.state.ovDrag; if (!from || from === id) return; const a = lay.filter(x => x.id !== from), at = a.findIndex(x => x.id === id), moved = lay.find(x => x.id === from); a.splice(at, 0, moved); this.setState({ ovLayout: a, ovDrag: null, ovOver: null }); } };
+    });
+    const go = tab => () => this.setState({ tab });
+    const openRep = (s.reports || []).filter(x => x.stage !== 'resolved').length, unv = (s.listings || []).filter(x => !x.verified).length;
+    return { edit, notEdit: !edit, w, empty: !lay.length, dragAttr: edit ? 'true' : 'false', dragEnd: () => this.setState({ ovDrag: null, ovOver: null }),
+      btn: { minHeight: 30, minWidth: 30, padding: 0, border: '1px solid rgba(255,255,255,.4)', background: 'transparent', color: 'inherit', cursor: 'pointer', font: 'inherit', fontSize: 14 },
+      start: () => this.setState({ ovEdit: true }), done: () => { this.setState({ ovEdit: false, ovAdding: false }); this.say('Your overview is saved.'); },
+      reset: () => { this.setState({ ovLayout: DEF }); this.say('Overview reset to the default.'); },
+      adding: edit && !!s.ovAdding, toggleAdd: () => this.setState({ ovAdding: !s.ovAdding }), addAria: s.ovAdding ? 'true' : 'false',
+      available: Object.keys(INFO).filter(id => !lay.some(x => x.id === id)).map(id => ({ name: INFO[id][0], desc: INFO[id][1], add: () => { set(lay.concat({ id, size: id === 'team' || id === 'waiting' ? 'full' : 'half' })); this.say(INFO[id][0] + ' added to the bottom. Drag it or use the arrows to move it.'); } })),
+      noneLeft: Object.keys(INFO).every(id => lay.some(x => x.id === id)),
+      glance: [[(s.requests || []).length, 'New listings & claims', 'requests'], [unv, 'Unverified listings', 'unverified'], [openRep, 'Open reports', 'reports'], [(s.changes || []).length, 'Contact changes', 'changes']].map(([n, label, tab]) => ({ n, label, go: go(tab) })),
+      links: [['Review requests', 'requests'], ['All listings', 'listings'], ['Reports', 'reports'], ['My team', 'team'], ['Settings', 'settings']].map(([label, tab]) => ({ label, go: go(tab) })),
+      note: { v: s.ovNote || '', on: e => this.setState({ ovNote: e.target.value }) } };
+  }
+  // "Your dashboards": the other dashboards this account can open, and which one opens at log in
+  dashVals() {
+    const s = this.state, list = s.myDash || [];
+    if (!s.dashOpen) return { open: false };
+    const CH = { 'Live': ['oklch(0.96 0.04 150)', 'oklch(0.40 0.12 150)', '1px solid oklch(0.80 0.09 150)', 'oklch(0.60 0.14 150)'],
+      'Paused': ['var(--color-neutral-200)', 'var(--color-neutral-800)', '1px solid var(--color-neutral-500)', 'var(--color-neutral-600)'],
+      'Waiting for approval': ['oklch(0.97 0.05 85)', 'oklch(0.45 0.11 70)', '1px dashed oklch(0.72 0.13 80)', 'oklch(0.75 0.15 80)'],
+      'Not approved': ['oklch(0.96 0.03 27)', 'oklch(0.48 0.17 27)', '1px solid oklch(0.82 0.08 27)', 'oklch(0.58 0.19 27)'] };
+    const names = { 'Waiting for approval': 'Waiting for review' };
+    return { open: true, close: () => this.setState({ dashOpen: false }), stop: e => { if (e && e.stopPropagation) e.stopPropagation(); },
+      list: list.map(d => { const c = CH[d.status] || CH.Live; return { name: d.name, info: d.info || '', chip: names[d.status] || d.status || 'Live',
+        line: d.role === 'Admin' ? 'You’re an admin' : 'You’re on the team (' + d.role + ')',
+        chipStyle: { flex: 'none', display: 'inline-flex', alignItems: 'center', gap: 7, fontSize: 13, fontWeight: 600, padding: '4px 10px', whiteSpace: 'nowrap', background: c[0], color: c[1], border: c[2] },
+        dot: { width: 8, height: 8, borderRadius: '50%', flex: 'none', background: c[3] },
+        open: () => { this.setState({ dashOpen: false }); this.say('Opening ' + d.name + '…'); } }; }),
+      autoOpts: [['', 'Ask me which dashboard to open'], ['admin', 'Always open the Admin page']].concat(list.map(d => [d.id, 'Always open ' + d.name])).map(([id, label]) => ({ label, on: (s.autoOpen || '') === id, aria: (s.autoOpen || '') === id ? 'true' : 'false',
+        ring: { flex: 'none', width: 18, height: 18, borderRadius: '50%', border: '2px solid ' + ((s.autoOpen || '') === id ? 'var(--color-accent-700)' : 'var(--color-neutral-600)'), boxShadow: (s.autoOpen || '') === id ? 'inset 0 0 0 3px var(--color-bg), inset 0 0 0 9px var(--color-accent-700)' : 'none' },
+        pick: () => { this.setState({ autoOpen: id }); this.say(id ? 'Saved. ' + label.replace('Always open ', '').replace(/^the /, 'The ') + ' will open when you log in.' : 'Saved. We’ll ask which dashboard to open each time you log in.'); } })) };
+  }
   popVals() {
     const s = this.state, P = s.pop;
     if (!P) return { open: false };
@@ -468,6 +545,10 @@ class Component extends DCLogic {
       else this.setState(st => ({ listings: st.listings.map(x => x.id === P.id ? Object.assign({}, x, { name: P.f.org, phone: P.f.phone, place: P.f.place, status: P.f.status }) : x) }));
     };
     const name = isReq ? r.org : o.name, F = P.f;
+    const who = isReq ? ((r.person || '').split(',')[0] + (r.email ? ' (' + r.email + ')' : '')) : 'the people who manage ' + name;
+    const whoShort = isReq ? ((r.person || '').split(',')[0] || 'them') : name;
+    const emailNote = isReq ? 'We’ll email ' + who + ' automatically when you approve or reject this, with a button to open their dashboard.' : 'We’ll email ' + who + ' automatically when you mark it Verified, pause it, or change its status, with a button to open their dashboard.';
+    const previewEmail = () => this.setState({ emailPrev: { name, to: isReq ? who : who.replace(/^the people/, 'The people') + ' (their account emails)', kinds: isReq ? (isNew ? ['approved', 'rejected'] : ['claimed', 'rejected']) : ['verified', 'paused', 'live'], k: isReq ? (isNew ? 'approved' : 'claimed') : 'verified', note: P.note || '' } });
     const verified = !isReq && !!o.verified;
     const AVL = { Accepting: 'Accepting new people', Limited: 'Limited capacity', Waitlist: 'Waitlist', Full: 'Currently full' };
     const ph = F.phone || '';
@@ -516,18 +597,19 @@ class Component extends DCLogic {
       checks: ck.map((label, i) => ({ label, on: !!P.checks[i], toggle: () => setP({ checks: Object.assign({}, P.checks, { [i]: !P.checks[i] }) }) })),
       note: { v: P.note, on: e => setP({ note: e.target.value }) }, noteLabel: isReq ? 'Note to the person (they see it if you reject)' : 'Private note (only admins see it)',
       save: () => { saveOrg(); this.say('Changes saved.'); this.log('Edited ' + (P.f.org || name) + '.'); },
+      emailNote, previewEmail,
       primaryLabel: isNew ? 'Approve listing' : isClaim ? 'Approve claim' : o.verified ? 'Confirm still correct' : 'Mark Verified',
       primary: () => {
         saveOrg();
-        if (isReq) { this.drop('requests', P.id, 'Approved.'); this.popAdvance(P); return; }
+        if (isReq) { this.drop('requests', P.id, 'Approved.'); this.popAdvance(P); this.say('Approved. We emailed ' + whoShort + '.'); return; }
         this.setState(st => ({ listings: st.listings.map(x => x.id === P.id ? Object.assign({}, x, { verified: true, checked: 0 }) : x) })); this.popAdvance(P);
-        this.say('Marked Verified.'); this.log('Marked ' + (P.f.org || name) + ' Verified.');
+        this.say(verified ? 'Confirmed. Last-checked date updated.' : 'Marked Verified. We emailed ' + name + '.'); this.log('Marked ' + (P.f.org || name) + ' Verified.');
       },
       secondaryLabel: isReq ? 'Reject' : 'Pause listing',
       secondary: () => {
-        if (isReq) { this.drop('requests', P.id, 'Rejected.'); this.popAdvance(P); return; }
+        if (isReq) { this.drop('requests', P.id, 'Rejected.'); this.popAdvance(P); this.say('Rejected. We emailed ' + whoShort + '.'); return; }
         this.setState(st => ({ listings: st.listings.map(x => x.id === P.id ? Object.assign({}, x, { status: 'paused' }) : x) })); this.popAdvance(P);
-        this.say('Listing paused.'); this.log('Paused ' + name + '.');
+        this.say('Listing paused. We emailed ' + name + '.'); this.log('Paused ' + name + '.');
       }
     };
   }
@@ -611,11 +693,12 @@ class Component extends DCLogic {
     return {
       ...(() => { const all = [['overview', 'Overview', 0], ['requests', 'New listings & claims', s.requests.length], ['unverified', 'Unverified', s.listings.filter(o => o.status === 'approved' && !o.verified).length], ['inbox', 'Inbox', s.mails.filter(m => m.status === 'open' && !m.read).length], ['reports', 'Reports', s.reports.filter(r => r.stage !== 'resolved').length], ['changes', 'Contact changes', s.changes.length], ['checks', 'Listing checks', this.chkDue().length + s.checks.filter(c => c.stage === 'flag').length], ['team', 'My team', 0], ['listings', 'All listings', s.listings.length], ['settings', 'Settings', 0]];
         const mk = ([k, label, count]) =>
-        { const unv = s.tab === 'listings' && s.listF === 'unverified'; const on = k === 'unverified' ? unv : k === 'listings' ? s.tab === 'listings' && !unv : s.tab === k; return { label, count, cur: on ? 'page' : 'false', aria: label + (count ? ', ' + count : ''), style: tabStyle(on),
-          pick: () => this.setState(k === 'unverified' ? { tab: 'listings', listF: 'unverified', q: '' } : k === 'listings' ? { tab: 'listings', listF: 'all' } : k === 'requests' ? { tab: 'requests', reqKind: 'all' } : { tab: k }),
-          isOverview: k === 'overview', isRequests: k === 'requests', isChanges: k === 'changes', isReports: k === 'reports', isChecks: k === 'checks', isInbox: k === 'inbox', isListings: k === 'listings', isUnverified: k === 'unverified', isTeam: k === 'team', isSettings: k === 'settings', isAccount: k === 'account',
+        { const unv = s.tab === 'listings' && s.listF === 'unverified'; const on = k === 'dashes' ? !!s.dashOpen : k === 'unverified' ? unv : k === 'listings' ? s.tab === 'listings' && !unv : s.tab === k; return { label, count, cur: on ? 'page' : 'false', aria: label + (count ? ', ' + count : ''), style: tabStyle(on),
+          pick: () => k === 'dashes' ? this.setState({ dashOpen: true }) : this.setState(k === 'unverified' ? { tab: 'listings', listF: 'unverified', q: '' } : k === 'listings' ? { tab: 'listings', listF: 'all' } : k === 'requests' ? { tab: 'requests', reqKind: 'all' } : { tab: k }),
+          isOverview: k === 'overview', isRequests: k === 'requests', isChanges: k === 'changes', isReports: k === 'reports', isChecks: k === 'checks', isInbox: k === 'inbox', isListings: k === 'listings', isUnverified: k === 'unverified', isTeam: k === 'team', isSettings: k === 'settings', isAccount: k === 'account', isDashes: k === 'dashes',
           showLabel: !mini, hasCount: !mini && count > 0 && k !== 'listings', dot: mini && count > 0 && k !== 'listings' }; };
-        const hide = window.CC_ADMIN_HIDE || []; return { tabs: all.filter(t => t[0] !== 'settings' && hide.indexOf(t[0]) < 0).map(mk), bottomTabs: all.filter(t => t[0] === 'settings').map(mk) }; })(),
+        const bottom = ((s.myDash || []).length ? [['dashes', 'Your dashboards', 0]] : []).concat(all.filter(t => t[0] === 'settings'));
+        const hide = window.CC_ADMIN_HIDE || []; return { tabs: all.filter(t => t[0] !== 'settings' && hide.indexOf(t[0]) < 0).map(mk), bottomTabs: bottom.map(mk) }; })(),
       reqCards: [['all', 'All requests', 'Listings and claims together'], ['new_listing', 'New listings', 'Organizations asking to join'], ['claim', 'Claims', 'People claiming an organization']].map(([k, label, hint]) => {
         const on = (s.reqKind || 'all') === k, n = k === 'all' ? s.requests.length : s.requests.filter(r => r.kind === k).length;
         return { label, hint, n, isAll: k === 'all', isNew: k === 'new_listing', isClaim: k === 'claim', pressed: on ? 'true' : 'false', pick: () => this.setState({ reqKind: k }),
@@ -912,7 +995,7 @@ class Component extends DCLogic {
         setStatus: e => { const v = e.target.value; this.setState(st => ({ listings: st.listings.map(x => x.id === o.id ? Object.assign({}, x, { status: v }) : x) })); this.say('Status updated.'); },
         toggle: () => { this.setState(st => ({ listings: st.listings.map(x => x.id === o.id ? Object.assign({}, x, { verified: !x.verified }) : x) })); this.say(o.verified ? 'Verified badge removed.' : 'Marked Verified.'); }
       })),
-      pop: this.popVals(),
+      pop: this.popVals(), ep: this.emailVals(), dsh: this.dashVals(), ovc: this.ovVals(),
       toast: s.toast
     };
   }
@@ -1024,12 +1107,19 @@ class Component extends DCLogic {
     if (!CC.ok) return say('<h1 style="font-size:28px">We can’t reach the server</h1><p>Please try again in a few minutes.</p>');
     var session = await CC.whenReady;
     if (!session) { window.location.replace('login.html'); return; }
-    var p = (await CC.sb.from('profiles').select('id, email, full_name, title, phone, is_admin, admin_role').eq('id', session.user.id).maybeSingle()).data;
+    var p = (await CC.sb.from('profiles').select('*').eq('id', session.user.id).maybeSingle()).data;
     if (!p || !p.is_admin) return say('<h1 style="font-size:28px">This page is for the site’s team</h1><p>Your account doesn’t have access to the Admin page. If you think it should, ask the site owner to add your email.</p><p><a href="dashboard.html?org=1">Go to your dashboard</a> · <a href="index.html">Home</a></p>');
     ME = { uid: session.user.id, email: session.user.email };
     ROLE = p.admin_role || 'admin';
     var data = await loadAll();
-    window.CC_ADMIN_INIT = Object.assign(data.state, {
+    // The overview layout is saved for each person; the Team note is shared by the whole team
+    PREFS = (p.prefs && typeof p.prefs === 'object') ? p.prefs : {};
+    var note = null; try { note = (await CC.sb.from('site_settings').select('value').eq('key', 'team_note').maybeSingle()).data; } catch (e) {}
+    var lay = Array.isArray(PREFS.adminOverview) ? PREFS.adminOverview.filter(function (x) { return x && typeof x.id === 'string'; }) : null;
+    var dashes = [];
+    try { dashes = await myDashes(session.user.id); } catch (e) { if (window.console) console.warn('Could not load your other dashboards', e); }
+    window.CC_ADMIN_INIT = Object.assign(data.state, lay ? { ovLayout: lay } : {}, { ovNote: (note && note.value && note.value.text) || '' },
+      { myDash: dashes, autoOpen: typeof PREFS.autoDash === 'string' ? PREFS.autoDash : '', dashOpen: false }, {
       me: { name: p.full_name || '', title: p.title || '', email: session.user.email, phone: p.phone || '', photo: '' },
       st: Object.assign({}, new Component({}).state.st, { name: p.full_name || '', email: session.user.email })
     });
@@ -1088,7 +1178,7 @@ class Component extends DCLogic {
     if (v.acct) {
       v.acct.roleLabel = RL[ROLE] || ROLE;
       v.acct.loginEmail = ME.email;
-      v.acct.logout = function () { CC.signOut().then(function () { window.location.href = 'index.html'; }, function () { window.location.href = 'index.html'; }); };
+      v.acct.logout = function () { try { sessionStorage.removeItem('cc-dash-cur'); } catch (e) {} CC.signOut().then(function () { window.location.href = 'index.html'; }, function () { window.location.href = 'index.html'; }); };
       v.acct.save = function () {
         var M = self.state.me, em = String(M.email || '').trim().toLowerCase();
         CC.sb.from('profiles').update({ full_name: (M.name || '').trim(), title: (M.title || '').trim() || null, phone: (M.phone || '').trim() || null }).eq('id', ME.uid).then(function (r) {
@@ -1134,11 +1224,70 @@ class Component extends DCLogic {
         CC.sb.storage.from('claim-documents').remove([Q.docPath]).then(function (r) { if (r.error) return fail(r.error); DOCS[Q.id] = null; baseDel(); });
       };
     }
+    // "Your dashboards": Open goes to that dashboard; the log-in choice is saved to the account
+    if (v.dsh && v.dsh.open) {
+      var D = s.myDash || [];
+      (v.dsh.list || []).forEach(function (it, k) {
+        var d = D[k]; if (!d) return;
+        it.open = function () { try { sessionStorage.setItem('cc-dash-cur', d.id); } catch (e) {} window.location.href = 'dashboard.html'; };
+      });
+      var autoIds = ['', 'admin'].concat(D.map(function (d) { return d.id; }));
+      (v.dsh.autoOpts || []).forEach(function (a, k) {
+        var basePick = a.pick;
+        a.pick = function () {
+          basePick();
+          PREFS.autoDash = autoIds[k] || '';
+          CC.sb.from('profiles').update({ prefs: PREFS }).eq('id', ME.uid).then(function (r) { if (r.error) toast('That choice couldn’t be saved: ' + CC.msg(r.error)); });
+        };
+      });
+    }
     // Who can change the team
     if (v.teamEdit && !CAN_APPROVE()) v.teamEdit.toggle = function () { toast('Only Owners and Admins can change the team.'); };
     if (v.invite && !CAN_APPROVE()) v.invite.toggle = function () { toast('Only Owners and Admins can add people to the team.'); };
     return v;
   };
+
+  // ---------- "Your dashboards": this admin's organizations and requests ----------
+  // The ids match the dashboard page (o-<org id>, r-<request id>), so Open takes you straight to that one.
+  async function myDashes(uid) {
+    var sb = CC.sb, list = [], have = {};
+    var shortDate = function (d) { return d ? new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; };
+    var catName = function (k) { var c = (window.BBData && window.BBData.CATS || []).find(function (x) { return x.k === k; }); return c ? c.label : k; };
+    var info = function (o) { return [(o.categories || []).slice(0, 2).map(catName).join(' & '), o.neighborhood || o.city || '', (o.last_confirmed_at || o.updated_at) ? 'Updated ' + shortDate(o.last_confirmed_at || o.updated_at) : ''].filter(Boolean).join(' · '); };
+    var mem = (await sb.from('organization_members').select('organization_id, role').eq('user_id', uid)).data || [];
+    var roles = {}; mem.forEach(function (m) { roles[m.organization_id] = m.role; });
+    var ids = Object.keys(roles);
+    if (ids.length) ((await sb.from('organizations').select('*').in('id', ids).in('status', ['approved', 'paused']).order('name')).data || []).forEach(function (o) {
+      have[o.id] = 1;
+      list.push({ id: 'o-' + o.id, name: o.name, role: roles[o.id] === 'owner' || roles[o.id] === 'admin' ? 'Admin' : roles[o.id] === 'volunteer' ? 'Volunteer' : 'Staff', status: o.status === 'paused' ? 'Paused' : 'Live', info: info(o) });
+    });
+    var rq = (await sb.from('claim_requests').select('id, organization_id, kind, status').eq('user_id', uid).in('status', ['pending', 'rejected']).order('created_at', { ascending: false })).data || [];
+    rq = rq.filter(function (q) { if (have[q.organization_id]) return false; have[q.organization_id] = 1; return true; });
+    if (rq.length) {
+      var rows = {};
+      ((await sb.from('organizations').select('*').in('id', rq.map(function (q) { return q.organization_id; }))).data || []).forEach(function (o) { rows[o.id] = o; });
+      rq.forEach(function (q) { var o = rows[q.organization_id]; if (!o) return;
+        list.push({ id: 'r-' + q.id, name: o.name, role: 'Admin', status: q.status === 'rejected' ? 'Not approved' : 'Waiting for approval', info: info(o) }); });
+    }
+    return list;
+  }
+
+  // ---------- the customizable overview ----------
+  var PREFS = {}, ovTimer = null, noteTimer = null;
+  function saveLayout(lay) {
+    clearTimeout(ovTimer);
+    ovTimer = setTimeout(function () {
+      PREFS.adminOverview = lay;
+      CC.sb.from('profiles').update({ prefs: PREFS }).eq('id', ME.uid).then(function (r) { if (r.error) toast('Your layout couldn’t be saved: ' + CC.msg(r.error)); });
+    }, 600);
+  }
+  function saveNote(text) {
+    clearTimeout(noteTimer);
+    noteTimer = setTimeout(function () {
+      if (!CAN_WORK()) return toast('Viewers can’t change the Team note.');
+      CC.sb.from('site_settings').upsert({ key: 'team_note', value: { text: text }, updated_at: new Date().toISOString() }).then(function (r) { if (r.error) toast('The Team note couldn’t be saved: ' + CC.msg(r.error)); });
+    }, 800);
+  }
 
   // ---------- saving what changed ----------
   function splitAddr(s) {
@@ -1185,6 +1334,10 @@ class Component extends DCLogic {
     if (!ME || !ps) return;
     if (this._skipSave) { this._skipSave = false; return; }
     var s = this.state, sb = CC.sb;
+
+    // Overview: layout and Team note
+    if (ps.ovLayout !== s.ovLayout && s.ovLayout) saveLayout(s.ovLayout);
+    if (ps.ovNote !== s.ovNote) saveNote(s.ovNote || '');
 
     // Listings: status, Verified, assigned teammate
     if (ps.listings !== s.listings) {
